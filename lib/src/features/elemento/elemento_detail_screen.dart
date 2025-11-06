@@ -1,16 +1,12 @@
 // lib/src/features/elemento/elemento_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/elemento_service.dart';
+import 'package:libratrack_client/src/core/services/catalog_service.dart'; // NUEVO
 import 'package:libratrack_client/src/model/elemento.dart';
+import 'package:libratrack_client/src/model/catalogo_entrada.dart'; // NUEVO
 
-/// Pantalla de Ficha de Detalle (RF10, RF11, RF12).
-///
-/// Muestra toda la información de un Elemento específico.
-/// Es un [StatefulWidget] porque necesita "esperar" (cargar)
-/// los datos de la API.
+/// Pantalla de Ficha de Detalle (RF10, RF11, RF12, y ahora RF05).
 class ElementoDetailScreen extends StatefulWidget {
-  /// El ID del elemento que debemos cargar.
-  /// Este ID se pasa desde la pantalla anterior (ej. SearchScreen).
   final int elementoId;
   
   const ElementoDetailScreen({
@@ -23,38 +19,122 @@ class ElementoDetailScreen extends StatefulWidget {
 }
 
 class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
-  // --- Servicios y Estado ---
+  // --- Servicios ---
   final ElementoService _elementoService = ElementoService();
-  
-  // Usamos un 'Future' para manejar el estado de la carga en la UI
-  // con un 'FutureBuilder'.
-  // Esta es la variable que SOLUCIONA el error
-  late Future<Elemento> _elementoFuture; 
+  final CatalogService _catalogService = CatalogService(); // NUEVO
+
+  // REFACTORIZADO: Este Future ahora cargará AMBAS cosas:
+  // 1. Los detalles del elemento (Elemento)
+  // 2. La lista del catálogo del usuario (List<CatalogoEntrada>)
+  late Future<Map<String, dynamic>> _screenDataFuture; 
+
+  // --- Estado de la UI ---
+  // NUEVO: Estado para saber si el elemento ya está en el catálogo
+  bool _isInCatalog = false;
+  // NUEVO: Estado de carga para el botón "Añadir"
+  bool _isAdding = false;
 
   @override
   void initState() {
     super.initState();
-    // 1. En cuanto la pantalla se crea, llamamos al servicio
-    // para que empiece a cargar el elemento usando el ID
-    // que recibimos en el constructor ('widget.elementoId').
-    _elementoFuture = _elementoService.getElementoById(widget.elementoId);
+    // 1. Llama al nuevo método que carga todos los datos necesarios
+    _loadScreenData();
+  }
+
+  /// NUEVO: Método que carga los datos del elemento Y el catálogo del usuario
+  /// al mismo tiempo usando Future.wait (más eficiente).
+  void _loadScreenData() {
+    _screenDataFuture = _fetchData();
+  }
+
+  Future<Map<String, dynamic>> _fetchData() async {
+    try {
+      // Pide ambos grupos de datos en paralelo
+      final results = await Future.wait([
+        _elementoService.getElementoById(widget.elementoId),
+        _catalogService.getMyCatalog(),
+      ]);
+
+      // Parsea los resultados
+      final Elemento elemento = results[0] as Elemento;
+      final List<CatalogoEntrada> catalogo = results[1] as List<CatalogoEntrada>;
+
+      // Comprueba si el elemento actual (widget.elementoId)
+      // ya existe en la lista del catálogo del usuario.
+      final bool inCatalog = catalogo.any(
+        (entrada) => entrada.elementoId == widget.elementoId
+      );
+      
+      // Actualiza el estado de la UI ANTES de construir el widget
+      // (usamos 'mounted' por seguridad)
+      if (mounted) {
+        setState(() {
+          _isInCatalog = inCatalog;
+        });
+      }
+      
+      // Devuelve los datos al FutureBuilder
+      return {
+        'elemento': elemento,
+      };
+    } catch (e) {
+      // Si algo falla (ej. el token expira), lanza el error
+      rethrow;
+    }
+  }
+
+  /// NUEVO: Lógica para el botón "Añadir al Catálogo" (RF05)
+  Future<void> _handleAddElemento() async {
+    setState(() {
+      _isAdding = true; // Muestra el spinner en el botón
+    });
+
+    final msgContext = ScaffoldMessenger.of(context);
+
+    try {
+      // 1. Llama al servicio (que devuelve la nueva entrada)
+      await _catalogService.addElementoAlCatalogo(widget.elementoId);
+
+      // 2. (ÉXITO) Actualiza la UI
+      if (!mounted) return;
+      setState(() {
+        _isAdding = false;
+        _isInCatalog = true; // El elemento YA está en el catálogo
+      });
+      
+      msgContext.showSnackBar(
+        const SnackBar(content: Text('¡Añadido al catálogo!'), backgroundColor: Colors.green),
+      );
+
+    } catch (e) {
+      // 3. (ERROR)
+      if (!mounted) return;
+      setState(() {
+        _isAdding = false;
+      });
+      
+      // Muestra el error (ej. "Ya está en tu catálogo" (409))
+      msgContext.showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst("Exception: ", "")),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 2. Usamos un FutureBuilder. Este widget sabe cómo manejar
-      // los 3 estados de un 'Future': 'waiting', 'error' y 'done'.
-      body: FutureBuilder<Elemento>(
-        future: _elementoFuture,
+      // REFACTORIZADO: El FutureBuilder ahora espera un Map
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _screenDataFuture,
         builder: (context, snapshot) {
           
-          // --- Caso 1: Aún estamos cargando (waiting) ---
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // --- Caso 2: Hubo un error (error) ---
           if (snapshot.hasError) {
             return Center(
               child: Padding(
@@ -68,13 +148,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
             );
           }
           
-          // --- Caso 3: Éxito (done) ---
-          // Si llegamos aquí, 'snapshot.hasData' es true.
-          // Guardamos el objeto 'Elemento' en una variable.
-          final Elemento elemento = snapshot.data!;
+          // REFACTORIZADO: Extrae el elemento del Map
+          final Elemento elemento = snapshot.data!['elemento'];
           
-          // Usamos 'CustomScrollView' para tener una imagen de cabecera
-          // que colapsa (SliverAppBar), como en muchas apps profesionales.
           return CustomScrollView(
             slivers: <Widget>[
               // --- Cabecera con Imagen ---
@@ -89,26 +165,22 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // La imagen (si existe)
+                      // ... (Código de la imagen de fondo sin cambios) ...
                       if (elemento.imagenPortadaUrl != null)
                         Image.network(
                           elemento.imagenPortadaUrl!,
                           fit: BoxFit.cover,
-                          // Placeholder mientras carga
                           loadingBuilder: (context, child, progress) {
                             return progress == null
                                 ? child
                                 : const Center(child: CircularProgressIndicator());
                           },
-                          // Placeholder si falla
                           errorBuilder: (context, error, stackTrace) {
                             return Container(color: Colors.grey[800]);
                           },
                         )
                       else
-                        Container(color: Colors.grey[800]), // Color si no hay imagen
-                      
-                      // Gradiente oscuro para que el título sea legible
+                        Container(color: Colors.grey[800]),
                       Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
@@ -119,8 +191,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                           ),
                         ),
                       ),
-                      
-                      // --- Chip "OFICIAL" (RF11) ---
                       Positioned(
                         top: 40,
                         right: 16,
@@ -142,7 +212,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                         children: [
                           // --- Tipo y Géneros ---
                           Text(
-                            // ej. "Serie | Fantasía, Misterio"
                             '${elemento.tipo} | ${elemento.generos.join(", ")}',
                             style: TextStyle(
                               fontSize: 16,
@@ -154,18 +223,8 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                           const SizedBox(height: 24),
 
                           // --- Botón de Añadir (RF05) ---
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.add),
-                            label: const Text('Añadir a Mi Catálogo'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size(double.infinity, 50),
-                            ),
-                            onPressed: () {
-                              // TO DO: Implementar lógica de RF05
-                            },
-                          ),
+                          // REFACTORIZADO: Ahora es dinámico
+                          _buildAddButton(),
                           
                           const SizedBox(height: 24),
 
@@ -187,8 +246,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                             'Reseñas',
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
-                          const SizedBox(height: 8),
-                          // TO DO: Implementar lista de reseñas (RF12)
+                          // ... (TODO: Lógica de Reseñas) ...
                           const Center(
                             child: Padding(
                               padding: EdgeInsets.all(16.0),
@@ -208,13 +266,10 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
   
-  /// (RF11) Widget auxiliar para mostrar 
-  /// el chip "OFICIAL" o "COMUNITARIO"
+  /// (RF11) Widget auxiliar para el chip
   Widget _buildEstadoChip(String estado) {
-    // Asumimos que el estado es "OFICIAL" o "COMUNITARIO"
-    // (basado en el Enum 'EstadoContenido' de la API)
+    // ... (código del chip sin cambios)
     final bool isOficial = estado == "OFICIAL"; 
-    
     return Chip(
       label: Text(
         isOficial ? "OFICIAL" : "COMUNITARIO",
@@ -228,6 +283,54 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         borderRadius: BorderRadius.circular(20),
         side: BorderSide.none,
       ),
+    );
+  }
+
+  /// NUEVO: Widget auxiliar que construye el botón de "Añadir" (RF05)
+  /// de forma dinámica, basado en el estado.
+  Widget _buildAddButton() {
+    // Caso 1: El elemento YA está en el catálogo
+    if (_isInCatalog) {
+      return ElevatedButton.icon(
+        icon: const Icon(Icons.check, color: Colors.grey),
+        label: const Text('Añadido al catálogo'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.grey[800],
+          foregroundColor: Colors.grey[400],
+          minimumSize: const Size(double.infinity, 50),
+        ),
+        onPressed: null, // Botón deshabilitado
+      );
+    }
+    
+    // Caso 2: El elemento NO está, y estamos en proceso de añadirlo
+    if (_isAdding) {
+      return ElevatedButton.icon(
+        icon: const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+        ),
+        label: const Text('Añadiendo...'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue[700],
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 50),
+        ),
+        onPressed: null, // Deshabilitado mientras carga
+      );
+    }
+
+    // Caso 3: El elemento NO está en el catálogo (listo para añadir)
+    return ElevatedButton.icon(
+      icon: const Icon(Icons.add),
+      label: const Text('Añadir a Mi Catálogo'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(double.infinity, 50),
+      ),
+      onPressed: _handleAddElemento, // Conecta la lógica
     );
   }
 }

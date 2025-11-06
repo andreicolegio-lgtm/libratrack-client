@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/catalog_service.dart';
 import 'package:libratrack_client/src/model/catalogo_entrada.dart';
-// --- NUEVAS IMPORTACIONES ---
 import 'package:libratrack_client/src/model/estado_personal.dart';
 import 'package:libratrack_client/src/features/catalog/widgets/edit_entrada_modal.dart';
 
@@ -16,14 +15,10 @@ class CatalogScreen extends StatefulWidget {
 class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProviderStateMixin {
   final CatalogService _catalogService = CatalogService();
   
-  // --- REFACTORIZACIÓN DE ESTADO ---
-  // Ya no usamos un FutureBuilder. Ahora gestionamos el estado manualmente
-  // para permitir actualizaciones instantáneas de la UI.
   bool _isLoading = true;
   String? _loadingError;
-  List<CatalogoEntrada> _catalogoCompleto = []; // Aquí vive la lista de datos
+  List<CatalogoEntrada> _catalogoCompleto = [];
   
-  // Lista de estados (sin cambios)
   final List<EstadoPersonal> _estados = [
     EstadoPersonal.EN_PROGRESO, 
     EstadoPersonal.PENDIENTE, 
@@ -37,8 +32,6 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     _loadCatalog();
   }
 
-  /// REFACTORIZADO: Ahora es un método 'async' que actualiza
-  /// el estado local cuando termina.
   Future<void> _loadCatalog() async {
     try {
       final catalogo = await _catalogService.getMyCatalog();
@@ -58,30 +51,20 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     }
   }
 
-  // --- NUEVO MÉTODO ---
-  /// (RF06, RF07)
-  /// Abre el modal para editar una entrada.
   Future<void> _openEditModal(CatalogoEntrada entrada) async {
-    // 1. Muestra el 'Modal Bottom Sheet' y ESPERA a que se cierre.
-    // 'showModalBottomSheet' devuelve un valor (el que pasamos a 'Navigator.pop')
     final resultado = await showModalBottomSheet<CatalogoEntrada>(
       context: context,
-      isScrollControlled: true, // Permite que el modal crezca con el teclado
+      isScrollControlled: true,
       builder: (ctx) {
-        return EditEntradaModal(entrada: entrada); // Muestra el formulario
+        return EditEntradaModal(entrada: entrada);
       },
     );
 
-    // 2. Comprueba el resultado
-    // Si 'resultado' no es nulo, significa que el usuario pulsó "Guardar"
-    // y nuestro modal devolvió la 'entradaActualizada'.
     if (resultado != null) {
-      // 3. (MEJOR PRÁCTICA) Actualiza la lista local (sin recargar de la API)
+      // Actualiza la lista local sin recargar de la API
       setState(() {
-        // Busca el índice del ítem antiguo en nuestra lista
         final index = _catalogoCompleto.indexWhere((e) => e.id == resultado.id);
         if (index != -1) {
-          // Reemplaza el ítem antiguo por el actualizado
           _catalogoCompleto[index] = resultado;
         }
       });
@@ -96,30 +79,21 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
         appBar: AppBar(
           title: const Text('Mi Catálogo'),
           centerTitle: true,
-          // 1. Pestañas de Filtro (Bottom Tab Bar - RF08)
           bottom: TabBar(
             isScrollable: true,
-            // REFACTORIZADO: Usa el Enum 'EstadoPersonal'
             tabs: _estados.map((estado) => Tab(text: estado.displayName)).toList(),
             labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
           ),
         ),
-        
-        // REFACTORIZADO: El 'body' ya no usa FutureBuilder.
-        // Ahora usa la lógica de estado local.
         body: _buildBody(),
       ),
     );
   }
 
-  /// REFACTORIZADO: Widget auxiliar para construir el body
   Widget _buildBody() {
-    // --- Caso 1: Cargando ---
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-
-    // --- Caso 2: Error ---
     if (_loadingError != null) {
       return Center(
         child: Padding(
@@ -133,10 +107,8 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
       );
     }
     
-    // --- Caso 3: Éxito (mostrar TabBarView) ---
     return TabBarView(
       children: _estados.map((estado) {
-        // REFACTORIZADO: Filtra la lista local '_catalogoCompleto'
         final filteredList = _catalogoCompleto
             .where((item) => item.estadoPersonal == estado.apiValue)
             .toList();
@@ -147,7 +119,6 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
           );
         }
 
-        // Muestra la lista de tarjetas filtradas
         return ListView.builder(
           itemCount: filteredList.length,
           itemBuilder: (context, index) {
@@ -159,7 +130,8 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     );
   }
 
-  /// Construye la Tarjeta de Catálogo (Mockup 7)
+  /// REFACTORIZADO: Construye la Tarjeta de Catálogo con Diseño Visual
+  /// Implementa Mejora 2 (Imágenes) y prepara para Mejora 3 (Edición en línea).
   Widget _buildCatalogCard(CatalogoEntrada item) {
     final String titulo = item.elementoTitulo;
     final String progreso = item.progresoEspecifico ?? '';
@@ -167,53 +139,102 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     final double progresoValue;
     if (item.estadoPersonal == EstadoPersonal.TERMINADO.apiValue) {
       progresoValue = 1.0;
-    } else if (item.estadoPersonal == EstadoPersonal.EN_PROGRESO.apiValue && progreso.isNotEmpty) {
+    } else if (item.estadoPersonal == EstadoPersonal.EN_PROGRESO.apiValue) {
       progresoValue = 0.5; // Simulado
     } else {
       progresoValue = 0.0;
     }
 
+    // --- Contenido de la Tarjeta ---
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Colors.grey[850],
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            const Icon(Icons.movie_filter_outlined, size: 40, color: Colors.blueGrey),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    titulo,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: progresoValue,
-                    backgroundColor: Colors.grey[700],
-                    color: Colors.blue,
-                  ),
-                  const SizedBox(height: 4),
-                  if (progreso.isNotEmpty)
-                    Text(
-                      progreso,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                ],
+      child: InkWell( // Hace que toda la tarjeta sea clickable
+        onTap: () {
+          // TO DO: Navegar a ElementoDetailScreen(elementoId: item.elementoId)
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Imagen de Portada (Mejora 2)
+              Container(
+                width: 70,
+                height: 100,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.0),
+                  color: Colors.grey[800],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: item.elementoImagenPortadaUrl.isNotEmpty
+                      ? Image.network(
+                          item.elementoImagenPortadaUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => 
+                            const Icon(Icons.broken_image, color: Colors.blueGrey),
+                        )
+                      : const Icon(Icons.image, size: 40, color: Colors.blueGrey),
+                ),
               ),
-            ),
-            
-            // --- BOTÓN CONECTADO ---
-            IconButton(
-              icon: const Icon(Icons.edit_note, color: Colors.grey),
-              tooltip: 'Editar progreso',
-              // NUEVO: Llama al método para abrir el modal
-              onPressed: () => _openEditModal(item),
-            ),
-          ],
+              const SizedBox(width: 16),
+              
+              // 2. Título y Progreso
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Título
+                        Expanded(
+                          child: Text(
+                            titulo,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Botón de Edición (RF06/RF07)
+                        IconButton(
+                          icon: const Icon(Icons.edit_note, color: Colors.grey),
+                          tooltip: 'Editar progreso',
+                          onPressed: () => _openEditModal(item),
+                        ),
+                      ],
+                    ),
+                    
+                    // Progreso Específico (T2:E5)
+                    if (progreso.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4.0),
+                        child: Text(
+                          progreso,
+                          style: const TextStyle(fontSize: 14, color: Colors.blue),
+                        ),
+                      ),
+                      
+                    // Barra de Progreso
+                    LinearProgressIndicator(
+                      value: progresoValue,
+                      backgroundColor: Colors.grey[700],
+                      color: Colors.blue,
+                    ),
+                    
+                    // Estado Personal (ej. Pendiente)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        EstadoPersonal.fromString(item.estadoPersonal).displayName,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

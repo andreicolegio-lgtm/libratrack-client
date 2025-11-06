@@ -1,183 +1,232 @@
+// lib/src/features/elemento/elemento_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/elemento_service.dart';
-import 'package:libratrack_client/src/core/services/catalog_service.dart'; // Import del servicio de catálogo
-import 'package:libratrack_client/src/features/catalog/catalog_screen.dart'; // Import de la pantalla de catálogo
+import 'package:libratrack_client/src/model/elemento.dart';
 
-/// Pantalla que muestra la ficha detallada de un elemento (Mockup 6).
-/// Implementa los requisitos RF10, RF11, RF12 y RF05.
+/// Pantalla de Ficha de Detalle (RF10, RF11, RF12).
+///
+/// Muestra toda la información de un Elemento específico.
+/// Es un [StatefulWidget] porque necesita "esperar" (cargar)
+/// los datos de la API.
 class ElementoDetailScreen extends StatefulWidget {
-  // Parámetro requerido para construir la pantalla
+  /// El ID del elemento que debemos cargar.
+  /// Este ID se pasa desde la pantalla anterior (ej. SearchScreen).
   final int elementoId;
-
-  const ElementoDetailScreen({super.key, required this.elementoId});
+  
+  const ElementoDetailScreen({
+    super.key,
+    required this.elementoId,
+  });
 
   @override
   State<ElementoDetailScreen> createState() => _ElementoDetailScreenState();
 }
 
 class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
-  // --- Servicios ---
+  // --- Servicios y Estado ---
   final ElementoService _elementoService = ElementoService();
-  final CatalogService _catalogService = CatalogService(); // Servicio para RF05
   
-  // --- Estado ---
-  Future<Map<String, dynamic>>? _detalleFuture;
-  bool _isLoading = false; // Estado de carga para el botón "Añadir"
+  // Usamos un 'Future' para manejar el estado de la carga en la UI
+  // con un 'FutureBuilder'.
+  // Esta es la variable que SOLUCIONA el error
+  late Future<Elemento> _elementoFuture; 
 
   @override
   void initState() {
     super.initState();
-    // 1. Carga los detalles del elemento al iniciar la pantalla
-    _loadDetalle();
-  }
-
-  /// Carga los datos de la API para este elemento (RF10)
-  void _loadDetalle() {
-    setState(() {
-      _detalleFuture = _elementoService.getElementoById(widget.elementoId);
-    });
-  }
-
-  /// Lógica para añadir el elemento al catálogo personal (RF05).
-  Future<void> _handleAddToCatalog() async {
-    // 1. Mostrar la rueda de carga en el botón
-    setState(() {
-      _isLoading = true;
-    });
-
-    // 2. (Mejor Práctica) Guardar 'context' en variables locales
-    final msgContext = ScaffoldMessenger.of(context);
-    final navContext = Navigator.of(context);
-
-    try {
-      // 3. Llamar al servicio de catálogo
-      await _catalogService.addElementoAlCatalogo(widget.elementoId);
-      
-      // 4. (Éxito) Mostrar SnackBar verde
-      msgContext.showSnackBar(
-        const SnackBar(
-          content: Text('¡Elemento añadido a tu catálogo!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // (Opcional) Navegar al catálogo del usuario después de añadir
-      // navContext.pop(); // Vuelve a la pantalla de búsqueda
-      // O navegar a la pestaña de catálogo (más complejo, lo dejamos para después)
-
-    } catch (e) {
-      // 5. (Error) Mostrar SnackBar rojo
-      msgContext.showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst("Exception: ", "")),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      // 6. Ocultar la rueda de carga (tanto si hay éxito como si hay error)
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    // 1. En cuanto la pantalla se crea, llamamos al servicio
+    // para que empiece a cargar el elemento usando el ID
+    // que recibimos en el constructor ('widget.elementoId').
+    _elementoFuture = _elementoService.getElementoById(widget.elementoId);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalle de Elemento'),
-      ),
-      // 2. Usamos FutureBuilder para manejar los estados de la carga
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _detalleFuture,
+      // 2. Usamos un FutureBuilder. Este widget sabe cómo manejar
+      // los 3 estados de un 'Future': 'waiting', 'error' y 'done'.
+      body: FutureBuilder<Elemento>(
+        future: _elementoFuture,
         builder: (context, snapshot) {
           
-          /// Caso 1: Aún estamos cargando
+          // --- Caso 1: Aún estamos cargando (waiting) ---
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          /// Caso 2: Hubo un error
+          // --- Caso 2: Hubo un error (error) ---
           if (snapshot.hasError) {
             return Center(
-              child: Text(
-                'Error: ${snapshot.error}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Error al cargar el elemento:\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
             );
           }
-
-          /// Caso 3: ¡Éxito! Tenemos los datos
-          if (snapshot.hasData) {
-            final elemento = snapshot.data!;
-            // Extraemos los datos del DTO (ElementoResponseDTO)
-            final String titulo = elemento['titulo'] ?? 'N/A';
-            final String descripcion = elemento['descripcion'] ?? 'Sin sinopsis.';
-            final String estadoContenido = elemento['estadoContenido'] ?? 'COMUNITARIO'; // RF11
-            final String tipo = elemento['tipo'] ?? 'N/A';
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 3. Etiqueta de estado (RF11)
-                  Chip(
-                    label: Text(
-                      estadoContenido,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    backgroundColor: estadoContenido == 'OFICIAL' ? Colors.green[800] : Colors.blueGrey[700],
+          
+          // --- Caso 3: Éxito (done) ---
+          // Si llegamos aquí, 'snapshot.hasData' es true.
+          // Guardamos el objeto 'Elemento' en una variable.
+          final Elemento elemento = snapshot.data!;
+          
+          // Usamos 'CustomScrollView' para tener una imagen de cabecera
+          // que colapsa (SliverAppBar), como en muchas apps profesionales.
+          return CustomScrollView(
+            slivers: <Widget>[
+              // --- Cabecera con Imagen ---
+              SliverAppBar(
+                expandedHeight: 300.0,
+                pinned: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(
+                    elemento.titulo,
+                    style: const TextStyle(shadows: [Shadow(blurRadius: 10)]),
                   ),
-                  const SizedBox(height: 8),
-
-                  // 4. Título y Tipo (RF10)
-                  Text(
-                    titulo,
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // La imagen (si existe)
+                      if (elemento.imagenPortadaUrl != null)
+                        Image.network(
+                          elemento.imagenPortadaUrl!,
+                          fit: BoxFit.cover,
+                          // Placeholder mientras carga
+                          loadingBuilder: (context, child, progress) {
+                            return progress == null
+                                ? child
+                                : const Center(child: CircularProgressIndicator());
+                          },
+                          // Placeholder si falla
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(color: Colors.grey[800]);
+                          },
+                        )
+                      else
+                        Container(color: Colors.grey[800]), // Color si no hay imagen
+                      
+                      // Gradiente oscuro para que el título sea legible
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.transparent, Colors.black87],
+                            stops: [0.5, 1.0],
+                          ),
+                        ),
+                      ),
+                      
+                      // --- Chip "OFICIAL" (RF11) ---
+                      Positioned(
+                        top: 40,
+                        right: 16,
+                        child: _buildEstadoChip(elemento.estadoContenido),
+                      ),
+                    ],
                   ),
-                  Text('Tipo: $tipo', style: TextStyle(color: Colors.grey[400])),
-                  
-                  const Divider(height: 32),
-
-                  // 5. Sinopsis (RF10)
-                  const Text('Sinopsis:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(descripcion),
-                  
-                  const Divider(height: 32),
-
-                  // 6. Botón Añadir al Catálogo (RF05)
-                  ElevatedButton.icon(
-                    // Llama al método _handleAddToCatalog
-                    // Se deshabilita si _isLoading es true
-                    onPressed: _isLoading ? null : _handleAddToCatalog,
-                    icon: _isLoading 
-                        ? Container() // Sin icono si está cargando
-                        : const Icon(Icons.add),
-                    label: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white) // Rueda de carga
-                        : const Text('Añadir a Mi Catálogo'),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                      backgroundColor: Colors.blue[700],
-                    ),
-                  ),
-
-                  // 7. Sección de Reseñas (RF12)
-                  const SizedBox(height: 32),
-                  const Text('Reseñas de la Comunidad (RF12)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  // TO DO: Aquí iría la lista de reseñas y el botón 'Escribir Reseña'
-                  
-                ],
+                ),
               ),
-            );
-          }
+              
+              // --- Cuerpo de la Página (Detalles) ---
+              SliverList(
+                delegate: SliverChildListDelegate(
+                  [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // --- Tipo y Géneros ---
+                          Text(
+                            // ej. "Serie | Fantasía, Misterio"
+                            '${elemento.tipo} | ${elemento.generos.join(", ")}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[400],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 24),
 
-          /// Caso 4: Caso por defecto (no debería pasar)
-          return const Center(child: Text('Datos no disponibles.'));
+                          // --- Botón de Añadir (RF05) ---
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.add),
+                            label: const Text('Añadir a Mi Catálogo'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(double.infinity, 50),
+                            ),
+                            onPressed: () {
+                              // TO DO: Implementar lógica de RF05
+                            },
+                          ),
+                          
+                          const SizedBox(height: 24),
+
+                          // --- Sinopsis (RF10) ---
+                          Text(
+                            'Sinopsis',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            elemento.descripcion,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // --- Reseñas (RF12) ---
+                          Text(
+                            'Reseñas',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          // TO DO: Implementar lista de reseñas (RF12)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Text('Las reseñas irán aquí.'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
         },
+      ),
+    );
+  }
+  
+  /// (RF11) Widget auxiliar para mostrar 
+  /// el chip "OFICIAL" o "COMUNITARIO"
+  Widget _buildEstadoChip(String estado) {
+    // Asumimos que el estado es "OFICIAL" o "COMUNITARIO"
+    // (basado en el Enum 'EstadoContenido' de la API)
+    final bool isOficial = estado == "OFICIAL"; 
+    
+    return Chip(
+      label: Text(
+        isOficial ? "OFICIAL" : "COMUNITARIO",
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      backgroundColor: isOficial ? Colors.blue[600] : Colors.grey[700],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide.none,
       ),
     );
   }

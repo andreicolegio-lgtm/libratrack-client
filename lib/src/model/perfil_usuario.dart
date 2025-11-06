@@ -3,7 +3,7 @@
 /// Modelo de datos para representar la información del perfil del usuario.
 ///
 /// Corresponde al 'UsuarioResponseDTO' del backend de Spring Boot.
-/// Usamos un modelo (clase) en lugar de un 'Map<String, dynamic>'
+/// Usamos un modelo (clase) en lugar de un 'Map<`String, dynamic`>'
 /// para asegurar la "seguridad de tipos" (type-safety) y evitar
 /// errores al escribir mal el nombre de una clave (ej. "userName" vs "username").
 class PerfilUsuario {

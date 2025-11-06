@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/auth_service.dart';
 import 'package:libratrack_client/src/core/services/catalog_service.dart';
 import 'package:libratrack_client/src/features/auth/login_screen.dart';
-import 'package:libratrack_client/src/model/estado_personal.dart'; // Importa el Enum de estados
 
 /// Pantalla principal que muestra el catálogo personal del usuario (Mockup 7).
 /// Implementa los requisitos RF06, RF07, RF08.

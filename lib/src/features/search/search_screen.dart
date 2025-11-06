@@ -1,6 +1,8 @@
+// lib/src/features/search/search_screen.dart
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/elemento_service.dart';
 import 'package:libratrack_client/src/features/elemento/elemento_detail_screen.dart';
+import 'package:libratrack_client/src/model/elemento.dart'; // NUEVO: Importa el modelo
 
 /// Pantalla para buscar y explorar contenido (Mockup 3).
 ///
@@ -16,8 +18,9 @@ class _SearchScreenState extends State<SearchScreen> {
   final ElementoService _elementoService = ElementoService();
   final TextEditingController _searchController = TextEditingController();
   
-  // El Future ahora puede depender del texto de búsqueda
-  Future<List<dynamic>>? _elementosFuture;
+  // REFACTORIZADO: El Future ahora usa nuestro modelo 'Elemento'
+  // para darnos seguridad de tipos (type-safety).
+  Future<List<Elemento>>? _elementosFuture;
 
   @override
   void initState() {
@@ -26,7 +29,6 @@ class _SearchScreenState extends State<SearchScreen> {
     _loadElementos();
   }
   
-  // Limpia el controlador cuando el widget se destruye
   @override
   void dispose() {
     _searchController.dispose();
@@ -34,14 +36,21 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   /// Método para cargar (o recargar) los elementos.
-  /// Llama al servicio con el texto actual del controlador.
   void _loadElementos() {
     setState(() {
-      // Llama al servicio, pasando el texto de la barra de búsqueda
+      // Llama al servicio (que ahora devuelve List<Elemento>)
       _elementosFuture = _elementoService.getElementos(
         searchText: _searchController.text,
       );
     });
+  }
+  
+  /// NUEVO: Método para limpiar la búsqueda y recargar
+  void _clearSearch() {
+    _searchController.clear();
+    _loadElementos();
+    // Oculta el teclado
+    FocusScope.of(context).unfocus();
   }
 
   @override
@@ -52,7 +61,7 @@ class _SearchScreenState extends State<SearchScreen> {
         title: TextField(
           controller: _searchController,
           decoration: InputDecoration(
-            hintText: 'Buscar por título, género o tipo...',
+            hintText: 'Buscar por título...', // Tu API busca por título
             hintStyle: TextStyle(color: Colors.grey[400]),
             filled: true,
             fillColor: Colors.grey[850],
@@ -61,14 +70,29 @@ class _SearchScreenState extends State<SearchScreen> {
               borderSide: BorderSide.none,
             ),
             prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+            
+            // NUEVO: Botón para limpiar la barra de búsqueda (Mejor Práctica UX)
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: Icon(Icons.clear, color: Colors.grey[400]),
+                    onPressed: _clearSearch,
+                  )
+                : null, // No muestra nada si está vacío
           ),
-          // 3. Ejecuta la búsqueda cuando el usuario pulsa Enter en el teclado
+          // 3. Ejecuta la búsqueda cuando el usuario pulsa Enter
           onSubmitted: (value) {
-            _loadElementos(); // Recarga la lista con el nuevo término
+            _loadElementos();
+          },
+          // NUEVO: Actualiza la UI para mostrar el botón 'clear' mientras escribes
+          onChanged: (value) {
+            setState(() {
+              // Esto solo reconstruye el 'suffixIcon', no recarga la lista
+            });
           },
         ),
       ),
-      body: FutureBuilder<List<dynamic>>(
+      // REFACTORIZADO: El FutureBuilder ahora espera una List<Elemento>
+      body: FutureBuilder<List<Elemento>>(
         future: _elementosFuture,
         builder: (context, snapshot) {
           
@@ -78,7 +102,14 @@ class _SearchScreenState extends State<SearchScreen> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('Error al cargar elementos:\n${snapshot.error}', textAlign: TextAlign.center),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Error al cargar elementos:\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
             );
           }
 
@@ -88,28 +119,36 @@ class _SearchScreenState extends State<SearchScreen> {
             );
           }
 
+          // REFACTORIZADO: 'elementos' es ahora una List<Elemento>
           final elementos = snapshot.data!;
           
           // 4. Muestra la lista de resultados
           return ListView.builder(
             itemCount: elementos.length,
             itemBuilder: (context, index) {
+              
+              // REFACTORIZADO: 'elemento' es un objeto Elemento, no un Map
               final elemento = elementos[index];
-              final String titulo = elemento['titulo'] ?? 'Sin Título';
-              final String tipo = elemento['tipo'] ?? 'Sin Tipo';
-              final String estado = elemento['estadoContenido'] ?? 'COMUNITARIO'; // RF11
+              
+              // REFACTORIZADO: Accedemos a las propiedades con '.' (type-safe)
+              final String titulo = elemento.titulo;
+              final String tipo = elemento.tipo;
+              final String estado = elemento.estadoContenido; // RF11
 
               return ListTile(
-                leading: const Icon(Icons.movie),
+                // TO DO: Reemplazar con 'elemento.imagenPortadaUrl' cuando
+                // tengamos el widget de imagen.
+                leading: const Icon(Icons.movie_filter_outlined), 
                 title: Text(titulo),
                 subtitle: Text('Tipo: $tipo | Estado: $estado'),
+                trailing: _buildEstadoChip(estado), // NUEVO: Chip visual (RF11)
                 onTap: () {
                   // Navega a la pantalla de Ficha de Elemento (RF10)
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      // Pasamos el ID como int (ElementoResponseDTO lo tiene como Long, pero Flutter lo maneja como int)
-                      builder: (context) => ElementoDetailScreen(elementoId: elemento['id']),
+                      // REFACTORIZADO: Accedemos con 'elemento.id'
+                      builder: (context) => ElementoDetailScreen(elementoId: elemento.id),
                     ),
                   );
                 },
@@ -118,6 +157,30 @@ class _SearchScreenState extends State<SearchScreen> {
           );
         },
       ),
+    );
+  }
+  
+  /// (RF11) Widget auxiliar para mostrar 
+  /// el chip "OFICIAL" o "COMUNITARIO" (reutilizado de 110-HH)
+  Widget _buildEstadoChip(String estado) {
+    final bool isOficial = estado == "OFICIAL"; 
+    
+    return Chip(
+      label: Text(
+        isOficial ? "OFICIAL" : "COMUNITARIO",
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      backgroundColor: isOficial ? Colors.blue[600] : Colors.grey[700],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide.none,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 }

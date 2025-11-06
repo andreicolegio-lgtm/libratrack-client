@@ -7,12 +7,10 @@ import 'package:libratrack_client/src/model/tipo.dart';
 /// Servicio para obtener la lista de Tipos de contenido (ej. Serie, Libro).
 class TipoService {
   
-  // Endpoint público que creamos en 110-CCC
   final String _baseUrl = 'http://10.0.2.2:8080/api/tipos'; 
   final _storage = const FlutterSecureStorage();
   final String _tokenKey = 'jwt_token'; 
 
-  /// Método auxiliar para obtener las cabeceras de autenticación (isAuthenticated).
   Future<Map<String, String>> _getAuthHeaders() async {
     final String? token = await _storage.read(key: _tokenKey);
     if (token == null) {
@@ -38,6 +36,7 @@ class TipoService {
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body);
+      // El JSON ahora viene del TipoResponseDTO
       return jsonList
           .map((json) => Tipo.fromJson(json as Map<String, dynamic>))
           .toList();

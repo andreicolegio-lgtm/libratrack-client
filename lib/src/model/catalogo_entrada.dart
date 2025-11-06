@@ -11,6 +11,7 @@ class CatalogoEntrada {
   final DateTime agregadoEn;
   final int elementoId;
   final String elementoTitulo;
+  final String elementoImagenPortadaUrl; // ¡NUEVO CAMPO EN LA CLASE!
   final int usuarioId;
 
   CatalogoEntrada({
@@ -20,6 +21,7 @@ class CatalogoEntrada {
     required this.agregadoEn,
     required this.elementoId,
     required this.elementoTitulo,
+    required this.elementoImagenPortadaUrl, // ¡AÑADIDO AL CONSTRUCTOR!
     required this.usuarioId,
   });
 
@@ -27,14 +29,15 @@ class CatalogoEntrada {
   /// a partir del JSON (Map) decodificado de la API.
   factory CatalogoEntrada.fromJson(Map<String, dynamic> json) {
     return CatalogoEntrada(
-      id: json['id'],
+      id: json['id'] as int,
       // Accede al Enum 'EstadoPersonal' de la API
-      estadoPersonal: json['estadoPersonal'], 
-      progresoEspecifico: json['progresoEspecifico'],
-      agregadoEn: DateTime.parse(json['agregadoEn']), // Convierte el String a DateTime
-      elementoId: json['elementoId'],
-      elementoTitulo: json['elementoTitulo'],
-      usuarioId: json['usuarioId'],
+      estadoPersonal: json['estadoPersonal'] as String,
+      progresoEspecifico: json['progresoEspecifico'] as String?,
+      agregadoEn: DateTime.parse(json['agregadoEn'] as String), // Convierte el String a DateTime
+      elementoId: json['elementoId'] as int,
+      elementoTitulo: json['elementoTitulo'] as String,
+      elementoImagenPortadaUrl: json['elementoImagenPortadaUrl'] as String, // ¡MAPEADO DEL JSON!
+      usuarioId: json['usuarioId'] as int,
     );
   }
 }

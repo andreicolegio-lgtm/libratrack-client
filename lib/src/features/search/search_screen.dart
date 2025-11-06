@@ -80,12 +80,11 @@ class _SearchScreenState extends State<SearchScreen> {
   /// Modificado para aplicar filtros activos
   void _loadElementos() {
     setState(() {
-      // TO DO: Implementar la lógica de filtrado por Tipo/Género
-      // Por ahora, solo enviamos el texto de búsqueda.
-      // Cuando la API soporte filtros combinados (ej. ?search=...&tipo=...)
-      // este método pasaría los 3 parámetros.
+      // ¡CONEXIÓN DE FILTROS! Ahora pasamos los 3 parámetros de filtro a la API.
       _elementosFuture = _elementoService.getElementos(
         searchText: _searchController.text,
+        tipoName: _filtroTipoActivo,     // NUEVO
+        generoName: _filtroGeneroActivo, // NUEVO
       );
     });
   }

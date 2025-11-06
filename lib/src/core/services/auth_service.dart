@@ -1,3 +1,4 @@
+// lib/src/core/services/auth_service.dart
 import 'dart:convert'; // Para codificar/decodificar JSON
 import 'dart:async'; // Para operaciones asíncronas (Future)
 import 'package:http/http.dart' as http; // El paquete HTTP que instalamos

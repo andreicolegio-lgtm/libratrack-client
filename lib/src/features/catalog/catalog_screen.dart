@@ -1,11 +1,11 @@
 // lib/src/features/catalog/catalog_screen.dart
 import 'package:flutter/material.dart';
-// REFACTORIZADO: Imports de Auth/Login eliminados (no es su responsabilidad)
 import 'package:libratrack_client/src/core/services/catalog_service.dart';
-import 'package:libratrack_client/src/model/catalogo_entrada.dart'; // NUEVO: Importa el modelo
+import 'package:libratrack_client/src/model/catalogo_entrada.dart';
+// --- NUEVAS IMPORTACIONES ---
+import 'package:libratrack_client/src/model/estado_personal.dart';
+import 'package:libratrack_client/src/features/catalog/widgets/edit_entrada_modal.dart';
 
-/// Pantalla principal que muestra el catálogo personal del usuario (Mockup 7).
-/// Implementa los requisitos RF06, RF07, RF08.
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
 
@@ -16,16 +16,19 @@ class CatalogScreen extends StatefulWidget {
 class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProviderStateMixin {
   final CatalogService _catalogService = CatalogService();
   
-  // REFACTORIZADO: El Future ahora usa nuestro modelo 'CatalogoEntrada'
-  Future<List<CatalogoEntrada>>? _catalogFuture;
+  // --- REFACTORIZACIÓN DE ESTADO ---
+  // Ya no usamos un FutureBuilder. Ahora gestionamos el estado manualmente
+  // para permitir actualizaciones instantáneas de la UI.
+  bool _isLoading = true;
+  String? _loadingError;
+  List<CatalogoEntrada> _catalogoCompleto = []; // Aquí vive la lista de datos
   
-  // Lista de todos los posibles estados personales (RF06)
-  // (Esta lógica es correcta)
-  final List<String> _estados = [
-    'EN_PROGRESO', 
-    'PENDIENTE', 
-    'TERMINADO', 
-    'ABANDONADO'
+  // Lista de estados (sin cambios)
+  final List<EstadoPersonal> _estados = [
+    EstadoPersonal.EN_PROGRESO, 
+    EstadoPersonal.PENDIENTE, 
+    EstadoPersonal.TERMINADO, 
+    EstadoPersonal.ABANDONADO
   ];
 
   @override
@@ -34,17 +37,56 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     _loadCatalog();
   }
 
-  /// Método para cargar (o recargar) el catálogo
-  void _loadCatalog() {
-    setState(() {
-      // Llama al servicio (que ahora devuelve List<CatalogoEntrada>)
-      _catalogFuture = _catalogService.getMyCatalog();
-    });
+  /// REFACTORIZADO: Ahora es un método 'async' que actualiza
+  /// el estado local cuando termina.
+  Future<void> _loadCatalog() async {
+    try {
+      final catalogo = await _catalogService.getMyCatalog();
+      if (mounted) {
+        setState(() {
+          _catalogoCompleto = catalogo;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loadingError = e.toString().replaceFirst("Exception: ", "");
+          _isLoading = false;
+        });
+      }
+    }
   }
 
-  // REFACTORIZADO: Se eliminó el método _handleLogout.
-  // La lógica de Logout ahora reside únicamente en 'profile_screen.dart'
-  // para mantener el Principio de Responsabilidad Única.
+  // --- NUEVO MÉTODO ---
+  /// (RF06, RF07)
+  /// Abre el modal para editar una entrada.
+  Future<void> _openEditModal(CatalogoEntrada entrada) async {
+    // 1. Muestra el 'Modal Bottom Sheet' y ESPERA a que se cierre.
+    // 'showModalBottomSheet' devuelve un valor (el que pasamos a 'Navigator.pop')
+    final resultado = await showModalBottomSheet<CatalogoEntrada>(
+      context: context,
+      isScrollControlled: true, // Permite que el modal crezca con el teclado
+      builder: (ctx) {
+        return EditEntradaModal(entrada: entrada); // Muestra el formulario
+      },
+    );
+
+    // 2. Comprueba el resultado
+    // Si 'resultado' no es nulo, significa que el usuario pulsó "Guardar"
+    // y nuestro modal devolvió la 'entradaActualizada'.
+    if (resultado != null) {
+      // 3. (MEJOR PRÁCTICA) Actualiza la lista local (sin recargar de la API)
+      setState(() {
+        // Busca el índice del ítem antiguo en nuestra lista
+        final index = _catalogoCompleto.indexWhere((e) => e.id == resultado.id);
+        if (index != -1) {
+          // Reemplaza el ítem antiguo por el actualizado
+          _catalogoCompleto[index] = resultado;
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,89 +96,81 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
         appBar: AppBar(
           title: const Text('Mi Catálogo'),
           centerTitle: true,
-          // REFACTORIZADO: Se eliminó el 'actions' (botón de logout)
-          
           // 1. Pestañas de Filtro (Bottom Tab Bar - RF08)
           bottom: TabBar(
             isScrollable: true,
-            tabs: _estados.map((estado) => Tab(text: _getDisplayName(estado))).toList(),
+            // REFACTORIZADO: Usa el Enum 'EstadoPersonal'
+            tabs: _estados.map((estado) => Tab(text: estado.displayName)).toList(),
             labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
           ),
         ),
         
-        body: TabBarView(
-          children: _estados.map((estado) {
-            // 2. Por cada estado, construimos un FutureBuilder
-            
-            // REFACTORIZADO: El FutureBuilder ahora espera una List<CatalogoEntrada>
-            return FutureBuilder<List<CatalogoEntrada>>(
-              future: _catalogFuture,
-              builder: (context, snapshot) {
-                
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        'Error: ${snapshot.error}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  );
-                }
-
-                // REFACTORIZADO: 'allItems' es ahora una lista con tipo seguro
-                final List<CatalogoEntrada> allItems = snapshot.data ?? [];
-
-                // REFACTORIZADO: El filtro ahora usa 'item.estadoPersonal'
-                final filteredList = allItems
-                    .where((item) => item.estadoPersonal == estado)
-                    .toList();
-
-                if (filteredList.isEmpty) {
-                  return Center(
-                    child: Text('No hay elementos en estado: ${_getDisplayName(estado)}'),
-                  );
-                }
-
-                // 3. Muestra la lista de tarjetas filtradas
-                return ListView.builder(
-                  itemCount: filteredList.length,
-                  itemBuilder: (context, index) {
-                    final item = filteredList[index];
-                    // REFACTORIZADO: Pasamos el objeto 'CatalogoEntrada'
-                    return _buildCatalogCard(item);
-                  },
-                );
-              },
-            );
-          }).toList(),
-        ),
+        // REFACTORIZADO: El 'body' ya no usa FutureBuilder.
+        // Ahora usa la lógica de estado local.
+        body: _buildBody(),
       ),
     );
   }
 
-  /// REFACTORIZADO: Construye la Tarjeta de Catálogo (Mockup 7)
-  /// Ahora recibe un objeto 'CatalogoEntrada' (type-safe).
+  /// REFACTORIZADO: Widget auxiliar para construir el body
+  Widget _buildBody() {
+    // --- Caso 1: Cargando ---
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // --- Caso 2: Error ---
+    if (_loadingError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Error: $_loadingError',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.red),
+          ),
+        ),
+      );
+    }
+    
+    // --- Caso 3: Éxito (mostrar TabBarView) ---
+    return TabBarView(
+      children: _estados.map((estado) {
+        // REFACTORIZADO: Filtra la lista local '_catalogoCompleto'
+        final filteredList = _catalogoCompleto
+            .where((item) => item.estadoPersonal == estado.apiValue)
+            .toList();
+
+        if (filteredList.isEmpty) {
+          return Center(
+            child: Text('No hay elementos en estado: ${estado.displayName}'),
+          );
+        }
+
+        // Muestra la lista de tarjetas filtradas
+        return ListView.builder(
+          itemCount: filteredList.length,
+          itemBuilder: (context, index) {
+            final item = filteredList[index];
+            return _buildCatalogCard(item);
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  /// Construye la Tarjeta de Catálogo (Mockup 7)
   Widget _buildCatalogCard(CatalogoEntrada item) {
-    // REFACTORIZADO: Acceso a propiedades con '.'
     final String titulo = item.elementoTitulo;
     final String progreso = item.progresoEspecifico ?? '';
     
-    // REFACTORIZADO: Lógica de barra de progreso
     final double progresoValue;
-    if (item.estadoPersonal == 'TERMINADO') {
+    if (item.estadoPersonal == EstadoPersonal.TERMINADO.apiValue) {
       progresoValue = 1.0;
-    } else if (item.estadoPersonal == 'EN_PROGRESO' && progreso.isNotEmpty) {
-      // TO DO: Lógica futura para parsear "T2:E5" / "Cap 5"
+    } else if (item.estadoPersonal == EstadoPersonal.EN_PROGRESO.apiValue && progreso.isNotEmpty) {
       progresoValue = 0.5; // Simulado
     } else {
-      progresoValue = 0.0; // PENDIENTE o ABANDONADO
+      progresoValue = 0.0;
     }
 
     return Card(
@@ -146,8 +180,6 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            // Icono de Marcador de posición
-            // TO DO: Cargar 'elemento.imagenPortadaUrl' (requiere modificar DTO)
             const Icon(Icons.movie_filter_outlined, size: 40, color: Colors.blueGrey),
             const SizedBox(width: 16),
             Expanded(
@@ -158,20 +190,13 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
                     titulo,
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  // REFACTORIZADO: Se eliminó el 'Text(tipo)'
-                  // El 'CatalogoPersonalResponseDTO' no provee el tipo,
-                  // solo el título del elemento.
                   const SizedBox(height: 8),
-                  
-                  // Barra de Progreso (Simulación de RF07)
                   LinearProgressIndicator(
                     value: progresoValue,
                     backgroundColor: Colors.grey[700],
                     color: Colors.blue,
                   ),
                   const SizedBox(height: 4),
-                  
-                  // Texto de Progreso Específico (RF07)
                   if (progreso.isNotEmpty)
                     Text(
                       progreso,
@@ -181,29 +206,16 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
               ),
             ),
             
-            // NUEVO: Botón de editar (Mockup 7)
+            // --- BOTÓN CONECTADO ---
             IconButton(
               icon: const Icon(Icons.edit_note, color: Colors.grey),
               tooltip: 'Editar progreso',
-              onPressed: () {
-                // TO DO: Implementar lógica de RF06/RF07
-                // (Llamar a catalogService.updateElemento)
-              },
+              // NUEVO: Llama al método para abrir el modal
+              onPressed: () => _openEditModal(item),
             ),
           ],
         ),
       ),
     );
-  }
-  
-  /// Traduce los ENUMs a nombres amigables
-  String _getDisplayName(String enumValue) {
-    switch (enumValue) {
-      case 'EN_PROGRESO': return 'En Progreso';
-      case 'PENDIENTE': return 'Pendiente';
-      case 'TERMINADO': return 'Terminado';
-      case 'ABANDONADO': return 'Abandonado';
-      default: return enumValue;
-    }
   }
 }

@@ -18,21 +18,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final UserService _userService = UserService();
 
   // --- Estado de la UI ---
-  bool _isScreenLoading = true; // Para la carga inicial de la página
+  bool _isScreenLoading = true;
   String? _loadingError;
-  bool _isLoadingUpdate = false; // Para el botón "Guardar Cambios"
-  bool _isLoadingPasswordChange = false; // NUEVO: Para "Cambiar Contraseña"
-  bool _isLoadingLogout = false; // Para el botón "Cerrar Sesión"
+  bool _isLoadingUpdate = false;
+  bool _isLoadingPasswordChange = false;
+  bool _isLoadingLogout = false;
 
-  // --- Controladores y Keys del Formulario (RF04) ---
-  
-  // NUEVO: Llave para el formulario de actualización de perfil (username)
+  // --- Formulario de Perfil (Username) ---
   final GlobalKey<FormState> _profileFormKey = GlobalKey<FormState>();
   final _nombreController = TextEditingController();
   final _emailController = TextEditingController();
   String _originalUsername = "";
 
-  // NUEVO: Llave y controladores para el formulario de cambio de contraseña
+  // --- Formulario de Cambio de Contraseña ---
   final GlobalKey<FormState> _passwordFormKey = GlobalKey<FormState>();
   final _contrasenaActualController = TextEditingController();
   final _nuevaContrasenaController = TextEditingController();
@@ -48,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _fetchProfileData() async {
+    // ... (código existente de _fetchProfileData)
     try {
       final PerfilUsuario perfil = await _userService.getMiPerfil();
       if (!mounted) return;
@@ -71,11 +70,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ===================================================================
 
   Future<void> _handleUpdateProfile() async {
-    // 1. Validar SÓLO el formulario de perfil
+    // ... (código existente de _handleUpdateProfile)
     if (!_profileFormKey.currentState!.validate()) {
       return;
     }
-
     final String nuevoUsername = _nombreController.text.trim();
     if (nuevoUsername == _originalUsername) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -83,12 +81,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       return;
     }
-
     setState(() {
       _isLoadingUpdate = true;
     });
     final msgContext = ScaffoldMessenger.of(context);
-
     try {
       final PerfilUsuario perfilActualizado = await _userService.updateMiPerfil(nuevoUsername);
       if (!mounted) return;
@@ -112,55 +108,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
   
   // ===================================================================
-  // NUEVA LÓGICA DE CAMBIO DE CONTRASEÑA (RF04)
+  // LÓGICA DE CAMBIO DE CONTRASEÑA
   // ===================================================================
 
   Future<void> _handleChangePassword() async {
-    // 1. Validar SÓLO el formulario de contraseña
+    // ... (código existente de _handleChangePassword)
     if (!_passwordFormKey.currentState!.validate()) {
       return;
     }
-
-    // 2. Iniciar el estado de carga
     setState(() {
       _isLoadingPasswordChange = true;
     });
-
     final msgContext = ScaffoldMessenger.of(context);
     final String actual = _contrasenaActualController.text;
     final String nueva = _nuevaContrasenaController.text;
-
     try {
-      // 3. Llamar al servicio que acabamos de crear
       await _userService.changePassword(actual, nueva);
-
-      // 4. (ÉXITO) Limpiar campos y notificar
       if (!mounted) return;
       setState(() {
         _isLoadingPasswordChange = false;
         _contrasenaActualController.clear();
         _nuevaContrasenaController.clear();
       });
-      
-      // Asegurarse de que el foco se quite de los campos
       FocusScope.of(context).unfocus(); 
-
       msgContext.showSnackBar(
         const SnackBar(content: Text('¡Contraseña actualizada con éxito!'), backgroundColor: Colors.green),
       );
-
     } catch (e) {
-      // 5. (ERROR) Mostrar error de la API (ej. "La contraseña actual es incorrecta")
       if (!mounted) return;
       setState(() {
         _isLoadingPasswordChange = false;
       });
-      
       msgContext.showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst("Exception: ", "")), 
-          backgroundColor: Colors.red
-        ),
+        SnackBar(content: Text(e.toString().replaceFirst("Exception: ", "")), backgroundColor: Colors.red),
       );
     }
   }
@@ -170,6 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ===================================================================
 
   Future<void> _handleLogout() async {
+    // ... (código existente de _handleLogout)
     setState(() {
       _isLoadingLogout = true;
     });
@@ -199,8 +180,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void dispose() {
     _nombreController.dispose();
     _emailController.dispose();
-    _contrasenaActualController.dispose(); // NUEVO
-    _nuevaContrasenaController.dispose(); // NUEVO
+    _contrasenaActualController.dispose();
+    _nuevaContrasenaController.dispose();
     super.dispose();
   }
 
@@ -242,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          // --- Avatar ---
+          // ... (Avatar y Formulario de Perfil) ...
           const Center(
             child: CircleAvatar(
               radius: 60,
@@ -250,18 +231,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 32.0),
-
-          // --- Formulario de Perfil (Username) ---
           Form(
-            key: _profileFormKey, // NUEVO: Llave de formulario 1
+            key: _profileFormKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildInputField(
                   controller: _nombreController,
                   labelText: 'Nombre de Usuario',
-                  enabled: _isAnyLoading(),
-                  validator: (value) { // NUEVO: Validación
+                  enabled: !_isAnyLoading(), // Correcto: !
+                  validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'El nombre de usuario no puede estar vacío.';
                     }
@@ -275,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildInputField(
                   controller: _emailController,
                   labelText: 'Email',
-                  enabled: false, // El email no se puede cambiar
+                  enabled: false,
                 ),
                 const SizedBox(height: 24.0),
                 ElevatedButton(
@@ -294,8 +273,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-
-          // --- Divisor ---
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24.0),
             child: Divider(),
@@ -307,16 +284,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16.0),
-          
           Form(
-            key: _passwordFormKey, // NUEVO: Llave de formulario 2
+            key: _passwordFormKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildInputField(
                   controller: _contrasenaActualController,
                   labelText: 'Contraseña actual',
-                  enabled: _isAnyLoading(),
+                  enabled: !_isAnyLoading(), // <-- CORREGIDO (añadido '!')
                   isPassword: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -329,7 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildInputField(
                   controller: _nuevaContrasenaController,
                   labelText: 'Nueva contraseña',
-                  enabled: _isAnyLoading(),
+                  enabled: !_isAnyLoading(), // <-- CORREGIDO (añadido '!')
                   isPassword: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -344,7 +320,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 24.0),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[700], // Color distinto
+                    backgroundColor: Colors.grey[700],
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
                   ),
                   onPressed: _isAnyLoading() ? null : _handleChangePassword,
@@ -380,12 +356,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// NUEVO: Helper para deshabilitar botones si CUALQUIER acción está en curso
+  /// Helper para deshabilitar botones
   bool _isAnyLoading() {
     return _isLoadingUpdate || _isLoadingPasswordChange || _isLoadingLogout;
   }
 
-  /// NUEVO: Helper para los spinners de los botones
+  /// Helper para los spinners de los botones
   Widget _buildSmallSpinner() {
     return const SizedBox(
       height: 20,
@@ -394,19 +370,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Widget auxiliar para construir los campos de texto
+  /// Widget auxiliar para construir los campos de texto
   Widget _buildInputField({
     required TextEditingController controller,
     required String labelText,
     bool enabled = true,
-    bool isPassword = false, // NUEVO
-    String? Function(String?)? validator, // NUEVO
+    bool isPassword = false,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       enabled: enabled,
-      obscureText: isPassword, // NUEVO
-      validator: validator, // NUEVO
+      obscureText: isPassword,
+      validator: validator,
       style: TextStyle(
         color: enabled ? Colors.white : Colors.grey[400],
       ),
@@ -422,7 +398,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           borderRadius: BorderRadius.circular(10.0),
           borderSide: BorderSide(color: Colors.grey[800]!),
         ),
-        // NUEVO: Bordes de error y foco para la validación
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
           borderSide: const BorderSide(color: Colors.red, width: 2),

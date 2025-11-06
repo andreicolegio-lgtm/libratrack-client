@@ -168,7 +168,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                   // 7. Sección de Reseñas (RF12)
                   const SizedBox(height: 32),
                   const Text('Reseñas de la Comunidad (RF12)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  // TODO: Aquí iría la lista de reseñas y el botón 'Escribir Reseña'
+                  // TO DO: Aquí iría la lista de reseñas y el botón 'Escribir Reseña'
                   
                 ],
               ),

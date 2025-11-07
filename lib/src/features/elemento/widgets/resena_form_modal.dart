@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/resena_service.dart';
 import 'package:libratrack_client/src/model/resena.dart';
+import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; // <-- NUEVA IMPORTACIÓN
 
 /// Un 'Modal Bottom Sheet' para escribir una nueva reseña (RF12).
 class ResenaFormModal extends StatefulWidget {
@@ -35,61 +36,59 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    
+    final msgContext = ScaffoldMessenger.of(context); // Guardamos el context
+
     // Validar que se haya seleccionado una valoración
     if (_valoracion == 0) {
-      // ESTE ES EL SNACKBAR QUE FALLABA
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, selecciona una valoración (1-5 estrellas).'),
-          backgroundColor: Colors.red,
-        ),
+      // Usa el helper
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        'Por favor, selecciona una valoración (1-5 estrellas).', 
+        isError: true
       );
       return;
     }
 
     setState(() { _isLoading = true; });
-    final msgContext = ScaffoldMessenger.of(context);
     final navContext = Navigator.of(context);
 
     try {
-      // ... (Lógica de llamada al servicio sin cambios) ...
+      // 2. Llamar al servicio
       final Resena nuevaResena = await _resenaService.crearResena(
         elementoId: widget.elementoId,
         valoracion: _valoracion,
         textoResena: _textoController.text.isEmpty ? null : _textoController.text,
       );
 
-      // ... (Lógica de éxito sin cambios) ...
+      // 3. (ÉXITO) Devolver la nueva reseña
       if (!mounted) return;
-      msgContext.showSnackBar(
-        const SnackBar(
-          content: Text('¡Reseña publicada!'),
-          backgroundColor: Colors.green,
-        ),
+      
+      // Usa el helper
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        '¡Reseña publicada!', 
+        isError: false
       );
       navContext.pop(nuevaResena); 
     } catch (e) {
-      // ... (Lógica de error sin cambios) ...
+      // 4. (ERROR)
       if (!mounted) return;
       setState(() { _isLoading = false; });
-      msgContext.showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst("Exception: ", "")),
-          backgroundColor: Colors.red,
-        ),
+      // Usa el helper
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        e.toString().replaceFirst("Exception: ", ""), 
+        isError: true
       );
     }
   }
 
-  // --- REFACTORIZADO ---
   @override
   Widget build(BuildContext context) {
-    // 1. Envolvemos el contenido en un 'Scaffold'
-    // Esto proporciona un 'ScaffoldMessenger' local para el modal.
+    // Envolvemos en un Scaffold para que el SnackBar se muestre por encima del modal
     return Scaffold(
-      // 2. Le damos un color de fondo para que coincida con el tema del modal
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // 3. El resto de tu UI (Padding y Form) va dentro del 'body'
       body: Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -98,12 +97,12 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.min, // Sigue siendo compacto
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 'Escribir Reseña',
-                style: Theme.of(context).textTheme.headlineSmall,
+                style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24.0),
@@ -121,9 +120,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
                         size: 32,
                       ),
                       onPressed: () {
-                        setState(() {
-                          _valoracion = estrella;
-                        });
+                        setState(() { _valoracion = estrella; });
                       },
                     );
                   }),
@@ -132,17 +129,14 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
               const SizedBox(height: 24.0),
 
               // --- Campo de Texto (Opcional) ---
-              TextFormField(
+              _buildInputField(
+                context,
                 controller: _textoController,
-                decoration: _buildInputDecoration(
-                  labelText: 'Reseña (opcional)',
-                  hintText: 'Escribe tu opinión...',
-                ),
+                labelText: 'Reseña (opcional)',
+                hintText: 'Escribe tu opinión...',
                 maxLines: 5,
                 validator: (value) {
-                  if (value != null && value.length > 2000) {
-                    return 'Máximo 2000 caracteres';
-                  }
+                  if (value != null && value.length > 2000) { return 'Máximo 2000 caracteres'; }
                   return null;
                 },
               ),
@@ -151,15 +145,18 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
               // --- Botón de Enviar ---
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
                 ),
                 onPressed: _isLoading ? null : _handleEnviarResena,
                 child: _isLoading
                     ? _buildSmallSpinner()
-                    : const Text(
+                    : Text(
                         'Publicar Reseña',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
                       ),
               ),
               const SizedBox(height: 16),
@@ -170,25 +167,49 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
     );
   }
 
-  // --- Helpers de UI (sin cambios) ---
-  InputDecoration _buildInputDecoration({required String labelText, String? hintText}) {
-    // ... (código sin cambios)
-    return InputDecoration(
-      labelText: labelText,
-      hintText: hintText,
-      hintStyle: TextStyle(color: Colors.grey[600]),
-      labelStyle: TextStyle(color: Colors.white70),
-      filled: true,
-      fillColor: Colors.grey[850],
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10.0),
-        borderSide: BorderSide.none,
+  // --- Helpers de UI ---
+  Widget _buildInputField(
+    BuildContext context,
+    {
+      required TextEditingController controller,
+      required String labelText,
+      String? hintText,
+      int maxLines = 1,
+      String? Function(String?)? validator,
+    }) {
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      maxLines: maxLines,
+      style: Theme.of(context).textTheme.bodyMedium,
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        labelStyle: Theme.of(context).textTheme.labelLarge,
+        hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
       ),
     );
   }
   
   Widget _buildSmallSpinner() {
-    // ... (código sin cambios)
     return const SizedBox(
       height: 20,
       width: 20,

@@ -4,8 +4,8 @@ import 'package:libratrack_client/src/core/services/auth_service.dart';
 import 'package:libratrack_client/src/core/services/user_service.dart'; 
 import 'package:libratrack_client/src/model/perfil_usuario.dart'; 
 import 'package:libratrack_client/src/features/auth/login_screen.dart';
-// --- NUEVA IMPORTACIÓN ---
 import 'package:libratrack_client/src/features/moderacion/moderacion_panel_screen.dart';
+import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; // <-- IMPORTA EL HELPER
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,34 +15,22 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // --- Servicios ---
+  // --- Servicios y Estado ---
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
-
-  // --- Estado de la UI ---
   bool _isScreenLoading = true;
   String? _loadingError;
   bool _isLoadingUpdate = false;
   bool _isLoadingPasswordChange = false;
   bool _isLoadingLogout = false;
-
-  // --- Formulario de Perfil (Username) ---
   final GlobalKey<FormState> _profileFormKey = GlobalKey<FormState>();
   final _nombreController = TextEditingController();
   final _emailController = TextEditingController();
   String _originalUsername = "";
-
-  // --- Formulario de Cambio de Contraseña ---
   final GlobalKey<FormState> _passwordFormKey = GlobalKey<FormState>();
   final _contrasenaActualController = TextEditingController();
   final _nuevaContrasenaController = TextEditingController();
-
-  // --- NUEVO: Estado de Roles (RF03) ---
-  String? _userRol; // Almacena el rol del usuario (ej. "ROLE_MODERADOR")
-
-  // ===================================================================
-  // LÓGICA DE CARGA DE DATOS
-  // ===================================================================
+  String? _userRol; 
 
   @override
   void initState() {
@@ -52,46 +40,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _fetchProfileData() async {
     try {
-      // 1. Llama al servicio (que devuelve PerfilUsuario)
       final PerfilUsuario perfil = await _userService.getMiPerfil();
       if (!mounted) return;
-      
-      // 2. Rellena los controladores
       _nombreController.text = perfil.username;
       _emailController.text = perfil.email;
       _originalUsername = perfil.username; 
-      
-      // 3. NUEVO: Almacena el rol del usuario
       setState(() {
-        _userRol = perfil.rol; // <-- Aquí guardamos el rol
+        _userRol = perfil.rol;
         _isScreenLoading = false;
       });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _loadingError = e.toString().replaceFirst("Exception: ", "");
-          _isScreenLoading = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _loadingError = e.toString().replaceFirst("Exception: ", "");
+        _isScreenLoading = false;
+      });
     }
   }
 
-  // ===================================================================
-  // LÓGICA DE ACTUALIZACIÓN DE PERFIL (Username)
-  // ===================================================================
-
   Future<void> _handleUpdateProfile() async {
-    // ... (código existente de _handleUpdateProfile sin cambios)
     if (!_profileFormKey.currentState!.validate()) { return; }
     final String nuevoUsername = _nombreController.text.trim();
     if (nuevoUsername == _originalUsername) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No has realizado ningún cambio.'), backgroundColor: Colors.grey),
+      // Usa el helper
+      SnackBarHelper.showTopSnackBar(
+        ScaffoldMessenger.of(context), 
+        'No has realizado ningún cambio.', 
+        isError: false
       );
       return;
     }
     setState(() { _isLoadingUpdate = true; });
+    
+    // Guardamos el contexto ANTES del await
     final msgContext = ScaffoldMessenger.of(context);
+
     try {
       final PerfilUsuario perfilActualizado = await _userService.updateMiPerfil(nuevoUsername);
       if (!mounted) return;
@@ -100,27 +83,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _originalUsername = perfilActualizado.username;
         _isLoadingUpdate = false;
       });
-      msgContext.showSnackBar(
-        const SnackBar(content: Text('¡Nombre de usuario actualizado!'), backgroundColor: Colors.green),
+      // Usa el helper
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        '¡Nombre de usuario actualizado!', 
+        isError: false
       );
     } catch (e) {
       if (!mounted) return;
       setState(() { _isLoadingUpdate = false; });
-      msgContext.showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst("Exception: ", "")), backgroundColor: Colors.red),
+      // Usa el helper
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        e.toString().replaceFirst("Exception: ", ""), 
+        isError: true
       );
     }
   }
-  
-  // ===================================================================
-  // LÓGICA DE CAMBIO DE CONTRASEÑA
-  // ===================================================================
 
   Future<void> _handleChangePassword() async {
-    // ... (código existente de _handleChangePassword sin cambios)
     if (!_passwordFormKey.currentState!.validate()) { return; }
     setState(() { _isLoadingPasswordChange = true; });
+
+    // Guardamos TODOS los contextos ANTES del await
     final msgContext = ScaffoldMessenger.of(context);
+    final focusScope = FocusScope.of(context);
+    
     final String actual = _contrasenaActualController.text;
     final String nueva = _nuevaContrasenaController.text;
     try {
@@ -131,29 +119,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _contrasenaActualController.clear();
         _nuevaContrasenaController.clear();
       });
-      FocusScope.of(context).unfocus(); 
-      msgContext.showSnackBar(
-        const SnackBar(content: Text('¡Contraseña actualizada con éxito!'), backgroundColor: Colors.green),
+      
+      focusScope.unfocus(); 
+      
+      // Usa el helper
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        '¡Contraseña actualizada con éxito!', 
+        isError: false
       );
     } catch (e) {
       if (!mounted) return;
       setState(() { _isLoadingPasswordChange = false; });
-      msgContext.showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst("Exception: ", "")), backgroundColor: Colors.red),
+      // Usa el helper
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        e.toString().replaceFirst("Exception: ", ""), 
+        isError: true
       );
     }
   }
 
-  // ===================================================================
-  // LÓGICA DE CIERRE DE SESIÓN
-  // ===================================================================
-
   Future<void> _handleLogout() async {
-    // ... (código existente de _handleLogout sin cambios)
     setState(() { _isLoadingLogout = true; });
+    
+    // Guardamos TODOS los contextos ANTES del await
     final nav = Navigator.of(context);
+    final msgContext = ScaffoldMessenger.of(context);
+    
     try {
       await _authService.logout();
+      if (!mounted) return;
       nav.pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
         (Route<dynamic> route) => false,
@@ -161,15 +157,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() { _isLoadingLogout = false; });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cerrar sesión: $e')),
+      // Usa el helper
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        'Error al cerrar sesión: ${e.toString()}', 
+        isError: true
       );
     }
   }
 
-  // --- NUEVO MÉTODO DE NAVEGACIÓN ---
-  
-  /// Navega al panel de moderación
   void _goToModeracionPanel() {
     Navigator.push(
       context,
@@ -179,9 +175,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ===================================================================
-  // LIMPIEZA
-  // ===================================================================
+  void _goToSettings() {
+    // Es seguro usar 'context' aquí porque no hay 'await'
+    SnackBarHelper.showTopSnackBar(
+      ScaffoldMessenger.of(context), 
+      'Funcionalidad de Ajustes (Modo Oscuro/Claro) Pendiente', 
+      isError: false
+    );
+  }
 
   @override
   void dispose() {
@@ -192,64 +193,108 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // ===================================================================
-  // INTERFAZ DE USUARIO (UI)
-  // ===================================================================
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Editar Perfil'),
+        title: const Text('Perfil'),
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _goToSettings,
+            tooltip: 'Ajustes',
+          ),
+        ],
       ),
-      body: _buildBody(),
+      body: _buildBody(context),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
     if (_isScreenLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_loadingError != null) {
-      return Center( /* ... (código de error sin cambios) ... */ );
+      return Center(
+        child: Text(
+          'Error: $_loadingError',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
+        ),
+      );
     }
 
-    // (ÉXITO) Muestra el formulario con los datos
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          // ... (Avatar y Formulario de Perfil sin cambios) ...
-          const Center(
-            child: CircleAvatar(
-              radius: 60,
-              child: Icon(Icons.person, size: 60),
+          // --- Avatar (Punto 8) ---
+          Center(
+            child: Stack(
+              children: [
+                const CircleAvatar(
+                  radius: 60,
+                  child: Icon(Icons.person, size: 60),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Icon(Icons.edit, size: 18, color: Colors.white),
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        SnackBarHelper.showTopSnackBar(
+                          ScaffoldMessenger.of(context), 
+                          'Selector de Imagen Pendiente (Mejora UX)', 
+                          isError: false
+                        );
+                      },
+                      customBorder: const CircleBorder(),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 32.0),
+          
+          // --- Formulario de Perfil (Username) ---
+          Text('Datos de Usuario', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 16.0),
           Form(
             key: _profileFormKey,
-            child: Column( /* ... (Campos de Username y Email sin cambios) ... */
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildInputField(
+                  context,
                   controller: _nombreController,
                   labelText: 'Nombre de Usuario',
                   enabled: !_isAnyLoading(),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'El nombre de usuario no puede estar vacío.';
-                    }
-                    if (value.trim().length < 4) {
-                      return 'Debe tener al menos 4 caracteres.';
-                    }
+                    if (value == null || value.trim().isEmpty) { return 'El nombre de usuario no puede estar vacío.'; }
+                    if (value.trim().length < 4) { return 'Debe tener al menos 4 caracteres.'; }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16.0),
                 _buildInputField(
+                  context,
                   controller: _emailController,
                   labelText: 'Email',
                   enabled: false,
@@ -257,22 +302,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 24.0),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
                   ),
                   onPressed: _isAnyLoading() ? null : _handleUpdateProfile, 
                   child: _isLoadingUpdate
                       ? _buildSmallSpinner()
-                      : const Text(
+                      : Text(
                           'Guardar Cambios',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
                         ),
                 ),
               ],
             ),
           ),
           
-          // ... (Divisor y Formulario de Contraseña sin cambios) ...
+          // --- Divisor y Formulario de Contraseña ---
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24.0),
             child: Divider(),
@@ -284,64 +329,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 16.0),
           Form(
             key: _passwordFormKey,
-            child: Column( /* ... (Campos de Contraseña sin cambios) ... */
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildInputField(
-                  controller: _contrasenaActualController,
-                  labelText: 'Contraseña actual',
-                  enabled: !_isAnyLoading(),
-                  isPassword: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'La contraseña actual es obligatoria.';
-                    }
-                    return null;
-                  },
-                ),
+                _buildInputField(context, controller: _contrasenaActualController, labelText: 'Contraseña actual', enabled: !_isAnyLoading(), isPassword: true, validator: (value) { if (value == null || value.isEmpty) { return 'La contraseña actual es obligatoria.'; } return null; }),
                 const SizedBox(height: 16.0),
-                _buildInputField(
-                  controller: _nuevaContrasenaController,
-                  labelText: 'Nueva contraseña',
-                  enabled: !_isAnyLoading(),
-                  isPassword: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'La nueva contraseña es obligatoria.';
-                    }
-                    if (value.length < 8) {
-                      return 'Debe tener al menos 8 caracteres.';
-                    }
-                    return null;
-                  },
-                ),
+                _buildInputField(context, controller: _nuevaContrasenaController, labelText: 'Nueva contraseña', enabled: !_isAnyLoading(), isPassword: true, validator: (value) { if (value == null || value.isEmpty) { return 'La nueva contraseña es obligatoria.'; } if (value.length < 8) { return 'Debe tener al menos 8 caracteres.'; } return null; }),
                 const SizedBox(height: 24.0),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[700],
+                    backgroundColor: Theme.of(context).colorScheme.surface,
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
                   ),
                   onPressed: _isAnyLoading() ? null : _handleChangePassword,
                   child: _isLoadingPasswordChange
                       ? _buildSmallSpinner()
-                      : const Text(
+                      : Text(
                           'Cambiar Contraseña',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
                 ),
               ],
             ),
           ),
           
-          // --- NUEVO: Botón de Panel de Moderación (RF03) ---
-          // Comprueba si el rol del usuario (guardado en _userRol)
-          // es el de Moderador.
+          // --- Botón de Panel de Moderación (RF03) ---
           if (_userRol == 'ROLE_MODERADOR') ...[
-            const SizedBox(height: 32.0), // Espacio extra
+            const SizedBox(height: 32.0),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber[700], // Color distintivo (Naranja)
-                foregroundColor: Colors.black, // Texto oscuro para contraste
+                backgroundColor: Colors.amber[700],
+                foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
               ),
               onPressed: _isAnyLoading() ? null : _goToModeracionPanel,
@@ -351,7 +369,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ],
-          // --- FIN DEL CÓDIGO NUEVO ---
           
           const SizedBox(height: 16.0),
 
@@ -364,9 +381,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: _isAnyLoading() ? null : _handleLogout,
             child: _isLoadingLogout
                 ? _buildSmallSpinner()
-                : const Text(
+                : Text(
                     'Cerrar Sesión',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
                   ),
           ),
         ],
@@ -374,7 +391,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // --- Helpers de UI (sin cambios) ---
+  // --- Helpers de UI (Definidos UNA VEZ) ---
 
   bool _isAnyLoading() {
     return _isLoadingUpdate || _isLoadingPasswordChange || _isLoadingLogout;
@@ -388,33 +405,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String labelText,
-    bool enabled = true,
-    bool isPassword = false,
-    String? Function(String?)? validator,
-  }) {
+  Widget _buildInputField(
+    BuildContext context,
+    {
+      required TextEditingController controller,
+      required String labelText,
+      bool enabled = true,
+      bool isPassword = false,
+      String? Function(String?)? validator,
+    }) {
     return TextFormField(
-      // ... (código de _buildInputField sin cambios)
       controller: controller,
       enabled: enabled,
       obscureText: isPassword,
       validator: validator,
-      style: TextStyle(
-        color: enabled ? Colors.white : Colors.grey[400],
-      ),
+      style: Theme.of(context).textTheme.bodyMedium,
       decoration: InputDecoration(
         labelText: labelText,
+        labelStyle: Theme.of(context).textTheme.labelLarge,
         filled: true,
-        fillColor: Colors.grey[850],
+        fillColor: Theme.of(context).colorScheme.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
           borderSide: BorderSide.none,
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: Colors.grey[800]!),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),

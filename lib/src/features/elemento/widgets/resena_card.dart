@@ -11,7 +11,8 @@ class ResenaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.grey[850],
+      // Usa el estilo de CardTheme (definido en main.dart)
+      color: Theme.of(context).cardTheme.color,
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -28,20 +29,22 @@ class ResenaCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 // Autor
                 Text(
-                  resena.usernameAutor, //
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  resena.usernameAutor,
+                  // REFACTORIZADO: Usa titleMedium
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const Spacer(),
                 // Estrellas
-                _buildStaticStars(resena.valoracion), //
+                _buildStaticStars(resena.valoracion),
               ],
             ),
             const SizedBox(height: 12),
             // Texto de la reseña (si existe)
             if (resena.textoResena != null && resena.textoResena!.isNotEmpty)
               Text(
-                resena.textoResena!, //
-                style: TextStyle(color: Colors.grey[300]),
+                resena.textoResena!,
+                // REFACTORIZADO: Usa bodyMedium
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
           ],
         ),

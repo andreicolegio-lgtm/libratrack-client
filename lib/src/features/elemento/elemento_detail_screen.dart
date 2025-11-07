@@ -2,14 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/elemento_service.dart';
 import 'package:libratrack_client/src/core/services/catalog_service.dart';
-import 'package:libratrack_client/src/core/services/resena_service.dart'; // NUEVO
-import 'package:libratrack_client/src/core/services/user_service.dart'; // NUEVO
+import 'package:libratrack_client/src/core/services/resena_service.dart';
+import 'package:libratrack_client/src/core/services/user_service.dart';
 import 'package:libratrack_client/src/model/elemento.dart';
 import 'package:libratrack_client/src/model/catalogo_entrada.dart';
-import 'package:libratrack_client/src/model/resena.dart'; // NUEVO
-import 'package:libratrack_client/src/model/perfil_usuario.dart'; // NUEVO
-import 'package:libratrack_client/src/features/elemento/widgets/resena_form_modal.dart'; // NUEVO
-import 'package:libratrack_client/src/features/elemento/widgets/resena_card.dart'; // NUEVO
+import 'package:libratrack_client/src/model/resena.dart';
+import 'package:libratrack_client/src/model/perfil_usuario.dart';
+import 'package:libratrack_client/src/features/elemento/widgets/resena_form_modal.dart';
+import 'package:libratrack_client/src/features/elemento/widgets/resena_card.dart';
 
 
 class ElementoDetailScreen extends StatefulWidget {
@@ -28,20 +28,18 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   // --- Servicios ---
   final ElementoService _elementoService = ElementoService();
   final CatalogService _catalogService = CatalogService();
-  final ResenaService _resenaService = ResenaService(); // NUEVO
-  final UserService _userService = UserService(); // NUEVO
+  final ResenaService _resenaService = ResenaService();
+  final UserService _userService = UserService();
 
-  // REFACTORIZADO: Este Future ahora carga 4 grupos de datos
   late Future<Map<String, dynamic>> _screenDataFuture; 
 
   // --- Estado de la UI ---
   bool _isInCatalog = false;
   bool _isAdding = false;
   
-  // --- NUEVO: Estado para Reseñas (RF12) ---
   List<Resena> _resenas = [];
-  bool _haResenado = false; // El usuario actual ya ha reseñado esto
-  String? _usernameActual; // Nombre del usuario logueado
+  bool _haResenado = false; 
+  String? _usernameActual; 
 
   @override
   void initState() {
@@ -49,7 +47,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     _loadScreenData();
   }
 
-  /// REFACTORIZADO: Carga todos los datos de la pantalla en paralelo
   void _loadScreenData() {
     _screenDataFuture = _fetchData();
   }
@@ -60,8 +57,8 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       final results = await Future.wait([
         _elementoService.getElementoById(widget.elementoId), // [0]
         _catalogService.getMyCatalog(),                     // [1]
-        _resenaService.getResenas(widget.elementoId),       // [2] NUEVO
-        _userService.getMiPerfil(),                         // [3] NUEVO
+        _resenaService.getResenas(widget.elementoId),       // [2]
+        _userService.getMiPerfil(),                         // [3]
       ]);
 
       // Parsea los resultados
@@ -75,24 +72,20 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         (entrada) => entrada.elementoId == widget.elementoId
       );
       
-      // NUEVO: Comprueba el estado de las reseñas (RF12)
-      // Guarda el username para futuras comprobaciones
+      // Comprueba el estado de las reseñas (RF12)
       _usernameActual = perfil.username; 
-      // Comprueba si alguna reseña en la lista fue escrita por el usuario actual
       final bool haResenado = resenas.any(
         (resena) => resena.usernameAutor == _usernameActual
       );
       
-      // Actualiza el estado de la UI
       if (mounted) {
         setState(() {
           _isInCatalog = inCatalog;
-          _resenas = resenas; // Guarda la lista de reseñas
-          _haResenado = haResenado; // Guarda si ya ha reseñado
+          _resenas = resenas;
+          _haResenado = haResenado;
         });
       }
       
-      // Devuelve solo los datos que el FutureBuilder necesita (el elemento)
       return { 'elemento': elemento };
     } catch (e) {
       rethrow;
@@ -101,7 +94,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
 
   /// Lógica para "Añadir al Catálogo" (RF05)
   Future<void> _handleAddElemento() async {
-    // ... (código existente sin cambios)
     setState(() { _isAdding = true; });
     final msgContext = ScaffoldMessenger.of(context);
     try {
@@ -126,8 +118,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     }
   }
 
-  /// --- NUEVO MÉTODO (RF12) ---
-  /// Abre el modal para escribir una nueva reseña
+  /// Abre el modal para escribir una nueva reseña (RF12)
   Future<void> _openWriteReviewModal() async {
     final resultado = await showModalBottomSheet<Resena>(
       context: context,
@@ -137,13 +128,10 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       },
     );
 
-    // (Actualización instantánea)
-    // Si el modal se cerró con éxito, 'resultado' será la nueva reseña
     if (resultado != null) {
       setState(() {
         // Añade la nueva reseña al principio de la lista
         _resenas.insert(0, resultado);
-        // Deshabilita el botón "Escribir Reseña"
         _haResenado = true;
       });
     }
@@ -161,13 +149,14 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           }
 
           if (snapshot.hasError) {
-            return Center( /* ... (código de error sin cambios) ... */
+            return Center(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
                   'Error al cargar el elemento:\n${snapshot.error}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red),
+                  // REFACTORIZADO: Usa bodyMedium del tema
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
                 ),
               ),
             );
@@ -179,18 +168,20 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
             slivers: <Widget>[
               // --- Cabecera con Imagen ---
               SliverAppBar(
-                // ... (código de SliverAppBar sin cambios) ...
                 expandedHeight: 300.0,
                 pinned: true,
+                backgroundColor: Theme.of(context).colorScheme.surface, // Usa color de tema
                 flexibleSpace: FlexibleSpaceBar(
                   title: Text(
                     elemento.titulo,
-                    style: const TextStyle(shadows: [Shadow(blurRadius: 10)]),
+                    // REFACTORIZADO: Usa titleLarge con sombra
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(shadows: [const Shadow(blurRadius: 10)]),
                   ),
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      if (elemento.imagenPortadaUrl != null)
+                      // La imagen (si existe)
+                      if (elemento.imagenPortadaUrl != null && elemento.imagenPortadaUrl!.isNotEmpty)
                         Image.network(
                           elemento.imagenPortadaUrl!,
                           fit: BoxFit.cover,
@@ -200,11 +191,13 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                                 : const Center(child: CircularProgressIndicator());
                           },
                           errorBuilder: (context, error, stackTrace) {
-                            return Container(color: Colors.grey[800]);
+                            return Container(color: Theme.of(context).colorScheme.surface);
                           },
                         )
                       else
-                        Container(color: Colors.grey[800]),
+                        Container(color: Theme.of(context).colorScheme.surface),
+                      
+                      // Gradiente oscuro para que el título sea legible
                       Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
@@ -215,10 +208,12 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                           ),
                         ),
                       ),
+                      
+                      // --- Chip "OFICIAL" (RF11) ---
                       Positioned(
                         top: 40,
                         right: 16,
-                        child: _buildEstadoChip(elemento.estadoContenido),
+                        child: _buildEstadoChip(context, elemento.estadoContenido),
                       ),
                     ],
                   ),
@@ -237,28 +232,35 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                           // --- Tipo y Géneros ---
                           Text(
                             '${elemento.tipo} | ${elemento.generos.join(", ")}',
-                            style: TextStyle(
+                            // REFACTORIZADO: Usa bodyMedium
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontSize: 16,
                               color: Colors.grey[400],
                               fontStyle: FontStyle.italic,
                             ),
                           ),
+                          
                           const SizedBox(height: 24),
+
                           // --- Botón de Añadir (RF05) ---
                           _buildAddButton(),
+                          
                           const SizedBox(height: 24),
+
                           // --- Sinopsis (RF10) ---
                           Text(
                             'Sinopsis',
+                            // REFACTORIZADO: Usa titleLarge
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             elemento.descripcion,
+                            // REFACTORIZADO: Usa bodyMedium
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           
-                          // --- REFACTORIZADO: Sección de Reseñas (RF12) ---
+                          // --- Sección de Reseñas (RF12) ---
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 24.0),
                             child: Divider(),
@@ -268,14 +270,15 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                             children: [
                               Text(
                                 'Reseñas (${_resenas.length})',
+                                // REFACTORIZADO: Usa titleLarge
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
-                              // NUEVO: Botón para escribir reseña
+                              // Botón para escribir reseña
                               _buildWriteReviewButton(),
                             ],
                           ),
                           const SizedBox(height: 16),
-                          // NUEVO: Lista de reseñas
+                          // Lista de reseñas
                           _buildReviewList(),
                         ],
                       ),
@@ -290,20 +293,22 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
   
-  // --- Helpers de UI (RF05, RF11, RF12) ---
-
-  Widget _buildEstadoChip(String estado) {
-    // ... (código del chip sin cambios)
+  // --- WIDGETS AUXILIARES (Refactorizados) ---
+  
+  Widget _buildEstadoChip(BuildContext context, String estado) {
+    // REFACTORIZADO: Usa colores de tema
     final bool isOficial = estado == "OFICIAL"; 
+    
     return Chip(
       label: Text(
         isOficial ? "OFICIAL" : "COMUNITARIO",
-        style: const TextStyle(
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
           color: Colors.white,
           fontWeight: FontWeight.bold,
+          fontSize: 14,
         ),
       ),
-      backgroundColor: isOficial ? Colors.blue[600] : Colors.grey[700],
+      backgroundColor: isOficial ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide.none,
@@ -312,19 +317,21 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
 
   Widget _buildAddButton() {
-    // ... (código del botón "Añadir" sin cambios)
+    final Color primaryColor = Theme.of(context).colorScheme.primary;
+    
     if (_isInCatalog) {
       return ElevatedButton.icon(
-        icon: const Icon(Icons.check, color: Colors.grey),
+        icon: Icon(Icons.check, color: Colors.grey[400]),
         label: const Text('Añadido al catálogo'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.grey[800],
+          backgroundColor: Theme.of(context).colorScheme.surface,
           foregroundColor: Colors.grey[400],
           minimumSize: const Size(double.infinity, 50),
         ),
         onPressed: null,
       );
     }
+    
     if (_isAdding) {
       return ElevatedButton.icon(
         icon: const SizedBox(
@@ -334,18 +341,19 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         ),
         label: const Text('Añadiendo...'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue[700],
+          backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 50),
         ),
         onPressed: null,
       );
     }
+
     return ElevatedButton.icon(
       icon: const Icon(Icons.add),
       label: const Text('Añadir a Mi Catálogo'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         minimumSize: const Size(double.infinity, 50),
       ),
@@ -353,41 +361,39 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
   
-  /// NUEVO: Construye el botón de "Escribir Reseña" (RF12)
   Widget _buildWriteReviewButton() {
-    // Si el usuario ya ha reseñado, muestra un botón deshabilitado
     if (_haResenado) {
       return const TextButton(
         onPressed: null,
         child: Text('Ya has reseñado', style: TextStyle(color: Colors.grey)),
       );
     }
-    // Si no, muestra el botón para abrir el modal
     return TextButton.icon(
       icon: const Icon(Icons.edit, size: 16),
       label: const Text('Escribir Reseña'),
-      style: TextButton.styleFrom(foregroundColor: Colors.blue[300]),
+      style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.primary),
       onPressed: _openWriteReviewModal,
     );
   }
   
-  /// NUEVO: Construye la lista de reseñas (RF12)
   Widget _buildReviewList() {
-    // Si la lista que cargamos está vacía
     if (_resenas.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text('Aún no hay reseñas para este elemento.'),
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Aún no hay reseñas para este elemento.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ),
       );
     }
-    // Si hay reseñas, las muestra usando el ResenaCard
     return ListView.builder(
       itemCount: _resenas.length,
-      shrinkWrap: true, // Importante dentro de un SingleChildScrollView
-      physics: const NeverScrollableScrollPhysics(), // Deshabilita el scroll
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
+        // Usamos el ResenaCard que ya creamos (que debe ser consistente)
         return ResenaCard(resena: _resenas[index]);
       },
     );

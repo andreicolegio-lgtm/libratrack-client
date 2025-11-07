@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/catalog_service.dart';
 import 'package:libratrack_client/src/model/catalogo_entrada.dart';
 import 'package:libratrack_client/src/model/estado_personal.dart';
+import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; 
+// --- NUEVA IMPORTACIÓN (Punto 2) ---
+import 'package:libratrack_client/src/features/elemento/elemento_detail_screen.dart'; 
 
 /// Tarjeta de Catálogo Refactorizada (Mejora UX - RF06/RF07).
-///
-/// Este widget es Stateful para manejar la edición rápida (TextField) y
-/// el estado de carga (Spinner) internamente, sin afectar la lista principal.
 class CatalogEntryCard extends StatefulWidget {
   final CatalogoEntrada entrada;
-  final VoidCallback onUpdate; // Callback para recargar la lista si es necesario
+  final VoidCallback onUpdate; 
 
   const CatalogEntryCard({
     super.key, 
@@ -26,7 +26,6 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
   final CatalogService _catalogService = CatalogService();
   final TextEditingController _progresoController = TextEditingController();
   
-  // Estado local que se inicializa con la entrada.
   late CatalogoEntrada _entrada;
   
   bool _isLoading = false;
@@ -34,7 +33,6 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
   @override
   void initState() {
     super.initState();
-    // 1. Inicializa la entrada y el controlador de progreso
     _entrada = widget.entrada;
     _progresoController.text = _entrada.progresoEspecifico ?? '';
   }
@@ -47,16 +45,14 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
 
   /// Lógica para actualizar el progreso o el estado (RF06/RF07)
   Future<void> _handleUpdate({String? nuevoEstado}) async {
-    // Solo actualiza si hay un estado o si el texto ha cambiado
     if (nuevoEstado == null && _progresoController.text == (_entrada.progresoEspecifico ?? '')) {
       return;
     }
 
     setState(() { _isLoading = true; });
-    final msgContext = ScaffoldMessenger.of(context);
+    final msgContext = ScaffoldMessenger.of(context); // Guardamos el context
 
     try {
-      // 1. Llama al servicio de actualización
       final CatalogoEntrada entradaActualizada =
           await _catalogService.updateElementoDelCatalogo(
         _entrada.elementoId,
@@ -64,43 +60,41 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
         progreso: _progresoController.text,
       );
 
-      // 2. (ÉXITO) Actualiza el estado local y la UI
       if (mounted) {
-        // La lista principal se actualizará si el estado cambió de pestaña
         widget.onUpdate(); 
         
         setState(() {
-          _entrada = entradaActualizada; // Reemplaza la entrada antigua con la nueva
+          _entrada = entradaActualizada; 
           _isLoading = false;
         });
 
-        // Feedback al usuario
-        msgContext.showSnackBar(
-          const SnackBar(content: Text('Progreso guardado.'), backgroundColor: Colors.green),
+        // Usa el helper
+        SnackBarHelper.showTopSnackBar(
+          msgContext, 
+          'Progreso guardado.', 
+          isError: false
         );
       }
     } catch (e) {
-      // 3. (ERROR)
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
-        msgContext.showSnackBar(
-          SnackBar(
-            content: Text('Error al actualizar: ${e.toString().replaceFirst("Exception: ", "")}'),
-            backgroundColor: Colors.red,
-          ),
+        // Usa el helper
+        SnackBarHelper.showTopSnackBar(
+          msgContext, 
+          'Error al actualizar: ${e.toString().replaceFirst("Exception: ", "")}', 
+          isError: true
         );
       }
     }
   }
 
-  /// Helper para determinar el valor de la barra de progreso
   double get _progresoValue {
     if (_entrada.estadoPersonal == EstadoPersonal.TERMINADO.apiValue) {
       return 1.0;
     } else if (_entrada.estadoPersonal == EstadoPersonal.EN_PROGRESO.apiValue && _progresoController.text.isNotEmpty) {
-      return 0.5; // Simulado
+      return 0.5;
     } else {
       return 0.0;
     }
@@ -108,23 +102,31 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
 
   @override
   Widget build(BuildContext context) {
-    // Deshabilita la edición si la tarjeta está cargando
     final bool isEditable = !_isLoading;
+    final Color onSurfaceColor = Theme.of(context).colorScheme.onSurface;
+    final Color fadedIconColor = onSurfaceColor.withAlpha(0x80); 
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Colors.grey[850],
+      color: Theme.of(context).colorScheme.surface, 
       child: InkWell(
+        // --- CORRECCIÓN (Punto 2) ---
+        // Al hacer clic en la tarjeta, navega a la Ficha de Detalle (RF10)
         onTap: isEditable ? () {
-          // TO DO: Navegar a ElementoDetailScreen(elementoId: _entrada.elementoId)
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ElementoDetailScreen(elementoId: _entrada.elementoId),
+            ),
+          ).then((_) => widget.onUpdate()); // Recarga la lista al volver (por si se borró)
         } : null,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Imagen de Portada (70x100)
-              _buildImageContainer(),
+              // 1. Imagen de Portada
+              _buildImageContainer(fadedIconColor),
               const SizedBox(width: 16),
               
               // 2. Contenido Principal
@@ -139,12 +141,12 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
                         Expanded(
                           child: Text(
                             _entrada.elementoTitulo,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: Theme.of(context).textTheme.titleMedium, 
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         // Botón de Dropdown de Estado (RF06)
-                        _buildEstadoDropdown(isEditable),
+                        _buildEstadoDropdown(context, isEditable),
                       ],
                     ),
                     
@@ -153,19 +155,19 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
                     LinearProgressIndicator(
                       value: _progresoValue,
                       backgroundColor: Colors.grey[700],
-                      color: Colors.blue,
+                      color: Theme.of(context).colorScheme.primary, 
                     ),
                     const SizedBox(height: 4),
 
                     // --- Campo de Edición Rápida (RF07) ---
-                    _buildProgresoField(isEditable),
+                    _buildProgresoField(context, isEditable),
 
                     // --- Estado Personal de Lectura ---
                     Padding(
                       padding: const EdgeInsets.only(top: 4.0),
                       child: Text(
                         EstadoPersonal.fromString(_entrada.estadoPersonal).displayName,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                        style: Theme.of(context).textTheme.bodyMedium, 
                       ),
                     ),
                   ],
@@ -180,44 +182,50 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
 
   // --- WIDGETS AUXILIARES ---
 
-  Widget _buildImageContainer() {
+  Widget _buildImageContainer(Color fadedIconColor) {
+    final String? imageUrl = _entrada.elementoImagenPortadaUrl;
+    final bool isValidUrl = imageUrl != null && imageUrl.isNotEmpty; 
+    
     return Container(
       width: 70,
       height: 100,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0),
-        color: Colors.grey[800],
+        color: Theme.of(context).colorScheme.surface, 
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.0),
-        child: _entrada.elementoImagenPortadaUrl.isNotEmpty
+        child: isValidUrl
             ? Image.network(
-                _entrada.elementoImagenPortadaUrl,
+                imageUrl, // '!' eliminado
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => 
-                  const Icon(Icons.broken_image, color: Colors.blueGrey),
+                  Icon(Icons.broken_image, color: fadedIconColor),
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(child: Icon(Icons.downloading, color: fadedIconColor));
+                },
               )
-            : const Icon(Icons.image, size: 40, color: Colors.blueGrey),
+            : Icon(Icons.image, size: 40, color: fadedIconColor),
       ),
     );
   }
 
-  /// NUEVO: Campo de texto para edición rápida del progreso (RF07)
-  Widget _buildProgresoField(bool isEditable) {
+  /// Campo de texto para edición rápida del progreso (RF07)
+  Widget _buildProgresoField(BuildContext context, bool isEditable) {
     return Row(
       children: [
         Expanded(
           child: TextField(
             controller: _progresoController,
             enabled: isEditable,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: Theme.of(context).textTheme.bodyMedium, 
             decoration: InputDecoration(
               hintText: 'Progreso (Ej. T2:E5)',
-              hintStyle: TextStyle(color: Colors.grey[600]),
+              hintStyle: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 14), 
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
               border: InputBorder.none,
-              // Spinner de carga justo al lado del texto
               suffixIcon: _isLoading 
                 ? const SizedBox(
                     height: 16,
@@ -226,41 +234,38 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
                   )
                 : null,
             ),
-            // Acción clave: al soltar el foco (teclado), se guarda.
             onEditingComplete: () => _handleUpdate(),
             textInputAction: TextInputAction.done,
           ),
         ),
-        // Botón de guardar (opcional, si se prefiere un clic)
         if (isEditable && _progresoController.text != (_entrada.progresoEspecifico ?? ''))
           IconButton(
-            icon: const Icon(Icons.save, color: Colors.blue),
+            icon: Icon(Icons.save, color: Theme.of(context).colorScheme.primary),
             onPressed: () => _handleUpdate(),
           ),
       ],
     );
   }
 
-  /// NUEVO: Dropdown simplificado de estado (RF06)
-  Widget _buildEstadoDropdown(bool isEditable) {
+  /// Dropdown simplificado de estado (RF06)
+  Widget _buildEstadoDropdown(BuildContext context, bool isEditable) {
     return DropdownButton<EstadoPersonal>(
       value: EstadoPersonal.fromString(_entrada.estadoPersonal),
-      icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
-      underline: const SizedBox(), // Elimina la línea de abajo
-      style: const TextStyle(color: Colors.white),
-      dropdownColor: Colors.grey[850], // Mantiene el esquema oscuro
+      icon: Icon(Icons.arrow_drop_down, color: Theme.of(context).colorScheme.primary),
+      underline: const SizedBox(),
+      style: Theme.of(context).textTheme.titleMedium, 
+      dropdownColor: Theme.of(context).colorScheme.surface, 
       onChanged: isEditable
           ? (EstadoPersonal? newValue) {
               if (newValue != null) {
-                // Guarda inmediatamente con el nuevo estado
                 _handleUpdate(nuevoEstado: newValue.apiValue); 
               }
             }
-          : null, // Deshabilitado si no es editable
+          : null,
       items: EstadoPersonal.values.map((estado) {
         return DropdownMenuItem(
           value: estado,
-          child: Text(estado.displayName, style: TextStyle(color: Colors.white)),
+          child: Text(estado.displayName, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white)),
         );
       }).toList(),
     );

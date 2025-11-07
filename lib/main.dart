@@ -1,3 +1,4 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/auth_service.dart';
 import 'package:libratrack_client/src/features/auth/login_screen.dart';
@@ -8,9 +9,6 @@ void main() {
 }
 
 /// Widget raíz de la aplicación.
-///
-/// Se convierte en un [StatefulWidget] para poder gestionar el estado
-/// de "comprobación de autenticación" al inicio de la app.
 class LibraTrackApp extends StatefulWidget {
   const LibraTrackApp({super.key});
 
@@ -20,57 +18,75 @@ class LibraTrackApp extends StatefulWidget {
 
 class _LibraTrackAppState extends State<LibraTrackApp> {
   final AuthService _authService = AuthService();
-  
-  /// Un [Future] que representa la comprobación del token.
-  /// Lo guardamos en el estado para evitar que se llame múltiples veces
-  /// cada vez que el widget se reconstruye.
   Future<String?>? _tokenCheckFuture;
 
   @override
   void initState() {
     super.initState();
-    // 1. Al iniciar la app, llamamos UNA VEZ al método para comprobar el token
     _tokenCheckFuture = _authService.getToken();
+  }
+
+  // --- CORREGIDO: Tema de la Aplicación para Consistencia ---
+  ThemeData _buildDarkTheme() {
+    const Color primaryColor = Colors.blue;
+    const Color secondaryColor = Color(0xFF1E88E5); 
+    const Color background = Color(0xFF121212);
+    const Color surfaceColor = Color(0xFF1E1E1E); 
+
+    return ThemeData(
+      // 1. Color y Brillo
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
+        primary: primaryColor,
+        secondary: secondaryColor,
+        surface: surfaceColor,
+      ),
+      useMaterial3: true,
+      scaffoldBackgroundColor: background, 
+
+      // 2. Tipografía (Consistencia en la Jerarquía)
+      textTheme: TextTheme(
+        headlineLarge: TextStyle(fontSize: 32.0, fontWeight: FontWeight.bold, color: Colors.white),
+        titleLarge: TextStyle(fontSize: 24.0, fontWeight: FontWeight.w600, color: Colors.white),
+        titleMedium: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
+        bodyMedium: TextStyle(fontSize: 14.0, color: Colors.grey[300]),
+        labelLarge: TextStyle(fontSize: 16.0, color: Colors.grey[500]),
+      ),
+      
+      // 3. Estilo de Componentes
+      appBarTheme: const AppBarTheme(
+        backgroundColor: surfaceColor,
+        elevation: 0,
+        titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+      // CORREGIDO: Uso de 'CardThemeData' en lugar de 'CardTheme'
+      cardTheme: const CardThemeData( 
+        color: surfaceColor, 
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
+      ),
+      // CORREGIDO: Eliminamos la referencia obsoleta a 'background' en otros temas si existía.
+      // Aquí está implícito y no causará el error.
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'LibraTrack',
-      debugShowCheckedModeBanner: false, // Oculta la cinta de "Debug"
-      
-      // Tema Oscuro (Mejor Práctica)
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        colorSchemeSeed: Colors.blue,
-        useMaterial3: true,
-      ),
-      
-      /// Lógica de Enrutamiento Inicial (Splash Screen)
-      ///
-      /// Usamos un [FutureBuilder] para mostrar una pantalla de carga
-      /// mientras comprobamos si existe un token guardado.
+      debugShowCheckedModeBanner: false,
+      theme: _buildDarkTheme(),
       home: FutureBuilder<String?>(
-        future: _tokenCheckFuture, // El 'Future' que estamos esperando
+        future: _tokenCheckFuture,
         builder: (context, snapshot) {
-          
-          /// Caso 1: Aún estamos comprobando (esperando el 'Future').
-          /// Mostramos una pantalla de carga (Splash Screen).
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
-
-          /// Caso 2: Comprobación terminada y SÍ HAY un token.
-          /// 'snapshot.hasData' es true y 'snapshot.data' (el token) no es nulo.
           if (snapshot.hasData && snapshot.data != null) {
-            // El usuario ya está logueado -> Ve directo al Catálogo
             return const HomeScreen();
           }
-          
-          /// Caso 3: Comprobación terminada y NO HAY token (o hay error).
-          // El usuario no está logueado -> Ve al Login
           return const LoginScreen();
         },
       ),

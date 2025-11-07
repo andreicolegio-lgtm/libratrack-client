@@ -1,15 +1,15 @@
 // lib/src/features/search/search_screen.dart
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/elemento_service.dart';
-import 'package:libratrack_client/src/core/services/tipo_service.dart'; // NUEVO
-import 'package:libratrack_client/src/core/services/genero_service.dart'; // NUEVO
+import 'package:libratrack_client/src/core/services/tipo_service.dart';
+import 'package:libratrack_client/src/core/services/genero_service.dart';
 import 'package:libratrack_client/src/features/elemento/elemento_detail_screen.dart';
 import 'package:libratrack_client/src/features/propuestas/propuesta_form_screen.dart';
 import 'package:libratrack_client/src/model/elemento.dart';
-import 'package:libratrack_client/src/model/tipo.dart'; // NUEVO
-import 'package:libratrack_client/src/model/genero.dart'; // NUEVO
+import 'package:libratrack_client/src/model/tipo.dart';
+import 'package:libratrack_client/src/model/genero.dart';
 
-/// Pantalla para buscar y explorar contenido (Mockup 3).
+/// Pantalla para buscar y explorar contenido (Mockup 3)
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -18,36 +18,29 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  // --- Servicios ---
+  // --- Servicios y Estado ---
   final ElementoService _elementoService = ElementoService();
-  final TipoService _tipoService = TipoService(); // NUEVO
-  final GeneroService _generoService = GeneroService(); // NUEVO
+  final TipoService _tipoService = TipoService();
+  final GeneroService _generoService = GeneroService();
   
-  // --- Estado de la Interfaz ---
   final TextEditingController _searchController = TextEditingController();
   Future<List<Elemento>>? _elementosFuture;
   
-  // --- NUEVO: Estado de Filtros y Datos de Consulta ---
-  // Datos cargados para los botones de exploración
   List<Tipo> _tipos = [];
   List<Genero> _generos = [];
   
-  // El filtro activo. Usamos String? para permitir que el filtro se anule.
   String? _filtroTipoActivo;
   String? _filtroGeneroActivo;
 
-  // NUEVO: Future que carga los tipos y géneros en la inicialización
   late Future<void> _consultaFuture;
 
   @override
   void initState() {
     super.initState();
-    // 1. Inicia la carga de datos de consulta y elementos en paralelo
     _consultaFuture = _loadInitialData();
-    _loadElementos(); // Inicia la primera carga de elementos
+    _loadElementos();
   }
   
-  /// NUEVO: Carga Tipos y Géneros en paralelo
   Future<void> _loadInitialData() async {
     try {
       final results = await Future.wait([
@@ -57,17 +50,12 @@ class _SearchScreenState extends State<SearchScreen> {
       
       if (mounted) {
         setState(() {
-          // Asigna los resultados
           _tipos = results[0] as List<Tipo>;
           _generos = results[1] as List<Genero>;
         });
       }
     } catch (e) {
-      // Manejamos el error en el cuerpo principal si falla la consulta
-      if (mounted) {
-        // En una app real, mostraríamos un error persistente aquí.
         debugPrint('Error al cargar datos de consulta: $e'); 
-      }
     }
   }
 
@@ -77,42 +65,35 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  /// Modificado para aplicar filtros activos
+  /// Conecta la UI con los 3 filtros de la API (RF09)
   void _loadElementos() {
     setState(() {
-      // ¡CONEXIÓN DE FILTROS! Ahora pasamos los 3 parámetros de filtro a la API.
       _elementosFuture = _elementoService.getElementos(
         searchText: _searchController.text,
-        tipoName: _filtroTipoActivo,     // NUEVO
-        generoName: _filtroGeneroActivo, // NUEVO
+        tipoName: _filtroTipoActivo,
+        generoName: _filtroGeneroActivo,
       );
     });
   }
   
   void _clearSearch() {
     _searchController.clear();
-    // NUEVO: Limpia los filtros activos al borrar la búsqueda
     _filtroTipoActivo = null; 
     _filtroGeneroActivo = null;
     _loadElementos();
     FocusScope.of(context).unfocus();
   }
 
-  /// NUEVO: Maneja el tap en un botón de filtro (Tipo o Género)
   void _handleFiltroTap(String tipoFiltro, String nombre) {
     setState(() {
       if (tipoFiltro == 'tipo') {
-        // Si ya estaba activo, lo desactiva. Si no, lo activa.
         _filtroTipoActivo = (_filtroTipoActivo == nombre) ? null : nombre;
+        _filtroGeneroActivo = null; 
       } else if (tipoFiltro == 'genero') {
         _filtroGeneroActivo = (_filtroGeneroActivo == nombre) ? null : nombre;
+        _filtroTipoActivo = null; 
       }
-      
-      // Una vez que el estado del filtro cambia, recargamos la lista.
-      // (Por ahora, _loadElementos no usa estos filtros, pero el flujo es correcto)
     });
-    // Llamar a _loadElementos() para que el efecto visual se vea inmediatamente.
-    // Esto es un placeholder hasta que el backend pueda filtrar por tipo/genero.
     _loadElementos();
   }
 
@@ -120,47 +101,19 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar( /* ... (Barra de búsqueda sin cambios) ... */
-        title: TextField(
-          controller: _searchController,
-          decoration: InputDecoration(
-            hintText: 'Buscar por título...',
-            hintStyle: TextStyle(color: Colors.grey[400]),
-            filled: true,
-            fillColor: Colors.grey[850],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.0),
-              borderSide: BorderSide.none,
-            ),
-            prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: Icon(Icons.clear, color: Colors.grey[400]),
-                    onPressed: _clearSearch,
-                  )
-                : null,
-          ),
-          onSubmitted: (value) {
-            _loadElementos();
-          },
-          onChanged: (value) {
-            setState(() {});
-          },
-        ),
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface, 
+        title: _buildSearchTextField(context),
       ),
       
-      // REFACTORIZADO: El body ahora está dentro de un FutureBuilder
-      // para esperar que los Tipos y Géneros se carguen.
       body: FutureBuilder<void>(
         future: _consultaFuture,
         builder: (context, snapshot) {
           
-          // Muestra un spinner mientras carga los Tipos/Géneros
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           
-          // Error en la carga de Tipos/Géneros (ej. 403 Forbidden para Moderador)
           if (snapshot.hasError && (_tipos.isEmpty || _generos.isEmpty)) {
             return Center(
               child: Padding(
@@ -168,21 +121,20 @@ class _SearchScreenState extends State<SearchScreen> {
                 child: Text(
                   'Error al cargar filtros: ${snapshot.error}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
                 ),
               ),
             );
           }
           
-          // ÉXITO: Muestra la lista y los filtros
-          return _buildSearchContent();
+          return _buildSearchContent(context);
         },
       ),
 
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Proponer Elemento'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         onPressed: () {
           Navigator.push(
@@ -190,37 +142,72 @@ class _SearchScreenState extends State<SearchScreen> {
             MaterialPageRoute(
               builder: (context) => const PropuestaFormScreen(),
             ),
-          ).then((_) => _loadElementos()); // Recarga la lista si se vuelve del formulario
+          ).then((_) => _loadElementos());
         },
       ),
     );
   }
+  
+  // --- WIDGETS AUXILIARES ---
+  
+  Widget _buildSearchTextField(BuildContext context) {
+    final Color iconColor = Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
+    
+    return TextField(
+      controller: _searchController,
+      style: Theme.of(context).textTheme.titleMedium,
+      decoration: InputDecoration(
+        hintText: 'Buscar por título...',
+        hintStyle: Theme.of(context).textTheme.labelLarge,
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide.none,
+        ),
+        prefixIcon: Icon(Icons.search, color: iconColor), 
+        suffixIcon: _searchController.text.isNotEmpty
+            ? IconButton(
+                icon: Icon(Icons.clear, color: iconColor), 
+                onPressed: _clearSearch,
+              )
+            : null,
+      ),
+      onSubmitted: (value) {
+        _loadElementos();
+      },
+      onChanged: (value) {
+        setState(() {});
+      },
+    );
+  }
 
-  /// NUEVO: Contenido principal de búsqueda y filtros
-  Widget _buildSearchContent() {
+  Widget _buildSearchContent(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           
-          // --- Explorar por Tipo ---
+          // --- Explorar por Tipo (RF09) ---
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Text('Explorar por Tipo', style: Theme.of(context).textTheme.titleLarge),
           ),
           _buildFiltroChips(
-            data: _tipos.map((t) => t.nombre).toList(), // Solo los nombres
+            context,
+            data: _tipos.map((t) => t.nombre).toList(),
             tipoFiltro: 'tipo',
             filtroActivo: _filtroTipoActivo,
           ),
           
-          // --- Explorar por Género ---
+          // --- Explorar por Género (RF09) ---
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Text('Explorar por Género', style: Theme.of(context).textTheme.titleLarge),
           ),
           _buildFiltroChips(
-            data: _generos.map((g) => g.nombre).toList(), // Solo los nombres
+            context,
+            data: _generos.map((g) => g.nombre).toList(),
             tipoFiltro: 'genero',
             filtroActivo: _filtroGeneroActivo,
           ),
@@ -243,7 +230,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ));
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error en la búsqueda: ${snapshot.error}', style: TextStyle(color: Colors.red)));
+                  return Center(child: Text('Error en la búsqueda: ${snapshot.error}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red)));
                 }
                 final elementos = snapshot.data ?? [];
                 
@@ -254,15 +241,15 @@ class _SearchScreenState extends State<SearchScreen> {
                   ));
                 }
 
-                // Muestra la lista de resultados
-                return ListView.builder(
+                return ListView.separated(
                   shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(), // Deshabilita el scroll
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: elementos.length,
                   itemBuilder: (context, index) {
                     final elemento = elementos[index];
-                    return _buildElementoListTile(elemento);
+                    return _buildElementoListTile(context, elemento);
                   },
+                  separatorBuilder: (context, index) => const Divider(height: 1),
                 );
               },
             ),
@@ -272,12 +259,13 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  /// NUEVO: Widget para construir los chips de Tipo/Género
-  Widget _buildFiltroChips({
-    required List<String> data,
-    required String tipoFiltro,
-    required String? filtroActivo,
-  }) {
+  Widget _buildFiltroChips(
+    BuildContext context,
+    {
+      required List<String> data,
+      required String tipoFiltro,
+      required String? filtroActivo,
+    }) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -288,8 +276,11 @@ class _SearchScreenState extends State<SearchScreen> {
             padding: const EdgeInsets.only(right: 8.0),
             child: ActionChip(
               label: Text(nombre),
-              backgroundColor: isSelected ? Colors.blue[600] : Colors.grey[700],
-              labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.grey[300]),
+              backgroundColor: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surface,
+              labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 14,
+                color: isSelected ? Colors.white : Colors.grey[400],
+              ),
               onPressed: () => _handleFiltroTap(tipoFiltro, nombre),
             ),
           );
@@ -298,38 +289,90 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  /// NUEVO: Widget auxiliar para un resultado de búsqueda
-  Widget _buildElementoListTile(Elemento elemento) {
-    return ListTile(
-      leading: const Icon(Icons.movie_filter_outlined), 
-      title: Text(elemento.titulo),
-      subtitle: Text('Tipo: ${elemento.tipo} | Estado: ${elemento.estadoContenido}'),
-      trailing: _buildEstadoChip(elemento.estadoContenido),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ElementoDetailScreen(elementoId: elemento.id),
-          ),
-        ).then((_) => _loadElementos()); // Recarga si se vuelve (por si se añadió)
-      },
+  // REFACTORIZADO: Resultado de búsqueda más inmersivo (similar a miniatura de YouTube)
+  Widget _buildElementoListTile(BuildContext context, Elemento elemento) {
+    final Color iconColor = Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: InkWell(
+        onTap: () {
+            Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ElementoDetailScreen(elementoId: elemento.id),
+            ),
+          ).then((_) => _loadElementos());
+        },
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Imagen de Portada (Miniatura)
+            Container(
+              width: 120, 
+              height: 75,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5.0),
+                color: Theme.of(context).colorScheme.surface,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(5.0),
+                child: elemento.imagenPortadaUrl != null && elemento.imagenPortadaUrl!.isNotEmpty
+                    ? Image.network(
+                        elemento.imagenPortadaUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => 
+                          Icon(Icons.image_not_supported, color: iconColor),
+                      )
+                    : Icon(Icons.movie_filter, color: iconColor, size: 30),
+              ),
+            ),
+            const SizedBox(width: 12),
+            
+            // 2. Título y Subtítulo
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Título principal
+                  Text(
+                    elemento.titulo,
+                    style: Theme.of(context).textTheme.titleMedium,
+                    // --- CORRECCIÓN (Punto 7) ---
+                    // Fuerza el título a una sola línea y lo corta con "..."
+                    maxLines: 1, 
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  // Subtítulo con tipo y estado
+                  Text(
+                    '${elemento.tipo} | ${elemento.estadoContenido}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            // 3. Chip de estado (OFICIAL/COMUNITARIO)
+            _buildEstadoChip(context, elemento.estadoContenido),
+          ],
+        ),
+      ),
     );
   }
   
-  /// Widget auxiliar para el chip "OFICIAL" / "COMUNITARIO"
-  Widget _buildEstadoChip(String estado) {
-    // ... (código existente)
+  Widget _buildEstadoChip(BuildContext context, String estado) {
     final bool isOficial = estado == "OFICIAL"; 
+    
     return Chip(
       label: Text(
         isOficial ? "OFICIAL" : "COMUNITARIO",
-        style: const TextStyle(
-          color: Colors.white,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
           fontSize: 10,
+          color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
       ),
-      backgroundColor: isOficial ? Colors.blue[600] : Colors.grey[700],
+      backgroundColor: isOficial ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide.none,

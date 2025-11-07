@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/catalog_service.dart';
 import 'package:libratrack_client/src/model/catalogo_entrada.dart';
 import 'package:libratrack_client/src/model/estado_personal.dart';
-// Eliminamos la dependencia a EditEntradaModal
-// Eliminamos la dependencia a widgets/edit_entrada_modal.dart
-import 'package:libratrack_client/src/features/catalog/widgets/catalog_entry_card.dart'; // ¡NUEVA IMPORTACIÓN!
+import 'package:libratrack_client/src/features/catalog/widgets/catalog_entry_card.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -54,31 +52,31 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     }
   }
 
-  // --- MÉTODO ELIMINADO ---
-  // Se eliminó _openEditModal, ya que la edición se hace en línea en la tarjeta.
-  // El onUpdate callback en el widget de la tarjeta llama a _loadCatalog()
-  // si el estado cambia (para mover la tarjeta a otra pestaña).
-
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: _estados.length,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Mi Catálogo'),
+          // REFACTORIZADO: Usa tipografía titleLarge y centrado
+          title: Text('Mi Catálogo', style: Theme.of(context).textTheme.titleLarge), 
           centerTitle: true,
           bottom: TabBar(
             isScrollable: true,
             tabs: _estados.map((estado) => Tab(text: estado.displayName)).toList(),
             labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
+            // NUEVO: Indicador y color del texto del tab unificados con el tema
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Colors.grey[500],
           ),
         ),
-        body: _buildBody(),
+        body: _buildBody(context),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -89,7 +87,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
           child: Text(
             'Error: $_loadingError',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
           ),
         ),
       );
@@ -103,7 +101,11 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
 
         if (filteredList.isEmpty) {
           return Center(
-            child: Text('No hay elementos en estado: ${estado.displayName}'),
+            child: Text(
+              'No hay elementos en estado: ${estado.displayName}',
+              textAlign: TextAlign.center, // Alineación central
+              style: Theme.of(context).textTheme.bodyMedium, 
+            ),
           );
         }
 
@@ -111,11 +113,9 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
           itemCount: filteredList.length,
           itemBuilder: (context, index) {
             final item = filteredList[index];
-            // ¡NUEVO USO DEL WIDGET!
+            // La lógica de actualización está dentro de CatalogEntryCard
             return CatalogEntryCard(
               entrada: item,
-              // Si la tarjeta actualiza su estado (ej. de PENDIENTE a EN_PROGRESO),
-              // recargamos la lista completa para que la tarjeta se mueva de pestaña.
               onUpdate: _loadCatalog, 
             );
           },

@@ -13,6 +13,7 @@ class ModeracionPanelScreen extends StatefulWidget {
 class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
   // --- Servicios y Estado ---
   final ModeracionService _moderacionService = ModeracionService();
+
   bool _isLoadingPage = true;
   String? _loadingError;
   List<Propuesta> _propuestasPendientes = [];
@@ -46,13 +47,15 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
   
   /// Lógica para aprobar una propuesta (RF15)
   Future<void> _handleAprobar(int propuestaId) async {
-    // ... (Lógica de aprobar sin cambios) ...
     setState(() {
       _processingItems.add(propuestaId);
     });
+    
     final msgContext = ScaffoldMessenger.of(context);
+
     try {
       await _moderacionService.aprobarPropuesta(propuestaId);
+
       if (mounted) {
         setState(() {
           _propuestasPendientes.removeWhere((p) => p.id == propuestaId);
@@ -62,6 +65,7 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
           const SnackBar(content: Text('¡Propuesta aprobada!'), backgroundColor: Colors.green),
         );
       }
+      
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -74,13 +78,14 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
     }
   }
   
-  /// Lógica para rechazar una propuesta (RF15)
+  /// Lógica para rechazar una propuesta (RF15 - Simulado)
   Future<void> _handleRechazar(int propuestaId) async {
-    // ... (Lógica de rechazar sin cambios) ...
     setState(() {
       _processingItems.add(propuestaId);
     });
+
     await Future.delayed(const Duration(seconds: 1));
+    
     if (mounted) {
       setState(() {
         _propuestasPendientes.removeWhere((p) => p.id == propuestaId);
@@ -92,21 +97,26 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Panel de Moderación'),
+        title: Text('Panel de Moderación', style: Theme.of(context).textTheme.titleLarge),
+        backgroundColor: Theme.of(context).colorScheme.surface,
       ),
-      body: _buildBody(),
+      body: _buildBody(context),
     );
   }
 
   /// Widget auxiliar para construir el body
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
+    // 1. Estado de Carga
     if (_isLoadingPage) {
       return const Center(child: CircularProgressIndicator());
     }
+
+    // 2. Estado de Error (ej. 403 No eres Moderador)
     if (_loadingError != null) {
       return Center(
         child: Padding(
@@ -114,58 +124,67 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
           child: Text(
             'Error al cargar el panel:\n$_loadingError',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
           ),
         ),
       );
     }
+    
+    // 3. Estado Vacío
     if (_propuestasPendientes.isEmpty) {
       return const Center(
         child: Text('¡Buen trabajo! No hay propuestas pendientes.'),
       );
     }
 
+    // 4. Estado con Datos (RF14)
     return ListView.builder(
       padding: const EdgeInsets.all(8.0),
       itemCount: _propuestasPendientes.length,
       itemBuilder: (context, index) {
         final propuesta = _propuestasPendientes[index];
         final bool isProcessing = _processingItems.contains(propuesta.id);
-        return _buildPropuestaCard(propuesta, isProcessing);
+        
+        return _buildPropuestaCard(context, propuesta, isProcessing);
       },
     );
   }
 
   /// Construye la tarjeta para una Propuesta (Mockup 4)
-  Widget _buildPropuestaCard(Propuesta propuesta, bool isProcessing) {
+  Widget _buildPropuestaCard(BuildContext context, Propuesta propuesta, bool isProcessing) {
     return Card(
-      color: Colors.grey[850],
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      color: Theme.of(context).cardTheme.color,
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- Título ---
-            // CORREGIDO: Ya no necesita '!' ni '??' porque el modelo
-            // 'propuesta.dart' ahora define 'tituloSugerido' como no-nulable,
-            // tal como tú confirmaste.
+            // CORREGIDO: Elimina ?? 'Sin Título'
             Text(
-              propuesta.tituloSugerido,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              propuesta.tituloSugerido, // Usamos '!' aquí solo para asegurar, aunque el modelo lo garantiza.
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            // --- Detalles ---
+            // --- Detalles (Proponente) ---
             Text(
               'Propuesto por: ${propuesta.proponenteUsername}',
-              style: TextStyle(color: Colors.grey[400], fontSize: 12),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 4),
-            // CORREGIDO: 'tipoSugerido' tampoco es nulo
-            Text('Tipo: ${propuesta.tipoSugerido}'),
+            // --- Tipo/Géneros ---
+            // CORREGIDO: Elimina ?? 'N/A'
+            Text(
+              'Tipo: ${propuesta.tipoSugerido}',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: 4),
-            // CORREGIDO: 'generosSugeridos' tampoco es nulo
-            Text('Géneros: ${propuesta.generosSugeridos}'),
+            // CORREGIDO: Elimina ?? 'N/A'
+            Text(
+              'Géneros: ${propuesta.generosSugeridos}',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0),
@@ -174,15 +193,16 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
             
             // --- Botones de Acción (RF15) ---
             Row(
-              // ... (Lógica de botones sin cambios) ...
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // Botón Rechazar
                 TextButton(
                   style: TextButton.styleFrom(foregroundColor: Colors.red[300]),
                   onPressed: isProcessing ? null : () => _handleRechazar(propuesta.id),
                   child: const Text('Rechazar'),
                 ),
                 const SizedBox(width: 8),
+                // Botón Aprobar
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[600],
@@ -190,7 +210,7 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
                   ),
                   onPressed: isProcessing ? null : () => _handleAprobar(propuesta.id),
                   child: isProcessing
-                      ? const SizedBox(
+                      ? const SizedBox( // Spinner pequeño
                           height: 16,
                           width: 16,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),

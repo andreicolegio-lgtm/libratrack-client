@@ -6,12 +6,12 @@
 /// Corresponde al 'CatalogoPersonalResponseDTO.java' del backend.
 class CatalogoEntrada {
   final int id;
-  final String estadoPersonal; // "PENDIENTE", "EN_PROGRESO", "TERMINADO", etc.
-  final String? progresoEspecifico; // "T2:E5", "Cap. 10", etc.
+  final String estadoPersonal; 
+  final String? progresoEspecifico; 
   final DateTime agregadoEn;
   final int elementoId;
   final String elementoTitulo;
-  final String elementoImagenPortadaUrl; // ¡NUEVO CAMPO EN LA CLASE!
+  final String? elementoImagenPortadaUrl; // ¡CORREGIDO! Ahora es NULABLE (String?)
   final int usuarioId;
 
   CatalogoEntrada({
@@ -21,7 +21,7 @@ class CatalogoEntrada {
     required this.agregadoEn,
     required this.elementoId,
     required this.elementoTitulo,
-    required this.elementoImagenPortadaUrl, // ¡AÑADIDO AL CONSTRUCTOR!
+    this.elementoImagenPortadaUrl, // ¡CORREGIDO! Ya no es required
     required this.usuarioId,
   });
 
@@ -30,13 +30,13 @@ class CatalogoEntrada {
   factory CatalogoEntrada.fromJson(Map<String, dynamic> json) {
     return CatalogoEntrada(
       id: json['id'] as int,
-      // Accede al Enum 'EstadoPersonal' de la API
       estadoPersonal: json['estadoPersonal'] as String,
-      progresoEspecifico: json['progresoEspecifico'] as String?,
-      agregadoEn: DateTime.parse(json['agregadoEn'] as String), // Convierte el String a DateTime
+      progresoEspecifico: json.containsKey('progresoEspecifico') ? json['progresoEspecifico'] as String? : null,
+      agregadoEn: DateTime.parse(json['agregadoEn'] as String),
       elementoId: json['elementoId'] as int,
       elementoTitulo: json['elementoTitulo'] as String,
-      elementoImagenPortadaUrl: json['elementoImagenPortadaUrl'] as String, // ¡MAPEADO DEL JSON!
+      // ¡CORREGIDO! Si 'elementoImagenPortadaUrl' es null en el JSON, Dart lo acepta como String?
+      elementoImagenPortadaUrl: json['elementoImagenPortadaUrl'] as String?, 
       usuarioId: json['usuarioId'] as int,
     );
   }

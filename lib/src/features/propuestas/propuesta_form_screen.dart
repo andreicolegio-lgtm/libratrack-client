@@ -1,6 +1,8 @@
-// lib/src/features/propuestas/propuesta_form_screen.dart
+// Archivo: lib/src/features/propuestas/propuesta_form_screen.dart
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/propuesta_service.dart';
+// ¡NUEVA IMPORTACIÓN! Importamos el helper centralizado
+import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; 
 
 /// Pantalla con el formulario para proponer un nuevo elemento (RF13).
 class PropuestaFormScreen extends StatefulWidget {
@@ -34,19 +36,8 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
   }
 
   // --- SNACKBAR HELPER ---
-  SnackBar _buildTopSnackBar(BuildContext context, String message, {required Color color}) {
-    return SnackBar(
-      content: Text(message),
-      backgroundColor: color,
-      behavior: SnackBarBehavior.floating, 
-      duration: const Duration(seconds: 4),
-      margin: EdgeInsets.only( 
-        bottom: MediaQuery.of(context).size.height - 100,
-        right: 20,
-        left: 20,
-      ),
-    );
-  }
+  // ¡ELIMINADO! Ya no necesitamos el _buildTopSnackBar local.
+  // Usaremos el SnackBarHelper central.
 
   /// Lógica para enviar la propuesta (RF13)
   Future<void> _handleProponer() async {
@@ -79,9 +70,11 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
         _imagenUrlController.clear();
       });
 
-      // Usa el helper
-      msgContext.showSnackBar(
-        _buildTopSnackBar(context, '¡Propuesta enviada con éxito!', color: Colors.green),
+      // ¡CORREGIDO! Usa el helper centralizado
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        '¡Propuesta enviada con éxito!', 
+        isError: false
       );
       
       navContext.pop();
@@ -89,9 +82,12 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() { _isLoading = false; });
-      // Usa el helper
-      msgContext.showSnackBar(
-        _buildTopSnackBar(context, e.toString().replaceFirst("Exception: ", ""), color: Colors.red),
+      
+      // ¡CORREGIDO! Usa el helper centralizado
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        e.toString().replaceFirst("Exception: ", ""), 
+        isError: true
       );
     }
   }

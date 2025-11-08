@@ -4,7 +4,12 @@ import 'package:libratrack_client/src/core/services/auth_service.dart';
 import 'package:libratrack_client/src/features/auth/login_screen.dart';
 import 'package:libratrack_client/src/features/home/home_screen.dart';
 
-void main() {
+// 1. Convertimos main() en una función asíncrona (async)
+Future<void> main() async {
+  // 2. (LA SOLUCIÓN) Aseguramos que los bindings de Flutter estén listos
+  //    antes de ejecutar CUALQUIER código de plugin (como flutter_secure_storage).
+  WidgetsFlutterBinding.ensureInitialized();
+  
   runApp(const LibraTrackApp());
 }
 
@@ -23,7 +28,8 @@ class _LibraTrackAppState extends State<LibraTrackApp> {
   @override
   void initState() {
     super.initState();
-    _tokenCheckFuture = _authService.getToken();
+    // Ahora esta llamada es segura, porque main() ya aseguró la inicialización
+    _tokenCheckFuture = _authService.getToken(); 
   }
 
   // --- CORREGIDO: Tema de la Aplicación para Consistencia ---

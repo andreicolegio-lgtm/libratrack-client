@@ -1,5 +1,7 @@
 // lib/src/features/search/search_screen.dart
 import 'package:flutter/material.dart';
+import 'package:libratrack_client/src/core/widgets/maybe_marquee.dart'; 
+import 'package:cached_network_image/cached_network_image.dart'; 
 import 'package:libratrack_client/src/core/services/elemento_service.dart';
 import 'package:libratrack_client/src/core/services/tipo_service.dart';
 import 'package:libratrack_client/src/core/services/genero_service.dart';
@@ -8,8 +10,8 @@ import 'package:libratrack_client/src/features/propuestas/propuesta_form_screen.
 import 'package:libratrack_client/src/model/elemento.dart';
 import 'package:libratrack_client/src/model/tipo.dart';
 import 'package:libratrack_client/src/model/genero.dart';
+import 'package:libratrack_client/src/model/paginated_response.dart';
 
-/// Pantalla para buscar y explorar contenido (Mockup 3)
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -18,27 +20,31 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  // --- Servicios y Estado ---
+  // ... (toda la lógica de la clase, initState, services, controllers, etc. no cambia) ...
   final ElementoService _elementoService = ElementoService();
   final TipoService _tipoService = TipoService();
   final GeneroService _generoService = GeneroService();
-  
   final TextEditingController _searchController = TextEditingController();
-  Future<List<Elemento>>? _elementosFuture;
-  
   List<Tipo> _tipos = [];
   List<Genero> _generos = [];
-  
   String? _filtroTipoActivo;
   String? _filtroGeneroActivo;
+  Future<void>? _filtrosFuture; 
+  final ScrollController _scrollController = ScrollController();
+  final List<Elemento> _elementos = [];
+  int _currentPage = 0;
+  bool _hasNextPage = true;
+  bool _isLoadingFirstPage = true; 
+  bool _isLoadingMore = false; 
+  String? _loadingError;
 
-  late Future<void> _consultaFuture;
 
   @override
   void initState() {
     super.initState();
-    _consultaFuture = _loadInitialData();
-    _loadElementos();
+    _filtrosFuture = _loadInitialData();
+    _loadElementos(isFirstPage: true);
+    _scrollController.addListener(_onScroll);
   }
   
   Future<void> _loadInitialData() async {
@@ -47,7 +53,6 @@ class _SearchScreenState extends State<SearchScreen> {
         _tipoService.getAllTipos(),
         _generoService.getAllGeneros(),
       ]);
-      
       if (mounted) {
         setState(() {
           _tipos = results[0] as List<Tipo>;
@@ -55,33 +60,79 @@ class _SearchScreenState extends State<SearchScreen> {
         });
       }
     } catch (e) {
-        debugPrint('Error al cargar datos de consulta: $e'); 
+      debugPrint('Error al cargar datos de consulta: $e'); 
+      if (mounted) {
+        setState(() {
+          _loadingError = 'Error al cargar filtros: ${e.toString()}';
+        });
+      }
     }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.removeListener(_onScroll); 
+    _scrollController.dispose();
     super.dispose();
   }
 
-  /// Conecta la UI con los 3 filtros de la API (RF09)
-  void _loadElementos() {
-    setState(() {
-      _elementosFuture = _elementoService.getElementos(
-        searchText: _searchController.text,
+  void _onScroll() {
+    if (_scrollController.position.pixels < _scrollController.position.maxScrollExtent - 200) return;
+    if (_isLoadingMore || !_hasNextPage) return;
+    _loadElementos();
+  }
+
+  Future<void> _loadElementos({bool isFirstPage = false}) async {
+    if (isFirstPage) {
+      setState(() {
+        _isLoadingFirstPage = true;
+        _currentPage = 0;
+        _elementos.clear();
+        _hasNextPage = true;
+        _loadingError = null;
+      });
+    } else {
+      setState(() { _isLoadingMore = true; });
+    }
+    try {
+      final PaginatedResponse<Elemento> respuesta = 
+          await _elementoService.getElementos(
+        searchText: _searchController.text.isEmpty ? null : _searchController.text,
         tipoName: _filtroTipoActivo,
         generoName: _filtroGeneroActivo,
+        page: _currentPage,
       );
-    });
+      if (mounted) {
+        setState(() {
+          _elementos.addAll(respuesta.content);
+          _currentPage++;
+          _hasNextPage = !respuesta.isLast;
+          _isLoadingFirstPage = false;
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loadingError = e.toString().replaceFirst("Exception: ", "");
+          _isLoadingFirstPage = false;
+          _isLoadingMore = false;
+        });
+      }
+    }
   }
   
+  void _reiniciarBusqueda() {
+    FocusScope.of(context).unfocus();
+    _loadElementos(isFirstPage: true);
+  }
+
   void _clearSearch() {
     _searchController.clear();
     _filtroTipoActivo = null; 
     _filtroGeneroActivo = null;
-    _loadElementos();
-    FocusScope.of(context).unfocus();
+    _reiniciarBusqueda();
   }
 
   void _handleFiltroTap(String tipoFiltro, String nombre) {
@@ -94,7 +145,7 @@ class _SearchScreenState extends State<SearchScreen> {
         _filtroTipoActivo = null; 
       }
     });
-    _loadElementos();
+    _reiniciarBusqueda();
   }
 
 
@@ -105,32 +156,7 @@ class _SearchScreenState extends State<SearchScreen> {
         backgroundColor: Theme.of(context).colorScheme.surface, 
         title: _buildSearchTextField(context),
       ),
-      
-      body: FutureBuilder<void>(
-        future: _consultaFuture,
-        builder: (context, snapshot) {
-          
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          
-          if (snapshot.hasError && (_tipos.isEmpty || _generos.isEmpty)) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Error al cargar filtros: ${snapshot.error}',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
-                ),
-              ),
-            );
-          }
-          
-          return _buildSearchContent(context);
-        },
-      ),
-
+      body: _buildBody(), 
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Proponer Elemento'),
@@ -142,17 +168,113 @@ class _SearchScreenState extends State<SearchScreen> {
             MaterialPageRoute(
               builder: (context) => const PropuestaFormScreen(),
             ),
-          ).then((_) => _loadElementos());
+          ).then((_) => _reiniciarBusqueda());
         },
       ),
     );
   }
   
-  // --- WIDGETS AUXILIARES ---
+  Widget _buildBody() {
+    return SingleChildScrollView(
+      controller: _scrollController, 
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          
+          FutureBuilder<void>(
+            future: _filtrosFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting && _tipos.isEmpty) {
+                return const Center(child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(),
+                ));
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                    child: Text('Explorar por Tipo', style: Theme.of(context).textTheme.titleLarge),
+                  ),
+                  _buildFiltroChips(
+                    context,
+                    data: _tipos.map((t) => t.nombre).toList(),
+                    tipoFiltro: 'tipo',
+                    filtroActivo: _filtroTipoActivo,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                    child: Text('Explorar por Género', style: Theme.of(context).textTheme.titleLarge),
+                  ),
+                  _buildFiltroChips(
+                    context,
+                    data: _generos.map((g) => g.nombre).toList(),
+                    tipoFiltro: 'genero',
+                    filtroActivo: _filtroGeneroActivo,
+                  ),
+                ],
+              );
+            },
+          ),
+
+          // --- ¡CORRECCIÓN (c)! ---
+          // Reducimos el espacio vertical de 16.0 a 8.0
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
+            child: Divider(),
+          ),
+          
+          Padding(
+            padding: const EdgeInsets.only(bottom: 80.0),
+            child: _buildResultadosLista(), 
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultadosLista() {
+    // ... (sin cambios)
+    if (_isLoadingFirstPage) {
+      return const Center(child: Padding(
+        padding: EdgeInsets.only(top: 50.0),
+        child: CircularProgressIndicator(),
+      ));
+    }
+    if (_loadingError != null) {
+      return Center(child: Text('Error en la búsqueda: $_loadingError', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red)));
+    }
+    if (_elementos.isEmpty) {
+      return const Center(child: Padding(
+        padding: EdgeInsets.only(top: 50.0),
+        child: Text('No se encontraron elementos con el filtro aplicado.'),
+      ));
+    }
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _elementos.length + 1, 
+      itemBuilder: (context, index) {
+        if (index == _elementos.length) {
+          return _isLoadingMore
+            ? const Center(child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
+              ))
+            : const SizedBox(height: 1); 
+        }
+        final elemento = _elementos[index];
+        return _buildElementoListTile(context, elemento);
+      },
+      separatorBuilder: (context, index) => const Divider(height: 1),
+    );
+  }
+
   
   Widget _buildSearchTextField(BuildContext context) {
+    // ... (sin cambios)
     final Color iconColor = Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
-    
     return TextField(
       controller: _searchController,
       style: Theme.of(context).textTheme.titleMedium,
@@ -174,7 +296,7 @@ class _SearchScreenState extends State<SearchScreen> {
             : null,
       ),
       onSubmitted: (value) {
-        _loadElementos();
+        _reiniciarBusqueda();
       },
       onChanged: (value) {
         setState(() {});
@@ -182,80 +304,94 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildSearchContent(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          
-          // --- Explorar por Tipo (RF09) ---
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-            child: Text('Explorar por Tipo', style: Theme.of(context).textTheme.titleLarge),
-          ),
-          _buildFiltroChips(
-            context,
-            data: _tipos.map((t) => t.nombre).toList(),
-            tipoFiltro: 'tipo',
-            filtroActivo: _filtroTipoActivo,
-          ),
-          
-          // --- Explorar por Género (RF09) ---
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-            child: Text('Explorar por Género', style: Theme.of(context).textTheme.titleLarge),
-          ),
-          _buildFiltroChips(
-            context,
-            data: _generos.map((g) => g.nombre).toList(),
-            tipoFiltro: 'genero',
-            filtroActivo: _filtroGeneroActivo,
-          ),
 
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
-            child: Divider(),
-          ),
-          
-          // --- Lista de Resultados (Elementos) ---
-          Padding(
-            padding: const EdgeInsets.only(bottom: 80.0),
-            child: FutureBuilder<List<Elemento>>(
-              future: _elementosFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: Padding(
-                    padding: EdgeInsets.only(top: 50.0),
-                    child: CircularProgressIndicator(),
-                  ));
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error en la búsqueda: ${snapshot.error}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red)));
-                }
-                final elementos = snapshot.data ?? [];
-                
-                if (elementos.isEmpty) {
-                  return const Center(child: Padding(
-                    padding: EdgeInsets.only(top: 50.0),
-                    child: Text('No se encontraron elementos con el filtro aplicado.'),
-                  ));
-                }
-
-                return ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: elementos.length,
-                  itemBuilder: (context, index) {
-                    final elemento = elementos[index];
-                    return _buildElementoListTile(context, elemento);
-                  },
-                  separatorBuilder: (context, index) => const Divider(height: 1),
-                );
-              },
+  Widget _buildElementoListTile(BuildContext context, Elemento elemento) {
+    // ... (sin cambios)
+    final Color iconColor = Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: InkWell(
+        onTap: () {
+            Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ElementoDetailScreen(elementoId: elemento.id),
             ),
-          ),
-        ],
+          ).then((_) => _reiniciarBusqueda());
+        },
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 120, 
+              height: 75,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5.0),
+                color: Theme.of(context).colorScheme.surface,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(5.0),
+                child: elemento.imagenPortadaUrl != null && elemento.imagenPortadaUrl!.isNotEmpty
+                    ? CachedNetworkImage( 
+                        imageUrl: elemento.imagenPortadaUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Icon(Icons.downloading, color: iconColor),
+                        errorWidget: (context, url, error) => 
+                          Icon(Icons.image_not_supported, color: iconColor),
+                      )
+                    : Icon(Icons.movie_filter, color: iconColor, size: 30),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  MaybeMarquee(
+                    text: elemento.titulo,
+                    style: Theme.of(context).textTheme.titleMedium ?? const TextStyle(),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${elemento.tipo} | ${elemento.generos.join(", ")}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    maxLines: 1, 
+                  ),
+                  const SizedBox(height: 8),
+                  _buildEstadoChip(context, elemento.estadoContenido),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+  
+  Widget _buildEstadoChip(BuildContext context, String estado) {
+    // ... (sin cambios)
+    final bool isOficial = estado == "OFICIAL"; 
+    final Color chipColor = isOficial 
+        ? Theme.of(context).colorScheme.secondary 
+        : Colors.grey[700]!; 
+    return Chip(
+      label: Text(
+        isOficial ? "OFICIAL" : "COMUNITARIO",
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontSize: 10,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      backgroundColor: chipColor, 
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide.none,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 
@@ -266,6 +402,7 @@ class _SearchScreenState extends State<SearchScreen> {
       required String tipoFiltro,
       required String? filtroActivo,
     }) {
+    // ... (sin cambios)
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -286,99 +423,6 @@ class _SearchScreenState extends State<SearchScreen> {
           );
         }).toList(),
       ),
-    );
-  }
-
-  // REFACTORIZADO: Resultado de búsqueda más inmersivo (similar a miniatura de YouTube)
-  Widget _buildElementoListTile(BuildContext context, Elemento elemento) {
-    final Color iconColor = Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: InkWell(
-        onTap: () {
-            Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ElementoDetailScreen(elementoId: elemento.id),
-            ),
-          ).then((_) => _loadElementos());
-        },
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Imagen de Portada (Miniatura)
-            Container(
-              width: 120, 
-              height: 75,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5.0),
-                color: Theme.of(context).colorScheme.surface,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(5.0),
-                child: elemento.imagenPortadaUrl != null && elemento.imagenPortadaUrl!.isNotEmpty
-                    ? Image.network(
-                        elemento.imagenPortadaUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => 
-                          Icon(Icons.image_not_supported, color: iconColor),
-                      )
-                    : Icon(Icons.movie_filter, color: iconColor, size: 30),
-              ),
-            ),
-            const SizedBox(width: 12),
-            
-            // 2. Título y Subtítulo
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Título principal
-                  Text(
-                    elemento.titulo,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    // --- CORRECCIÓN (Punto 7) ---
-                    // Fuerza el título a una sola línea y lo corta con "..."
-                    maxLines: 1, 
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  // Subtítulo con tipo y estado
-                  Text(
-                    '${elemento.tipo} | ${elemento.estadoContenido}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-            // 3. Chip de estado (OFICIAL/COMUNITARIO)
-            _buildEstadoChip(context, elemento.estadoContenido),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildEstadoChip(BuildContext context, String estado) {
-    final bool isOficial = estado == "OFICIAL"; 
-    
-    return Chip(
-      label: Text(
-        isOficial ? "OFICIAL" : "COMUNITARIO",
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontSize: 10,
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      backgroundColor: isOficial ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide.none,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 }

@@ -17,8 +17,14 @@ class SnackBarHelper {
     // Obtenemos el contexto (de forma segura) desde el messenger
     final context = messenger.context;
 
-    // Calcula el margen superior
-    final topMargin = MediaQuery.of(context).viewPadding.top + kToolbarHeight;
+    // --- CORRECCIÓN ---
+    // Calcula la altura de la pantalla
+    final screenHeight = MediaQuery.of(context).size.height;
+    // Calcula la altura del AppBar + Safe Area
+    final topPadding = MediaQuery.of(context).viewPadding.top + kToolbarHeight;
+    // Calcula el margen inferior para "empujar" el SnackBar hacia arriba,
+    // dejando espacio para él (ej. 100px) y el padding superior.
+    final bottomMargin = screenHeight - topPadding - 100; 
 
     messenger.showSnackBar(
       SnackBar(
@@ -26,8 +32,10 @@ class SnackBarHelper {
         backgroundColor: isError ? Colors.red[700] : Colors.green[700],
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 3),
+        // --- LÍNEA CORREGIDA ---
+        // Usamos 'bottom' para empujarlo hacia arriba, en lugar de 'top'
         margin: EdgeInsets.only(
-          top: topMargin,
+          bottom: bottomMargin, // <--- CORREGIDO
           left: 16,
           right: 16,
         ),

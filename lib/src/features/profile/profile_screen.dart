@@ -197,7 +197,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil'),
+        // --- LÍNEA CORREGIDA ---
+        title: Text('LibraTrack', style: Theme.of(context).textTheme.titleLarge),
+        centerTitle: true, // <-- AÑADIDO para consistencia
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -424,13 +426,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         labelText: labelText,
         labelStyle: Theme.of(context).textTheme.labelLarge,
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
+        // --- LÍNEA CORREGIDA ---
+        // Si no está habilitado, usa un color de fondo más oscuro/diferente
+        fillColor: enabled ? Theme.of(context).colorScheme.surface : Theme.of(context).scaffoldBackgroundColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
           borderSide: BorderSide.none,
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
+          // --- LÍNEA CORREGIDA ---
+          // Mantenemos el borde "surface" para que no desaparezca
           borderSide: BorderSide(color: Theme.of(context).colorScheme.surface),
         ),
         focusedBorder: OutlineInputBorder(

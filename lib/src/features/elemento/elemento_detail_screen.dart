@@ -1,5 +1,6 @@
 // lib/src/features/elemento/elemento_detail_screen.dart
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart'; 
 import 'package:libratrack_client/src/core/services/elemento_service.dart';
 import 'package:libratrack_client/src/core/services/catalog_service.dart';
 import 'package:libratrack_client/src/core/services/resena_service.dart';
@@ -10,7 +11,7 @@ import 'package:libratrack_client/src/model/resena.dart';
 import 'package:libratrack_client/src/model/perfil_usuario.dart';
 import 'package:libratrack_client/src/features/elemento/widgets/resena_form_modal.dart';
 import 'package:libratrack_client/src/features/elemento/widgets/resena_card.dart';
-
+import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
 
 class ElementoDetailScreen extends StatefulWidget {
   final int elementoId;
@@ -25,7 +26,7 @@ class ElementoDetailScreen extends StatefulWidget {
 }
 
 class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
-  // --- Servicios ---
+  // ... (Servicios y estado sin cambios) ...
   final ElementoService _elementoService = ElementoService();
   final CatalogService _catalogService = CatalogService();
   final ResenaService _resenaService = ResenaService();
@@ -33,9 +34,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
 
   late Future<Map<String, dynamic>> _screenDataFuture; 
 
-  // --- Estado de la UI ---
   bool _isInCatalog = false;
   bool _isAdding = false;
+  bool _isDeleting = false; 
   
   List<Resena> _resenas = [];
   bool _haResenado = false; 
@@ -88,11 +89,12 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       
       return { 'elemento': elemento };
     } catch (e) {
+      // (Manejo de 401/403 ya es global en ApiClient)
       rethrow;
     }
   }
 
-  /// Lógica para "Añadir al Catálogo" (RF05)
+  // ... (Lógica _handleAddElemento, _handleRemoveElemento, _openWriteReviewModal sin cambios) ...
   Future<void> _handleAddElemento() async {
     setState(() { _isAdding = true; });
     final msgContext = ScaffoldMessenger.of(context);
@@ -103,22 +105,48 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         _isAdding = false;
         _isInCatalog = true;
       });
-      msgContext.showSnackBar(
-        const SnackBar(content: Text('¡Añadido al catálogo!'), backgroundColor: Colors.green),
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        '¡Añadido al catálogo!', 
+        isError: false
       );
     } catch (e) {
       if (!mounted) return;
       setState(() { _isAdding = false; });
-      msgContext.showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst("Exception: ", "")),
-          backgroundColor: Colors.red,
-        ),
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        e.toString().replaceFirst("Exception: ", ""),
+        isError: true
       );
     }
   }
 
-  /// Abre el modal para escribir una nueva reseña (RF12)
+  Future<void> _handleRemoveElemento() async {
+    setState(() { _isDeleting = true; });
+    final msgContext = ScaffoldMessenger.of(context);
+    try {
+      await _catalogService.removeElementoDelCatalogo(widget.elementoId);
+      if (!mounted) return;
+      setState(() {
+        _isDeleting = false;
+        _isInCatalog = false; 
+      });
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        'Elemento quitado del catálogo', 
+        isError: false
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() { _isDeleting = false; });
+      SnackBarHelper.showTopSnackBar(
+        msgContext, 
+        e.toString().replaceFirst("Exception: ", ""),
+        isError: true
+      );
+    }
+  }
+
   Future<void> _openWriteReviewModal() async {
     final resultado = await showModalBottomSheet<Resena>(
       context: context,
@@ -130,12 +158,12 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
 
     if (resultado != null) {
       setState(() {
-        // Añade la nueva reseña al principio de la lista
         _resenas.insert(0, resultado);
         _haResenado = true;
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -153,9 +181,8 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  'Error al cargar el elemento:\n${snapshot.error}',
+                  'Error al cargar el elemento:\n${snapshot.error.toString().replaceFirst("Exception: ", "")}',
                   textAlign: TextAlign.center,
-                  // REFACTORIZADO: Usa bodyMedium del tema
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
                 ),
               ),
@@ -166,38 +193,34 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           
           return CustomScrollView(
             slivers: <Widget>[
-              // --- Cabecera con Imagen ---
+              // --- Cabecera con Imagen (SliverAppBar) ---
               SliverAppBar(
                 expandedHeight: 300.0,
                 pinned: true,
-                backgroundColor: Theme.of(context).colorScheme.surface, // Usa color de tema
+                backgroundColor: Theme.of(context).colorScheme.surface, 
                 flexibleSpace: FlexibleSpaceBar(
+                  centerTitle: true,
+                  titlePadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
                   title: Text(
                     elemento.titulo,
-                    // REFACTORIZADO: Usa titleLarge con sombra
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(shadows: [const Shadow(blurRadius: 10)]),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(shadows: [const Shadow(blurRadius: 10)], fontSize: 20),
+                    textAlign: TextAlign.center, 
                   ),
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // La imagen (si existe)
+                      // Usamos CachedNetworkImage
                       if (elemento.imagenPortadaUrl != null && elemento.imagenPortadaUrl!.isNotEmpty)
-                        Image.network(
-                          elemento.imagenPortadaUrl!,
+                        CachedNetworkImage(
+                          imageUrl: elemento.imagenPortadaUrl!,
                           fit: BoxFit.cover,
-                          loadingBuilder: (context, child, progress) {
-                            return progress == null
-                                ? child
-                                : const Center(child: CircularProgressIndicator());
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(color: Theme.of(context).colorScheme.surface);
-                          },
+                          placeholder: (context, url) => Container(color: Theme.of(context).colorScheme.surface),
+                          errorWidget: (context, url, error) => Container(color: Theme.of(context).colorScheme.surface),
                         )
                       else
                         Container(color: Theme.of(context).colorScheme.surface),
                       
-                      // Gradiente oscuro para que el título sea legible
+                      // Gradiente oscuro
                       Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
@@ -209,7 +232,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                         ),
                       ),
                       
-                      // --- Chip "OFICIAL" (RF11) ---
+                      // Chip "OFICIAL" / "COMUNITARIO"
                       Positioned(
                         top: 40,
                         right: 16,
@@ -232,7 +255,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                           // --- Tipo y Géneros ---
                           Text(
                             '${elemento.tipo} | ${elemento.generos.join(", ")}',
-                            // REFACTORIZADO: Usa bodyMedium
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontSize: 16,
                               color: Colors.grey[400],
@@ -242,24 +264,25 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                           
                           const SizedBox(height: 24),
 
-                          // --- Botón de Añadir (RF05) ---
-                          _buildAddButton(),
+                          // --- Botón de Añadir / Quitar (RF05) ---
+                          _buildAddOrRemoveButton(),
                           
                           const SizedBox(height: 24),
 
                           // --- Sinopsis (RF10) ---
                           Text(
                             'Sinopsis',
-                            // REFACTORIZADO: Usa titleLarge
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             elemento.descripcion,
-                            // REFACTORIZADO: Usa bodyMedium
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           
+                          // --- ¡NUEVO WIDGET! (Petición 9) ---
+                          _buildProgresoTotalInfo(elemento),
+
                           // --- Sección de Reseñas (RF12) ---
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 24.0),
@@ -270,7 +293,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                             children: [
                               Text(
                                 'Reseñas (${_resenas.length})',
-                                // REFACTORIZADO: Usa titleLarge
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
                               // Botón para escribir reseña
@@ -293,12 +315,106 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
   
-  // --- WIDGETS AUXILIARES (Refactorizados) ---
+  // --- WIDGETS AUXILIARES ---
+  
+  // --- ¡NUEVO HELPER! (Petición 9) ---
+  /// Helper para parsear el string "10,8,12" a [10, 8, 12]
+  List<int> _parseEpisodiosPorTemporada(String? data) {
+    if (data == null || data.isEmpty) return [];
+    try {
+      return data.split(',').map((e) => int.tryParse(e.trim()) ?? 0).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+  
+  // --- ¡NUEVO WIDGET! (Petición 9) ---
+  /// Construye la sección de "Detalles del Progreso"
+  Widget _buildProgresoTotalInfo(Elemento elemento) {
+    final tipo = elemento.tipo.toLowerCase();
+    final List<Widget> infoWidgets = []; // Lista para guardar las filas de info
+
+    // 1. Lógica para Series
+    if (tipo == 'serie') {
+      final epCounts = _parseEpisodiosPorTemporada(elemento.episodiosPorTemporada);
+      final totalTemps = epCounts.length;
+      if (totalTemps > 0) {
+        infoWidgets.add(_buildInfoRow(context, Icons.movie_filter, 'Total Temporadas', '$totalTemps'));
+        infoWidgets.add(_buildInfoRow(context, Icons.list_alt, 'Episodios', epCounts.join(', ')));
+      }
+    } 
+    // 2. Lógica para Libros
+    else if (tipo == 'libro') {
+      if (elemento.totalCapitulosLibro != null && elemento.totalCapitulosLibro! > 0) {
+        infoWidgets.add(_buildInfoRow(context, Icons.book_outlined, 'Total Capítulos', '${elemento.totalCapitulosLibro}'));
+      }
+      if (elemento.totalPaginasLibro != null && elemento.totalPaginasLibro! > 0) {
+        infoWidgets.add(_buildInfoRow(context, Icons.pages_outlined, 'Total Páginas', '${elemento.totalPaginasLibro}'));
+      }
+    } 
+    // 3. Lógica para Anime o Manga
+    else if (tipo == 'anime' || tipo == 'manga') {
+      if (elemento.totalUnidades != null && elemento.totalUnidades! > 0) {
+        final label = tipo == 'anime' ? 'Total Episodios' : 'Total Capítulos';
+        infoWidgets.add(_buildInfoRow(context, Icons.list, label, '${elemento.totalUnidades}'));
+      }
+    }
+
+    // 4. Si no hay widgets (Película, Videojuego), no mostrar nada
+    if (infoWidgets.isEmpty) {
+      return const SizedBox.shrink(); 
+    }
+
+    // 5. Construir el widget final
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 24.0),
+          child: Divider(),
+        ),
+        Text('Detalles del Progreso', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 16),
+        ...infoWidgets, // Desplegar la lista de filas
+      ],
+    );
+  }
+  
+  // --- ¡NUEVO WIDGET! (Petición 9) ---
+  /// Helper para construir una fila de información (Icono - Label - Valor)
+  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: Colors.grey[400]),
+          const SizedBox(width: 16),
+          Text(
+            '$label:', 
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)
+          ),
+          const SizedBox(width: 8),
+          // Usamos Expanded para que el valor (ej. lista de episodios) pueda hacer wrap
+          Expanded(
+            child: Text(
+              value, 
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[300])
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // --- (Resto de Widgets Auxiliares sin cambios) ---
   
   Widget _buildEstadoChip(BuildContext context, String estado) {
-    // REFACTORIZADO: Usa colores de tema
+    // ... (código sin cambios)
     final bool isOficial = estado == "OFICIAL"; 
-    
+    final Color chipColor = isOficial 
+        ? Theme.of(context).colorScheme.secondary 
+        : Colors.grey[700]!; 
     return Chip(
       label: Text(
         isOficial ? "OFICIAL" : "COMUNITARIO",
@@ -308,7 +424,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           fontSize: 14,
         ),
       ),
-      backgroundColor: isOficial ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.surface,
+      backgroundColor: chipColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide.none,
@@ -316,22 +432,37 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
 
-  Widget _buildAddButton() {
+  Widget _buildAddOrRemoveButton() {
+    // ... (código sin cambios)
     final Color primaryColor = Theme.of(context).colorScheme.primary;
-    
-    if (_isInCatalog) {
+    if (_isDeleting) {
       return ElevatedButton.icon(
-        icon: Icon(Icons.check, color: Colors.grey[400]),
-        label: const Text('Añadido al catálogo'),
+        icon: const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+        ),
+        label: const Text('Eliminando...'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          foregroundColor: Colors.grey[400],
+          backgroundColor: Colors.red[700],
+          foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 50),
         ),
         onPressed: null,
       );
     }
-    
+    if (_isInCatalog) {
+      return ElevatedButton.icon(
+        icon: const Icon(Icons.remove_circle_outline),
+        label: const Text('Quitar del catálogo'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          foregroundColor: Colors.red[300], 
+          minimumSize: const Size(double.infinity, 50),
+        ),
+        onPressed: _handleRemoveElemento,
+      );
+    }
     if (_isAdding) {
       return ElevatedButton.icon(
         icon: const SizedBox(
@@ -348,7 +479,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         onPressed: null,
       );
     }
-
     return ElevatedButton.icon(
       icon: const Icon(Icons.add),
       label: const Text('Añadir a Mi Catálogo'),
@@ -362,6 +492,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
   
   Widget _buildWriteReviewButton() {
+    // ... (código sin cambios)
     if (_haResenado) {
       return const TextButton(
         onPressed: null,
@@ -377,6 +508,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
   
   Widget _buildReviewList() {
+    // ... (código sin cambios)
     if (_resenas.isEmpty) {
       return Center(
         child: Padding(
@@ -393,7 +525,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
-        // Usamos el ResenaCard que ya creamos (que debe ser consistente)
         return ResenaCard(resena: _resenas[index]);
       },
     );

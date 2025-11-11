@@ -13,6 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // ... (toda la lógica de _handleLogin, dispose, etc. no cambia) ...
   final _emailController = TextEditingController(); 
   final _passwordController = TextEditingController();
   final _authService = AuthService();
@@ -54,13 +55,13 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
+  // ... (toda la lógica de _handleLogin, dispose, etc. no cambia) ...
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false, 
-      ),
+      // --- LÍNEA CORREGIDA ---
+      // appBar: AppBar( ... ), // <-- Esta AppBar ha sido eliminada.
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -141,6 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // ... (el método _buildInputField no cambia) ...
   Widget _buildInputField(
     BuildContext context,
     {

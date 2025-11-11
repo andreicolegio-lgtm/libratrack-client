@@ -4,12 +4,13 @@ import 'package:libratrack_client/src/core/services/auth_service.dart';
 import 'package:libratrack_client/src/features/auth/login_screen.dart';
 import 'package:libratrack_client/src/features/home/home_screen.dart';
 
-// 1. Convertimos main() en una función asíncrona (async)
+// --- ¡NUEVO! (Paso 1) ---
+// Creamos una GlobalKey para el Navigator.
+// Esto nos permite navegar desde fuera de un widget (como desde el ApiClient).
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
-  // 2. (LA SOLUCIÓN) Aseguramos que los bindings de Flutter estén listos
-  //    antes de ejecutar CUALQUIER código de plugin (como flutter_secure_storage).
   WidgetsFlutterBinding.ensureInitialized();
-  
   runApp(const LibraTrackApp());
 }
 
@@ -28,11 +29,10 @@ class _LibraTrackAppState extends State<LibraTrackApp> {
   @override
   void initState() {
     super.initState();
-    // Ahora esta llamada es segura, porque main() ya aseguró la inicialización
     _tokenCheckFuture = _authService.getToken(); 
   }
 
-  // --- CORREGIDO: Tema de la Aplicación para Consistencia ---
+  // ... (método _buildDarkTheme sin cambios) ...
   ThemeData _buildDarkTheme() {
     const Color primaryColor = Colors.blue;
     const Color secondaryColor = Color(0xFF1E88E5); 
@@ -40,7 +40,6 @@ class _LibraTrackAppState extends State<LibraTrackApp> {
     const Color surfaceColor = Color(0xFF1E1E1E); 
 
     return ThemeData(
-      // 1. Color y Brillo
       brightness: Brightness.dark,
       colorScheme: const ColorScheme.dark(
         primary: primaryColor,
@@ -49,8 +48,6 @@ class _LibraTrackAppState extends State<LibraTrackApp> {
       ),
       useMaterial3: true,
       scaffoldBackgroundColor: background, 
-
-      // 2. Tipografía (Consistencia en la Jerarquía)
       textTheme: TextTheme(
         headlineLarge: TextStyle(fontSize: 32.0, fontWeight: FontWeight.bold, color: Colors.white),
         titleLarge: TextStyle(fontSize: 24.0, fontWeight: FontWeight.w600, color: Colors.white),
@@ -58,23 +55,19 @@ class _LibraTrackAppState extends State<LibraTrackApp> {
         bodyMedium: TextStyle(fontSize: 14.0, color: Colors.grey[300]),
         labelLarge: TextStyle(fontSize: 16.0, color: Colors.grey[500]),
       ),
-      
-      // 3. Estilo de Componentes
       appBarTheme: const AppBarTheme(
         backgroundColor: surfaceColor,
         elevation: 0,
         titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
       ),
-      // CORREGIDO: Uso de 'CardThemeData' en lugar de 'CardTheme'
       cardTheme: const CardThemeData( 
         color: surfaceColor, 
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
       ),
-      // CORREGIDO: Eliminamos la referencia obsoleta a 'background' en otros temas si existía.
-      // Aquí está implícito y no causará el error.
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +75,11 @@ class _LibraTrackAppState extends State<LibraTrackApp> {
       title: 'LibraTrack',
       debugShowCheckedModeBanner: false,
       theme: _buildDarkTheme(),
+      
+      // --- ¡NUEVO! (Paso 2) ---
+      // Asignamos la clave global a la app
+      navigatorKey: navigatorKey, 
+
       home: FutureBuilder<String?>(
         future: _tokenCheckFuture,
         builder: (context, snapshot) {

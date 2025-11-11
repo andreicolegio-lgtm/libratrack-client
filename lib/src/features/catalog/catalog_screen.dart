@@ -52,17 +52,21 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: _estados.length,
       child: Scaffold(
         appBar: AppBar(
-          // REFACTORIZADO: Usa tipografía titleLarge y centrado
-          title: Text('Mi Catálogo', style: Theme.of(context).textTheme.titleLarge), 
+          // REFACTORIZADO: Usa tipografía titleLarge y centrado (Corrección 6)
+          title: Text('LibraTrack', style: Theme.of(context).textTheme.titleLarge), 
           centerTitle: true,
           bottom: TabBar(
-            isScrollable: true,
+            // --- LÍNEAS CORREGIDAS (Corrección 8) ---
+            isScrollable: false,
+            tabAlignment: TabAlignment.center,
+            // ---
             tabs: _estados.map((estado) => Tab(text: estado.displayName)).toList(),
             labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
             // NUEVO: Indicador y color del texto del tab unificados con el tema

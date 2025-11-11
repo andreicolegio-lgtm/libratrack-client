@@ -3,20 +3,22 @@
 /// Modelo de datos para representar un Elemento del catálogo.
 ///
 /// Corresponde al 'ElementoResponseDTO.java' del backend.
-/// Usamos esta clase para tener seguridad de tipos (type-safety)
-/// y evitar errores al manejar el JSON de la API.
+/// --- ¡ACTUALIZADO (Sprint 2 / V2)! ---
 class Elemento {
   final int id;
   final String titulo;
   final String descripcion;
-  final String? imagenPortadaUrl; // Puede ser nulo
+  final String? imagenPortadaUrl; 
   final String estadoContenido; // "OFICIAL" o "COMUNITARIO"
   final String tipo; // "Serie", "Libro", etc.
-  final List<String> generos; // "Fantasía", "Ciencia Ficción", etc.
-  final String? creadorUsername; // "Administrador" o el nombre del proponente
+  final List<String> generos; 
+  final String? creadorUsername; 
   
-  // Nota: 'fechaLanzamiento' se omite por ahora 
-  // para simplificar, pero se puede añadir fácilmente.
+  // --- ¡CAMPOS DE PROGRESO TOTAL REFACTORIZADOS! ---
+  final String? episodiosPorTemporada; // Para Series (ej. "10,8,12")
+  final int? totalUnidades;        // Para Anime / Manga
+  final int? totalCapitulosLibro;  // Para Libros
+  final int? totalPaginasLibro;    // Para Libros
 
   Elemento({
     required this.id,
@@ -27,6 +29,11 @@ class Elemento {
     required this.tipo,
     required this.generos,
     this.creadorUsername,
+    // --- ¡NUEVOS CAMPOS! ---
+    this.episodiosPorTemporada,
+    this.totalUnidades,
+    this.totalCapitulosLibro,
+    this.totalPaginasLibro,
   });
 
   /// Constructor 'factory' para crear una instancia de [Elemento]
@@ -36,14 +43,19 @@ class Elemento {
       id: json['id'],
       titulo: json['titulo'],
       descripcion: json['descripcion'],
-      imagenPortadaUrl: json['imagenPortadaUrl'],
+      imagenPortadaUrl: json['urlImagen'], // <-- Nombre corregido
       estadoContenido: json['estadoContenido'],
-      tipo: json['tipo'],
+      tipo: json['tipoNombre'], // <-- Nombre corregido
       
-      // Convierte la lista/set de géneros del JSON a una List<String> de Dart
       generos: List<String>.from(json['generos']), 
       
       creadorUsername: json['creadorUsername'],
+      
+      // --- ¡NUEVO MAPEO DE PROGRESO! ---
+      episodiosPorTemporada: json['episodiosPorTemporada'] as String?,
+      totalUnidades: json['totalUnidades'] as int?,
+      totalCapitulosLibro: json['totalCapitulosLibro'] as int?,
+      totalPaginasLibro: json['totalPaginasLibro'] as int?,
     );
   }
 }

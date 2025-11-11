@@ -1,40 +1,48 @@
-// Archivo: lib/src/core/services/propuesta_service.dart
+// lib/src/core/services/propuesta_service.dart
+import 'package:libratrack_client/src/core/utils/api_client.dart'; 
 
-// Se eliminan imports innecesarios: dart:convert, http, flutter_secure_storage
-import 'package:libratrack_client/src/core/utils/api_client.dart'; // Importar el nuevo ApiClient
-
-/// Servicio para gestionar las llamadas a la API relacionadas con la
-/// proposición de nuevo contenido (RF13).
-/// REFACTORIZADO: Utiliza ApiClient.
+/// Servicio para gestionar las llamadas a la API de Propuestas (RF13).
+/// --- ¡ACTUALIZADO (Sprint 2 / V2)! ---
 class PropuestaService {
   
-  // Ruta base relativa al ApiClient.baseUrl
   final String _basePath = '/propuestas';
 
-  /// Envía una nueva propuesta de elemento a la cola de moderación (RF13).
-  /// @param imagenUrl (NUEVO) La URL de la imagen de portada.
+  /// Llama al endpoint de crear una nueva propuesta (RF13).
   Future<void> proponerElemento({
     required String titulo,
     required String descripcion,
     required String tipo,
     required String generos,
     String? imagenUrl,
+    // --- ¡PARÁMETROS REFACTORIZADOS! ---
+    String? episodiosPorTemporada, // Para Series
+    int? totalUnidades,           // Para Anime / Manga
+    int? totalCapitulosLibro,     // Para Libros
+    int? totalPaginasLibro,       // Para Libros
   }) async {
     
-    // Las claves DEBEN coincidir con el 'PropuestaRequestDTO' de la API
-    final Map<String, String?> body = {
+    // El body ahora acepta nulos
+    final Map<String, dynamic> body = { 
       'tituloSugerido': titulo,
       'descripcionSugerida': descripcion,
       'tipoSugerido': tipo,
       'generosSugeridos': generos,
       'imagenPortadaUrl': imagenUrl,
+      
+      // --- ¡NUEVOS CAMPOS! ---
+      'episodiosPorTemporada': episodiosPorTemporada,
+      'totalUnidades': totalUnidades,
+      'totalCapitulosLibro': totalCapitulosLibro,
+      'totalPaginasLibro': totalPaginasLibro,
     };
+    
+    // Eliminamos nulos para un JSON limpio
+    body.removeWhere((key, value) => value == null);
 
-    // 1. Llamar al ApiClient.post
-    // (ApiClient se encarga de las cabeceras, try-catch, y errores 400/403)
     await api.post(
       _basePath,
       body: body,
+      protected: true, 
     );
   }
 }

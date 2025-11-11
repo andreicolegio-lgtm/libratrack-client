@@ -1,6 +1,5 @@
 // Archivo: lib/src/core/services/auth_service.dart
-import 'dart:convert'; // Para codificar/decodificar JSON
-import 'package:http/http.dart' as http; // El paquete HTTP
+// import 'package:http/http.dart' as http; // <--- ELIMINADO
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Importar almacenamiento seguro
 import 'package:libratrack_client/src/core/utils/api_client.dart'; // Importar el nuevo ApiClient
 
@@ -52,38 +51,32 @@ class AuthService {
       'password': password,
     };
     
-    // 1. Usar la URL base PÚBLICA del cliente.
-    final Uri loginUrl = Uri.parse('${api.baseUrl}$_authPath/login'); 
-    
-    http.Response response;
+    // --- INICIO DE LA CORRECCIÓN ---
     try {
-      response = await http.post(
-        loginUrl,
-        headers: { 'Content-Type': 'application/json; charset=UTF-8', },
-        body: jsonEncode(body),
+      // 1. REFACTORIZADO: Usamos api.post() en lugar de http.post()
+      final dynamic responseData = await api.post(
+        '$_authPath/login',
+        body: body,
+        protected: false, // El login es una ruta pública
       );
-    } catch (_) { // ¡Cláusula catch limpia!
-      throw Exception('Fallo al conectar con el servidor.');
-    }
+      
+      final String token = responseData['token'];
 
-    // Usamos el handler PÚBLICO para procesar la respuesta
-    try {
-        // 2. Usar el handleResponse PÚBLICO para procesar la respuesta
-        final dynamic responseData = api.handleResponse(response);
-        final String token = responseData['token'];
-    
-        // Guarda el token en el almacenamiento seguro
-        await _saveToken(token);
-        
-        return token;
-    } on Exception { // Linter fix: 'e' (excepción) no se usaba
-      // Si la respuesta es 401, usamos el mensaje fijo por seguridad.
-      if (response.statusCode == 401) {
+      // 2. Guarda el token en el almacenamiento seguro
+      await _saveToken(token);
+      
+      return token;
+
+    } on Exception catch (e) {
+      // 3. REFACTORIZADO: Si la excepción que viene de handleResponse es 401
+      // la convertimos en un mensaje amigable.
+      if (e.toString().contains('401') || e.toString().contains('Usuario o contraseña incorrectos')) {
           throw Exception('Usuario o contraseña incorrectos.');
       }
-      // Si es otro error (400, 404, 500) relanzamos la excepción que api.handleResponse preparó
+      // Si es "Fallo al conectar con el servidor", la relanza tal cual.
       rethrow;
     }
+    // --- FIN DE LA CORRECCIÓN ---
   }
 
   /// Lee el token JWT guardado en el almacenamiento seguro.

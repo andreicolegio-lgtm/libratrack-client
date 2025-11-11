@@ -2,22 +2,22 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+// --- ¡NUEVAS IMPORTACIONES! ---
+import 'package:flutter/material.dart'; // Para MaterialPageRoute
+import 'package:libratrack_client/main.dart'; // Para el navigatorKey
+import 'package:libratrack_client/src/core/services/auth_service.dart'; // Para .logout()
+import 'package:libratrack_client/src/features/auth/login_screen.dart'; // Para la navegación
 
 // Definición del cliente HTTP centralizado con manejo de errores
 class ApiClient {
-  // Almacenamiento seguro (para el token)
+  // ... (propiedades _storage, _tokenKey, baseUrl, _instance, _getAuthHeaders sin cambios) ...
   final _storage = const FlutterSecureStorage();
   final String _tokenKey = 'jwt_token';
-  
-  // URL base: ¡HECHO PÚBLICO!
   final String baseUrl = 'http://10.0.2.2:8080/api'; 
-
-  // Acceso a esta instancia desde cualquier lugar
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
   ApiClient._internal();
 
-  /// Obtiene las cabeceras de autenticación (JWT)
   Future<Map<String, String>> _getAuthHeaders() async {
     final String? token = await _storage.read(key: _tokenKey);
     if (token == null) {
@@ -25,37 +25,55 @@ class ApiClient {
     }
     return {
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer $token', // Añade el token 'Bearer'
+      'Authorization': 'Bearer $token', 
     };
   }
+  
+  // --- ¡NUEVO MÉTODO AUXILIAR! ---
+  /// Maneja globalmente un 401/403, borrando el token
+  /// y navegando a la pantalla de Login.
+  Future<void> _handleGlobalLogout() async {
+    // 1. Borra el token inválido del almacenamiento
+    await AuthService().logout();
+    
+    // 2. Navega al Login usando el GlobalKey de main.dart
+    if (navigatorKey.currentState != null) {
+      navigatorKey.currentState!.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (Route<dynamic> route) => false, // Elimina todas las rutas anteriores
+      );
+    }
+  }
+
 
   /// Lógica central para manejar la respuesta HTTP (incluyendo errores 4xx)
-  // ¡HECHO PÚBLICO!
   dynamic handleResponse(http.Response response) { 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      // 2xx Success. Si el body está vacío (ej. 204 No Content), devolvemos null
+      // 2xx Success
       return response.body.isNotEmpty ? jsonDecode(response.body) : null;
     }
 
-    // --- Mapeo de Errores de la API (4xx, 5xx) ---
+    // --- ¡LÓGICA 401/403 MODIFICADA! ---
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      // ¡Llama al manejador global!
+      _handleGlobalLogout(); 
+      // Lanza la excepción para que la UI sepa que algo falló
+      throw Exception('Sesión expirada/no autorizada. Por favor, inicia sesión de nuevo.');
+    }
+    // --- FIN DE LA MODIFICACIÓN ---
+
     String errorMessage = 'Error desconocido: ${response.statusCode}';
-    
-    // Intentamos extraer el mensaje de error que el backend (GlobalExceptionHandler) devolvió
     if (response.body.isNotEmpty) {
       try {
         final dynamic errorBody = jsonDecode(response.body);
-        
-        // Si el body es un JSON con el mensaje (ej. de 400 Validation, o 404/409)
         if (errorBody is Map && errorBody.containsKey('message')) {
            errorMessage = errorBody['message'] as String;
         } else if (errorBody is String) {
            errorMessage = errorBody;
         } else {
-          // A veces Spring devuelve un string plano para 400/409, o un mapa simple
           errorMessage = response.body; 
         }
       } on FormatException {
-        // El cuerpo no es JSON (ej. Bad Request/Conflict simple)
         errorMessage = response.body;
       } catch (_) {
         // Fallback
@@ -64,13 +82,10 @@ class ApiClient {
     
     // Interpretamos los códigos de estado y lanzamos la excepción con el mensaje limpio
     switch (response.statusCode) {
-      case 401:
-      case 403:
-        throw Exception('Sesión expirada/no autorizada. Por favor, inicia sesión de nuevo.');
-      case 404: // ResourceNotFoundException
-      case 409: // ConflictException
-      case 400: // Validation/Bad Request (aunque este debería ser manejado por @Valid)
-        // El mensaje de error ya contiene el texto que el backend lanzó (ej. "Elemento no encontrado" o "Contraseña incorrecta")
+      // Ya no necesitamos los casos 401/403 aquí
+      case 404: 
+      case 409: 
+      case 400: 
         throw Exception(errorMessage); 
       default:
         throw Exception('Error en la API. Código: ${response.statusCode}. $errorMessage');
@@ -78,7 +93,7 @@ class ApiClient {
   }
 
   // ===================================================================
-  // Métodos CRUD simplificados para servicios
+  // Métodos CRUD (sin cambios)
   // ===================================================================
   
   Future<dynamic> post(String path, {dynamic body, bool protected = true}) =>
@@ -99,10 +114,8 @@ class ApiClient {
     String method, 
     {dynamic body, Map<String, String>? queryParams, bool protected = true}) async {
     
-    // ¡USAMOS EL NUEVO CAMPO PÚBLICO!
     Uri url = Uri.parse('$baseUrl$path');
     
-    // Añadir Query Parameters si existen
     if (queryParams != null && queryParams.isNotEmpty) {
       url = url.replace(queryParameters: queryParams);
     }
@@ -111,7 +124,6 @@ class ApiClient {
       'Content-Type': 'application/json; charset=UTF-8',
     };
     
-    // Añadir el token si es una ruta protegida
     if (protected) {
       final Map<String, String> authHeaders = await _getAuthHeaders();
       headers.addAll(authHeaders);
@@ -119,6 +131,7 @@ class ApiClient {
 
     http.Response response;
     try {
+      // El TRY solo envuelve la llamada de RED
       switch (method) {
         case 'GET':
           response = await http.get(url, headers: headers);
@@ -135,16 +148,15 @@ class ApiClient {
         default:
           throw Exception('Método HTTP no soportado: $method');
       }
-      return handleResponse(response); // ¡USAMOS EL NUEVO MÉTODO PÚBLICO!
     } catch (e) {
-      // Capturamos errores de red (ej. SocketException)
-      if (e is Exception && !e.toString().contains('Exception: Sesión expirada')) {
-        throw Exception('Fallo al conectar con el servidor.');
-      }
-      rethrow;
+      // Error de CONEXIÓN
+      throw Exception('Fallo al conectar con el servidor.');
     }
+
+    // Dejamos que handleResponse maneje los códigos 4xx/5xx
+    return handleResponse(response);
   }
 }
 
-// Exportamos una instancia global para fácil acceso en los servicios
+// Exportamos una instancia global
 final ApiClient api = ApiClient();

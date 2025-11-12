@@ -1,0 +1,16 @@
+# Configuración para el generador de código de internacionalización (i18n)
+
+# 1. El archivo ARB (Formato de Recurso de Aplicación) que contiene el texto base
+template-arb-file: app_es.arb
+
+# 2. El archivo Dart que se generará automáticamente
+output-localization-file: app_localizations.dart
+
+# 3. (Opcional pero recomendado) El nombre de la clase generada
+output-class: AppLocalizations
+
+# 4. (Opcional pero recomendado) La carpeta donde buscar los archivos .arb
+arb-dir: lib/l10n
+
+# 5. (Opcional pero recomendado) La carpeta donde se generará el código .dart
+output-dir: lib/src/core/l10n

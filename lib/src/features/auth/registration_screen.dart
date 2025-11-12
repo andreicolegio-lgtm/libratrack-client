@@ -2,7 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/services/auth_service.dart';
 import 'package:libratrack_client/src/features/auth/login_screen.dart';
-import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; // Importa el helper
+import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; 
+import 'package:libratrack_client/src/model/perfil_usuario.dart'; 
+// --- ¡NUEVA IMPORTACIÓN! ---
+import 'package:libratrack_client/src/core/l10n/app_localizations.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -25,18 +28,22 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     setState(() { _isLoading = true; });
 
     final navContext = Navigator.of(context);
-    final msgContext = ScaffoldMessenger.of(context); // Guardamos el State
+    final msgContext = ScaffoldMessenger.of(context);
 
     try {
-      await _authService.register(_usernameController.text, _emailController.text, _passwordController.text);
+      final PerfilUsuario nuevoUsuario = await _authService.register(
+        _usernameController.text, 
+        _emailController.text, 
+        _passwordController.text
+      );
 
       if (!mounted) return;
       setState(() { _isLoading = false; });
 
-      // Usa el helper con el state guardado
+      // (Usamos el l10n capturado)
       SnackBarHelper.showTopSnackBar(
         msgContext, 
-        '¡Registro exitoso! Por favor, inicia sesión.', 
+        '¡Registro exitoso! Bienvenido, ${nuevoUsuario.username}. Por favor, inicia sesión.', 
         isError: false
       );
       
@@ -47,7 +54,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       if (!mounted) return;
       setState(() { _isLoading = false; });
       
-      // Usa el helper con el state guardado
       SnackBarHelper.showTopSnackBar(
         msgContext, 
         e.toString().replaceFirst("Exception: ", ""), 
@@ -66,8 +72,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // --- ¡NUEVO! Obtenemos las traducciones ---
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
-      // AppBar eliminada para un look más limpio
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -79,7 +87,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               children: <Widget>[
                 
                 Text(
-                  'LibraTrack',
+                  l10n.appTitle, // <-- TRADUCIDO
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 48), 
                 ),
@@ -88,10 +96,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 _buildInputField(
                   context,
                   controller: _usernameController,
-                  labelText: 'Nombre de Usuario',
+                  labelText: l10n.registerUsernameLabel, // <-- TRADUCIDO
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) { return 'El nombre de usuario es obligatorio.'; }
-                    if (value.trim().length < 4) { return 'Debe tener al menos 4 caracteres.'; }
+                    if (value == null || value.trim().isEmpty) { return l10n.registerUsernameRequired; } // <-- TRADUCIDO
+                    if (value.trim().length < 4) { return l10n.registerUsernameLength; } // <-- TRADUCIDO
                     return null;
                   },
                 ),
@@ -100,11 +108,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 _buildInputField(
                   context,
                   controller: _emailController,
-                  labelText: 'Email',
+                  labelText: l10n.loginEmailLabel, // <-- TRADUCIDO
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.isEmpty) { return 'El email es obligatorio.'; }
-                    if (!value.contains('@') || !value.contains('.')) { return 'Introduce un email válido.'; }
+                    if (value == null || value.isEmpty) { return l10n.loginEmailRequired; } // <-- TRADUCIDO
+                    if (!value.contains('@') || !value.contains('.')) { return l10n.loginEmailInvalid; } // <-- TRADUCIDO
                     return null;
                   },
                 ),
@@ -113,11 +121,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 _buildInputField(
                   context,
                   controller: _passwordController,
-                  labelText: 'Contraseña',
+                  labelText: l10n.loginPasswordLabel, // <-- TRADUCIDO
                   isPassword: true,
                   validator: (value) {
-                    if (value == null || value.isEmpty) { return 'La contraseña es obligatoria.'; }
-                    if (value.length < 8) { return 'Debe tener al menos 8 caracteres.'; }
+                    if (value == null || value.isEmpty) { return l10n.loginPasswordRequired; } // <-- TRADUCIDO
+                    if (value.length < 8) { return l10n.registerPasswordLength; } // <-- TRADUCIDO
                     return null;
                   },
                 ),
@@ -134,9 +142,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   onPressed: _isLoading ? null : _handleRegister,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Registrarse',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
+                      : Text(
+                          l10n.registerTitle, // <-- TRADUCIDO
+                          style: const TextStyle(fontSize: 18, color: Colors.white),
                         ),
                 ),
                 const SizedBox(height: 16.0),
@@ -146,7 +154,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     Navigator.of(context).pop(); 
                   },
                   child: Text(
-                    '¿Ya tienes cuenta? Inicia sesión',
+                    l10n.registerLoginPrompt, // <-- TRADUCIDO
                     style: TextStyle(color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
@@ -158,6 +166,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
+  // ... (Widget _buildInputField sin cambios)
   Widget _buildInputField(
     BuildContext context,
     {
@@ -171,7 +180,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: isPassword,
-      // CORREGIDO: El typo 'custom_context' se reemplaza por 'context'
       style: Theme.of(context).textTheme.bodyMedium, 
       validator: validator,
       decoration: InputDecoration(

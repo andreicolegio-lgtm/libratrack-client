@@ -1,19 +1,14 @@
 // Archivo: lib/src/core/services/auth_service.dart
-// import 'package:http/http.dart' as http; // <--- ELIMINADO
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Importar almacenamiento seguro
-import 'package:libratrack_client/src/core/utils/api_client.dart'; // Importar el nuevo ApiClient
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; 
+import 'package:libratrack_client/src/core/utils/api_client.dart'; 
+import 'package:libratrack_client/src/model/perfil_usuario.dart'; 
 
 /// Servicio de Autenticación (AuthService).
-///
-/// REFACTORIZADO: Utiliza ApiClient para el registro y reusa su lógica de errores para el login.
+/// --- ¡ACTUALIZADO Y CORREGIDO (Sprint 4)! ---
 class AuthService {
   
-  // --- 1. Almacenamiento Seguro ---
   final _storage = const FlutterSecureStorage();
   final String _tokenKey = 'jwt_token'; 
-
-  // --- 2. Configuración de la API ---
-  // Esta es ahora la ruta relativa al ApiClient.baseUrl
   final String _authPath = '/auth';
 
   // ===================================================================
@@ -22,9 +17,10 @@ class AuthService {
 
   /// Llama al endpoint de registro (RF01).
   ///
-  /// Lanza una [Exception] si el registro falla (ej. 409 Conflict)
-  /// para que la pantalla (UI) pueda mostrar un error.
-  Future<void> register(String username, String email, String password) async {
+  /// --- ¡CORREGIDO! ---
+  /// 1. Ahora devuelve 'PerfilUsuario' para coincidir con la API.
+  /// 2. Ahora tiene un try-catch para manejar los errores 409 (Conflicto).
+  Future<PerfilUsuario> register(String username, String email, String password) async {
     
     final Map<String, String> body = {
       'username': username,
@@ -32,32 +28,39 @@ class AuthService {
       'password': password,
     };
 
-    // Usar ApiClient.post. La ruta de registro es pública, ¡usamos protected: false!
-    await api.post(
-      '$_authPath/register',
-      body: body,
-      protected: false, // Acceso público
-    );
-    // Errores (409 Conflict, conexión) gestionados por api.post()
+    try {
+      // ApiClient.post ahora devolverá un Map<String, dynamic>
+      final dynamic responseData = await api.post(
+        '$_authPath/register',
+        body: body,
+        protected: false, 
+      );
+      
+      // Mapeamos la respuesta al modelo de Flutter
+      return PerfilUsuario.fromJson(responseData as Map<String, dynamic>);
+
+    } catch (e) {
+      // Si api.post() lanza un 409, lo relanzamos para que la UI lo atrape
+      rethrow; 
+    }
   }
 
   /// Llama al endpoint de login (RF02) usando email y contraseña.
   ///
-  /// Lanza una [Exception] si el login falla (ej. 401 Unauthorized).
-  /// Devuelve el [String] del token JWT si es exitoso.
+  /// --- ¡REFACTORIZADO! ---
+  /// Ahora usa api.post() en lugar de http.post() manual.
   Future<String> login(String email, String password) async {
     final Map<String, String> body = {
       'email': email,
       'password': password,
     };
     
-    // --- INICIO DE LA CORRECCIÓN ---
     try {
-      // 1. REFACTORIZADO: Usamos api.post() en lugar de http.post()
+      // 1. Usamos api.post()
       final dynamic responseData = await api.post(
         '$_authPath/login',
         body: body,
-        protected: false, // El login es una ruta pública
+        protected: false, 
       );
       
       final String token = responseData['token'];
@@ -68,15 +71,12 @@ class AuthService {
       return token;
 
     } on Exception catch (e) {
-      // 3. REFACTORIZADO: Si la excepción que viene de handleResponse es 401
-      // la convertimos en un mensaje amigable.
+      // 3. Convertimos el error 401 en un mensaje amigable
       if (e.toString().contains('401') || e.toString().contains('Usuario o contraseña incorrectos')) {
           throw Exception('Usuario o contraseña incorrectos.');
       }
-      // Si es "Fallo al conectar con el servidor", la relanza tal cual.
       rethrow;
     }
-    // --- FIN DE LA CORRECCIÓN ---
   }
 
   /// Lee el token JWT guardado en el almacenamiento seguro.

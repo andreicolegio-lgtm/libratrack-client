@@ -3,33 +3,32 @@
 /// Modelo de datos para representar un Elemento del catálogo.
 ///
 /// Corresponde al 'ElementoResponseDTO.java' del backend.
-/// --- ¡ACTUALIZADO (Sprint 2 / V2)! ---
+/// --- ¡ACTUALIZADO (Sprint 4 - Fase 2)! ---
 class Elemento {
   final int id;
   final String titulo;
   final String descripcion;
-  final String? imagenPortadaUrl; 
+  final String? urlImagen; // <-- ¡NOMBRE CORREGIDO! (era imagenPortadaUrl)
   final String estadoContenido; // "OFICIAL" o "COMUNITARIO"
   final String tipo; // "Serie", "Libro", etc.
   final List<String> generos; 
   final String? creadorUsername; 
   
-  // --- ¡CAMPOS DE PROGRESO TOTAL REFACTORIZADOS! ---
-  final String? episodiosPorTemporada; // Para Series (ej. "10,8,12")
-  final int? totalUnidades;        // Para Anime / Manga
-  final int? totalCapitulosLibro;  // Para Libros
-  final int? totalPaginasLibro;    // Para Libros
+  // --- Campos de Progreso Total (Refactorizados) ---
+  final String? episodiosPorTemporada; 
+  final int? totalUnidades;        
+  final int? totalCapitulosLibro;  
+  final int? totalPaginasLibro;    
 
   Elemento({
     required this.id,
     required this.titulo,
     required this.descripcion,
-    this.imagenPortadaUrl,
+    this.urlImagen, // <-- ¡NOMBRE CORREGIDO!
     required this.estadoContenido,
     required this.tipo,
     required this.generos,
     this.creadorUsername,
-    // --- ¡NUEVOS CAMPOS! ---
     this.episodiosPorTemporada,
     this.totalUnidades,
     this.totalCapitulosLibro,
@@ -43,15 +42,15 @@ class Elemento {
       id: json['id'],
       titulo: json['titulo'],
       descripcion: json['descripcion'],
-      imagenPortadaUrl: json['urlImagen'], // <-- Nombre corregido
+      urlImagen: json['urlImagen'] as String?, // <-- ¡NOMBRE CORREGIDO!
       estadoContenido: json['estadoContenido'],
-      tipo: json['tipoNombre'], // <-- Nombre corregido
+      tipo: json['tipoNombre'], // (Este ya estaba bien)
       
       generos: List<String>.from(json['generos']), 
       
       creadorUsername: json['creadorUsername'],
       
-      // --- ¡NUEVO MAPEO DE PROGRESO! ---
+      // Mapeo de Progreso
       episodiosPorTemporada: json['episodiosPorTemporada'] as String?,
       totalUnidades: json['totalUnidades'] as int?,
       totalCapitulosLibro: json['totalCapitulosLibro'] as int?,

@@ -1,4 +1,5 @@
 // lib/src/features/search/search_screen.dart
+// ... (imports sin cambios) ...
 import 'package:flutter/material.dart';
 import 'package:libratrack_client/src/core/widgets/maybe_marquee.dart'; 
 import 'package:cached_network_image/cached_network_image.dart'; 
@@ -13,8 +14,8 @@ import 'package:libratrack_client/src/model/genero.dart';
 import 'package:libratrack_client/src/model/paginated_response.dart';
 
 class SearchScreen extends StatefulWidget {
+  // ... (código sin cambios)
   const SearchScreen({super.key});
-
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
@@ -38,7 +39,6 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _isLoadingMore = false; 
   String? _loadingError;
 
-
   @override
   void initState() {
     super.initState();
@@ -48,6 +48,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
   
   Future<void> _loadInitialData() async {
+    // ... (código sin cambios)
     try {
       final results = await Future.wait([
         _tipoService.getAllTipos(),
@@ -71,6 +72,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   void dispose() {
+    // ... (código sin cambios)
     _searchController.dispose();
     _scrollController.removeListener(_onScroll); 
     _scrollController.dispose();
@@ -78,12 +80,14 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _onScroll() {
+    // ... (código sin cambios)
     if (_scrollController.position.pixels < _scrollController.position.maxScrollExtent - 200) return;
     if (_isLoadingMore || !_hasNextPage) return;
     _loadElementos();
   }
 
   Future<void> _loadElementos({bool isFirstPage = false}) async {
+    // ... (código sin cambios)
     if (isFirstPage) {
       setState(() {
         _isLoadingFirstPage = true;
@@ -124,11 +128,13 @@ class _SearchScreenState extends State<SearchScreen> {
   }
   
   void _reiniciarBusqueda() {
+    // ... (código sin cambios)
     FocusScope.of(context).unfocus();
     _loadElementos(isFirstPage: true);
   }
 
   void _clearSearch() {
+    // ... (código sin cambios)
     _searchController.clear();
     _filtroTipoActivo = null; 
     _filtroGeneroActivo = null;
@@ -136,6 +142,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _handleFiltroTap(String tipoFiltro, String nombre) {
+    // ... (código sin cambios)
     setState(() {
       if (tipoFiltro == 'tipo') {
         _filtroTipoActivo = (_filtroTipoActivo == nombre) ? null : nombre;
@@ -148,9 +155,9 @@ class _SearchScreenState extends State<SearchScreen> {
     _reiniciarBusqueda();
   }
 
-
   @override
   Widget build(BuildContext context) {
+    // ... (código de Scaffold sin cambios) ...
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface, 
@@ -175,15 +182,16 @@ class _SearchScreenState extends State<SearchScreen> {
   }
   
   Widget _buildBody() {
+    // ... (código sin cambios) ...
     return SingleChildScrollView(
       controller: _scrollController, 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          
           FutureBuilder<void>(
             future: _filtrosFuture,
             builder: (context, snapshot) {
+              // ... (código de FutureBuilder sin cambios) ...
               if (snapshot.connectionState == ConnectionState.waiting && _tipos.isEmpty) {
                 return const Center(child: Padding(
                   padding: EdgeInsets.all(16.0),
@@ -217,14 +225,10 @@ class _SearchScreenState extends State<SearchScreen> {
               );
             },
           ),
-
-          // --- ¡CORRECCIÓN (c)! ---
-          // Reducimos el espacio vertical de 16.0 a 8.0
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8.0),
             child: Divider(),
           ),
-          
           Padding(
             padding: const EdgeInsets.only(bottom: 80.0),
             child: _buildResultadosLista(), 
@@ -235,7 +239,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildResultadosLista() {
-    // ... (sin cambios)
+    // ... (código sin cambios) ...
     if (_isLoadingFirstPage) {
       return const Center(child: Padding(
         padding: EdgeInsets.only(top: 50.0),
@@ -273,7 +277,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   
   Widget _buildSearchTextField(BuildContext context) {
-    // ... (sin cambios)
+    // ... (código sin cambios) ...
     final Color iconColor = Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
     return TextField(
       controller: _searchController,
@@ -304,10 +308,10 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-
+  // --- ¡MÉTODO MODIFICADO! (Bugfix) ---
   Widget _buildElementoListTile(BuildContext context, Elemento elemento) {
-    // ... (sin cambios)
     final Color iconColor = Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: InkWell(
@@ -322,6 +326,7 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 1. Imagen (Usando Caché)
             Container(
               width: 120, 
               height: 75,
@@ -331,9 +336,10 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(5.0),
-                child: elemento.imagenPortadaUrl != null && elemento.imagenPortadaUrl!.isNotEmpty
+                // --- ¡LÍNEA CORREGIDA! ---
+                child: elemento.urlImagen != null && elemento.urlImagen!.isNotEmpty
                     ? CachedNetworkImage( 
-                        imageUrl: elemento.imagenPortadaUrl!,
+                        imageUrl: elemento.urlImagen!, // <-- ¡NOMBRE CORREGIDO!
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Icon(Icons.downloading, color: iconColor),
                         errorWidget: (context, url, error) => 
@@ -343,6 +349,8 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
             const SizedBox(width: 12),
+            
+            // 2. Título, Subtítulo y Tag (sin cambios)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,7 +379,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
   
   Widget _buildEstadoChip(BuildContext context, String estado) {
-    // ... (sin cambios)
+    // ... (código sin cambios)
     final bool isOficial = estado == "OFICIAL"; 
     final Color chipColor = isOficial 
         ? Theme.of(context).colorScheme.secondary 
@@ -398,11 +406,11 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildFiltroChips(
     BuildContext context,
     {
+      // ... (código sin cambios)
       required List<String> data,
       required String tipoFiltro,
       required String? filtroActivo,
     }) {
-    // ... (sin cambios)
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16.0),

@@ -12,7 +12,11 @@ import 'package:libratrack_client/src/model/perfil_usuario.dart';
 import 'package:libratrack_client/src/features/elemento/widgets/resena_form_modal.dart';
 import 'package:libratrack_client/src/features/elemento/widgets/resena_card.dart';
 import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
+import 'package:libratrack_client/src/core/services/admin_service.dart';
+import 'package:libratrack_client/src/features/admin/admin_elemento_form.dart';
+// import 'dart:math'; // <-- Ya no es necesario
 
+/// --- ¡ACTUALIZADO (Sprint 6)! ---
 class ElementoDetailScreen extends StatefulWidget {
   final int elementoId;
   
@@ -26,17 +30,21 @@ class ElementoDetailScreen extends StatefulWidget {
 }
 
 class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
-  // ... (Servicios y estado sin cambios) ...
+  // --- Servicios ---
   final ElementoService _elementoService = ElementoService();
   final CatalogService _catalogService = CatalogService();
   final ResenaService _resenaService = ResenaService();
   final UserService _userService = UserService();
+  final AdminService _adminService = AdminService(); 
 
   late Future<Map<String, dynamic>> _screenDataFuture; 
 
+  // --- Estado de la UI ---
   bool _isInCatalog = false;
   bool _isAdding = false;
   bool _isDeleting = false; 
+  // --- ¡ESTADO UNIFICADO! ---
+  bool _isLoadingStatusChange = false; 
   
   List<Resena> _resenas = [];
   bool _haResenado = false; 
@@ -48,37 +56,34 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     _loadScreenData();
   }
 
+  // Recarga todos los datos de la pantalla
   void _loadScreenData() {
     _screenDataFuture = _fetchData();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<Map<String, dynamic>> _fetchData() async {
+    // ... (código sin cambios)
     try {
-      // Pide 4 grupos de datos en paralelo
       final results = await Future.wait([
-        _elementoService.getElementoById(widget.elementoId), // [0]
-        _catalogService.getMyCatalog(),                     // [1]
-        _resenaService.getResenas(widget.elementoId),       // [2]
-        _userService.getMiPerfil(),                         // [3]
+        _elementoService.getElementoById(widget.elementoId), 
+        _catalogService.getMyCatalog(),                     
+        _resenaService.getResenas(widget.elementoId),       
+        _userService.getMiPerfil(),                         
       ]);
-
-      // Parsea los resultados
       final Elemento elemento = results[0] as Elemento;
       final List<CatalogoEntrada> catalogo = results[1] as List<CatalogoEntrada>;
       final List<Resena> resenas = results[2] as List<Resena>;
       final PerfilUsuario perfil = results[3] as PerfilUsuario;
-
-      // Comprueba el estado del catálogo (RF05)
       final bool inCatalog = catalogo.any(
         (entrada) => entrada.elementoId == widget.elementoId
       );
-      
-      // Comprueba el estado de las reseñas (RF12)
       _usernameActual = perfil.username; 
       final bool haResenado = resenas.any(
         (resena) => resena.usernameAutor == _usernameActual
       );
-      
       if (mounted) {
         setState(() {
           _isInCatalog = inCatalog;
@@ -86,16 +91,16 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           _haResenado = haResenado;
         });
       }
-      
-      return { 'elemento': elemento };
+      return { 'elemento': elemento, 'perfil': perfil };
     } catch (e) {
-      // (Manejo de 401/403 ya es global en ApiClient)
       rethrow;
     }
   }
 
-  // ... (Lógica _handleAddElemento, _handleRemoveElemento, _openWriteReviewModal sin cambios) ...
+  // --- Lógica de Acciones ---
+
   Future<void> _handleAddElemento() async {
+    // ... (código sin cambios)
     setState(() { _isAdding = true; });
     final msgContext = ScaffoldMessenger.of(context);
     try {
@@ -122,6 +127,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
 
   Future<void> _handleRemoveElemento() async {
+    // ... (código sin cambios)
     setState(() { _isDeleting = true; });
     final msgContext = ScaffoldMessenger.of(context);
     try {
@@ -148,6 +154,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
 
   Future<void> _openWriteReviewModal() async {
+    // ... (código sin cambios)
     final resultado = await showModalBottomSheet<Resena>(
       context: context,
       isScrollControlled: true,
@@ -155,7 +162,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         return ResenaFormModal(elementoId: widget.elementoId);
       },
     );
-
     if (resultado != null) {
       setState(() {
         _resenas.insert(0, resultado);
@@ -164,6 +170,57 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     }
   }
 
+  // --- ¡MÉTODO UNIFICADO! (Petición 17 y F) ---
+  Future<void> _handleToggleOficial(Elemento elemento) async {
+    // Determinamos qué acción tomar
+    final bool esOficial = elemento.estadoContenido == 'OFICIAL';
+    
+    setState(() { _isLoadingStatusChange = true; });
+    final msgContext = ScaffoldMessenger.of(context);
+    
+    try {
+      if (esOficial) {
+        // --- (Petición F) ---
+        await _adminService.comunitarizarElemento(elemento.id);
+        SnackBarHelper.showTopSnackBar(msgContext, 'Elemento marcado como COMUNITARIO.', isError: false);
+      } else {
+        // --- (Petición 17) ---
+        await _adminService.oficializarElemento(elemento.id);
+        SnackBarHelper.showTopSnackBar(msgContext, '¡Elemento marcado como OFICIAL!', isError: false);
+      }
+      
+      if (!mounted) return;
+      // Recarga todos los datos de la pantalla (para actualizar el tag y el botón)
+      _loadScreenData(); 
+      
+    } catch (e) {
+      if (!mounted) return;
+      SnackBarHelper.showTopSnackBar(msgContext, e.toString().replaceFirst("Exception: ", ""), isError: true);
+    } finally {
+      if (mounted) {
+        // Aseguramos que el spinner se oculte
+        setState(() { _isLoadingStatusChange = false; });
+      }
+    }
+  }
+
+  Future<void> _goToEditarElemento(Elemento elemento) async {
+    // ... (código sin cambios)
+    if (_isAnyLoading()) return;
+    final bool? seHaActualizado = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdminElementoFormScreen(elemento: elemento),
+      ),
+    );
+    if (seHaActualizado == true && mounted) {
+      _loadScreenData();
+    }
+  }
+  
+  bool _isAnyLoading() {
+    return _isAdding || _isDeleting || _isLoadingStatusChange; // <-- ¡ACTUALIZADO!
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,8 +232,8 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
           if (snapshot.hasError) {
+            // ... (código de error sin cambios) ...
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -190,11 +247,13 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           }
           
           final Elemento elemento = snapshot.data!['elemento'];
+          final PerfilUsuario perfil = snapshot.data!['perfil'];
           
           return CustomScrollView(
             slivers: <Widget>[
               // --- Cabecera con Imagen (SliverAppBar) ---
               SliverAppBar(
+                // ... (código de SliverAppBar sin cambios) ...
                 expandedHeight: 300.0,
                 pinned: true,
                 backgroundColor: Theme.of(context).colorScheme.surface, 
@@ -209,18 +268,15 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // Usamos CachedNetworkImage
-                      if (elemento.imagenPortadaUrl != null && elemento.imagenPortadaUrl!.isNotEmpty)
+                      if (elemento.urlImagen != null && elemento.urlImagen!.isNotEmpty)
                         CachedNetworkImage(
-                          imageUrl: elemento.imagenPortadaUrl!,
+                          imageUrl: elemento.urlImagen!, 
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(color: Theme.of(context).colorScheme.surface),
                           errorWidget: (context, url, error) => Container(color: Theme.of(context).colorScheme.surface),
                         )
                       else
                         Container(color: Theme.of(context).colorScheme.surface),
-                      
-                      // Gradiente oscuro
                       Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
@@ -231,8 +287,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                           ),
                         ),
                       ),
-                      
-                      // Chip "OFICIAL" / "COMUNITARIO"
                       Positioned(
                         top: 40,
                         right: 16,
@@ -261,8 +315,10 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                               fontStyle: FontStyle.italic,
                             ),
                           ),
-                          
                           const SizedBox(height: 24),
+                          
+                          // --- Botones de Admin/Mod ---
+                          _buildAdminButtons(context, perfil, elemento),
 
                           // --- Botón de Añadir / Quitar (RF05) ---
                           _buildAddOrRemoveButton(),
@@ -270,17 +326,11 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                           const SizedBox(height: 24),
 
                           // --- Sinopsis (RF10) ---
-                          Text(
-                            'Sinopsis',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
+                          Text('Sinopsis', style: Theme.of(context).textTheme.titleLarge),
                           const SizedBox(height: 8),
-                          Text(
-                            elemento.descripcion,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
+                          Text(elemento.descripcion, style: Theme.of(context).textTheme.bodyMedium),
                           
-                          // --- ¡NUEVO WIDGET! (Petición 9) ---
+                          // --- Detalles del Progreso (Petición 9) ---
                           _buildProgresoTotalInfo(elemento),
 
                           // --- Sección de Reseñas (RF12) ---
@@ -295,12 +345,10 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                                 'Reseñas (${_resenas.length})',
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
-                              // Botón para escribir reseña
                               _buildWriteReviewButton(),
                             ],
                           ),
                           const SizedBox(height: 16),
-                          // Lista de reseñas
                           _buildReviewList(),
                         ],
                       ),
@@ -317,8 +365,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   
   // --- WIDGETS AUXILIARES ---
   
-  // --- ¡NUEVO HELPER! (Petición 9) ---
-  /// Helper para parsear el string "10,8,12" a [10, 8, 12]
+  // (Este código es el que me enviaste)
   List<int> _parseEpisodiosPorTemporada(String? data) {
     if (data == null || data.isEmpty) return [];
     try {
@@ -328,13 +375,10 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     }
   }
   
-  // --- ¡NUEVO WIDGET! (Petición 9) ---
-  /// Construye la sección de "Detalles del Progreso"
   Widget _buildProgresoTotalInfo(Elemento elemento) {
+    // (Este código es el que me enviaste)
     final tipo = elemento.tipo.toLowerCase();
-    final List<Widget> infoWidgets = []; // Lista para guardar las filas de info
-
-    // 1. Lógica para Series
+    final List<Widget> infoWidgets = []; 
     if (tipo == 'serie') {
       final epCounts = _parseEpisodiosPorTemporada(elemento.episodiosPorTemporada);
       final totalTemps = epCounts.length;
@@ -343,7 +387,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         infoWidgets.add(_buildInfoRow(context, Icons.list_alt, 'Episodios', epCounts.join(', ')));
       }
     } 
-    // 2. Lógica para Libros
     else if (tipo == 'libro') {
       if (elemento.totalCapitulosLibro != null && elemento.totalCapitulosLibro! > 0) {
         infoWidgets.add(_buildInfoRow(context, Icons.book_outlined, 'Total Capítulos', '${elemento.totalCapitulosLibro}'));
@@ -352,20 +395,15 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         infoWidgets.add(_buildInfoRow(context, Icons.pages_outlined, 'Total Páginas', '${elemento.totalPaginasLibro}'));
       }
     } 
-    // 3. Lógica para Anime o Manga
     else if (tipo == 'anime' || tipo == 'manga') {
       if (elemento.totalUnidades != null && elemento.totalUnidades! > 0) {
         final label = tipo == 'anime' ? 'Total Episodios' : 'Total Capítulos';
         infoWidgets.add(_buildInfoRow(context, Icons.list, label, '${elemento.totalUnidades}'));
       }
     }
-
-    // 4. Si no hay widgets (Película, Videojuego), no mostrar nada
     if (infoWidgets.isEmpty) {
       return const SizedBox.shrink(); 
     }
-
-    // 5. Construir el widget final
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -375,14 +413,13 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         ),
         Text('Detalles del Progreso', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 16),
-        ...infoWidgets, // Desplegar la lista de filas
+        ...infoWidgets, 
       ],
     );
   }
   
-  // --- ¡NUEVO WIDGET! (Petición 9) ---
-  /// Helper para construir una fila de información (Icono - Label - Valor)
   Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
+    // (Este código es el que me enviaste)
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -395,7 +432,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)
           ),
           const SizedBox(width: 8),
-          // Usamos Expanded para que el valor (ej. lista de episodios) pueda hacer wrap
           Expanded(
             child: Text(
               value, 
@@ -407,10 +443,8 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
   
-  // --- (Resto de Widgets Auxiliares sin cambios) ---
-  
   Widget _buildEstadoChip(BuildContext context, String estado) {
-    // ... (código sin cambios)
+    // (Este código es el que me enviaste)
     final bool isOficial = estado == "OFICIAL"; 
     final Color chipColor = isOficial 
         ? Theme.of(context).colorScheme.secondary 
@@ -433,7 +467,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
 
   Widget _buildAddOrRemoveButton() {
-    // ... (código sin cambios)
+    // (Este código es el que me enviaste)
     final Color primaryColor = Theme.of(context).colorScheme.primary;
     if (_isDeleting) {
       return ElevatedButton.icon(
@@ -460,7 +494,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           foregroundColor: Colors.red[300], 
           minimumSize: const Size(double.infinity, 50),
         ),
-        onPressed: _handleRemoveElemento,
+        onPressed: _isAnyLoading() ? null : _handleRemoveElemento,
       );
     }
     if (_isAdding) {
@@ -487,12 +521,12 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         foregroundColor: Colors.white,
         minimumSize: const Size(double.infinity, 50),
       ),
-      onPressed: _handleAddElemento,
+      onPressed: _isAnyLoading() ? null : _handleAddElemento,
     );
   }
   
   Widget _buildWriteReviewButton() {
-    // ... (código sin cambios)
+    // (Este código es el que me enviaste)
     if (_haResenado) {
       return const TextButton(
         onPressed: null,
@@ -508,7 +542,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
   
   Widget _buildReviewList() {
-    // ... (código sin cambios)
+    // (Este código es el que me enviaste)
     if (_resenas.isEmpty) {
       return Center(
         child: Padding(
@@ -527,6 +561,58 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       itemBuilder: (context, index) {
         return ResenaCard(resena: _resenas[index]);
       },
+    );
+  }
+
+  /// --- ¡WIDGET REFACTORIZADO! (Petición 8, 17, F) ---
+  Widget _buildAdminButtons(BuildContext context, PerfilUsuario perfil, Elemento elemento) {
+    
+    if (!perfil.esModerador) {
+      return const SizedBox.shrink(); 
+    }
+    
+    // --- Lógica del "interruptor" (Petición F) ---
+    final bool esOficial = elemento.estadoContenido == 'OFICIAL';
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        children: [
+          // (Petición 8) Botón de Editar
+          Expanded(
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.edit_note, size: 18),
+              label: const Text('Editar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.primary,
+              ),
+              onPressed: _isAnyLoading() ? null : () => _goToEditarElemento(elemento),
+            ),
+          ),
+          
+          // (Petición 17 y F) Botón de Oficializar/Comunitarizar (Solo Admins)
+          if (perfil.esAdministrador) ...[
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton.icon(
+                icon: _isLoadingStatusChange 
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      // Icono dinámico
+                      : Icon(esOficial ? Icons.public_off : Icons.verified, size: 18),
+                // Texto dinámico
+                label: Text(_isLoadingStatusChange ? '...' : (esOficial ? 'Comunitarizar' : 'Oficializar')),
+                style: ElevatedButton.styleFrom(
+                  // Color dinámico
+                  backgroundColor: esOficial ? Colors.grey[700] : Theme.of(context).colorScheme.secondary,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: _isAnyLoading() ? null : () => _handleToggleOficial(elemento),
+              ),
+            ),
+          ]
+        ],
+      ),
     );
   }
 }

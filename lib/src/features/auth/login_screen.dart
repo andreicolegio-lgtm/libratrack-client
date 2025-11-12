@@ -4,6 +4,8 @@ import 'package:libratrack_client/src/core/services/auth_service.dart';
 import 'package:libratrack_client/src/features/auth/registration_screen.dart';
 import 'package:libratrack_client/src/features/home/home_screen.dart';
 import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; 
+// --- ¡NUEVA IMPORTACIÓN! ---
+import 'package:libratrack_client/src/core/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,7 +15,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // ... (toda la lógica de _handleLogin, dispose, etc. no cambia) ...
   final _emailController = TextEditingController(); 
   final _passwordController = TextEditingController();
   final _authService = AuthService();
@@ -25,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() { _isLoading = true; });
 
     final navContext = Navigator.of(context);
-    final msgContext = ScaffoldMessenger.of(context); // Guardamos el ScaffoldMessengerState
+    final msgContext = ScaffoldMessenger.of(context); 
 
     try {
       await _authService.login(_emailController.text, _passwordController.text);
@@ -40,7 +41,6 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() { _isLoading = false; });
       }
       
-      // CORREGIDO: Pasamos msgContext (el State) al helper, no 'context'
       SnackBarHelper.showTopSnackBar(
         msgContext, 
         e.toString().replaceFirst("Exception: ", ""), 
@@ -55,13 +55,14 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
-  // ... (toda la lógica de _handleLogin, dispose, etc. no cambia) ...
 
   @override
   Widget build(BuildContext context) {
+    // --- ¡NUEVO! Obtenemos las traducciones ---
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
-      // --- LÍNEA CORREGIDA ---
-      // appBar: AppBar( ... ), // <-- Esta AppBar ha sido eliminada.
+      // (AppBar eliminada en 20251108-A15)
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -73,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: <Widget>[
                 
                 Text(
-                  'LibraTrack',
+                  l10n.appTitle, // <-- TRADUCIDO
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 48), 
                 ),
@@ -82,11 +83,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildInputField(
                   context,
                   controller: _emailController,
-                  labelText: 'Email',
+                  labelText: l10n.loginEmailLabel, // <-- TRADUCIDO
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.isEmpty) { return 'El email es obligatorio.'; }
-                    if (!value.contains('@') || !value.contains('.')) { return 'Introduce un email válido.'; }
+                    if (value == null || value.isEmpty) { return l10n.loginEmailRequired; } // <-- TRADUCIDO
+                    if (!value.contains('@') || !value.contains('.')) { return l10n.loginEmailInvalid; } // <-- TRADUCIDO
                     return null;
                   },
                 ),
@@ -95,10 +96,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildInputField(
                   context,
                   controller: _passwordController,
-                  labelText: 'Contraseña',
+                  labelText: l10n.loginPasswordLabel, // <-- TRADUCIDO
                   isPassword: true,
                   validator: (value) {
-                    if (value == null || value.isEmpty) { return 'La contraseña es obligatoria.'; }
+                    if (value == null || value.isEmpty) { return l10n.loginPasswordRequired; } // <-- TRADUCIDO
                     return null;
                   },
                 ),
@@ -115,9 +116,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: _isLoading ? null : _handleLogin,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Iniciar Sesión',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
+                      : Text(
+                          l10n.loginButton, // <-- TRADUCIDO
+                          style: const TextStyle(fontSize: 18, color: Colors.white),
                         ),
                 ),
                 const SizedBox(height: 16.0),
@@ -130,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                   child: Text(
-                    '¿No tienes cuenta? Regístrate',
+                    l10n.loginRegisterPrompt, // <-- TRADUCIDO
                     style: TextStyle(color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
@@ -142,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ... (el método _buildInputField no cambia) ...
+  // ... (Widget _buildInputField sin cambios)
   Widget _buildInputField(
     BuildContext context,
     {

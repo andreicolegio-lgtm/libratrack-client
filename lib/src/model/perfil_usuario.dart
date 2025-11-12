@@ -1,21 +1,25 @@
 // lib/src/model/perfil_usuario.dart
 
 /// Corresponde al 'UsuarioResponseDTO' del backend.
-/// --- ¡ACTUALIZADO (Sprint 3)! ---
+/// --- ¡ACTUALIZADO (Sprint 4)! ---
 class PerfilUsuario {
   final int id;
   final String username;
   final String email;
-  final String rol; 
-  final String? fotoPerfilUrl; // <-- ¡NUEVO CAMPO!
+  final String? fotoPerfilUrl;
+  
+  // --- ¡CAMPOS DE ROL REFACTORIZADOS! ---
+  final bool esModerador;
+  final bool esAdministrador;
 
   // Constructor
   PerfilUsuario({
     required this.id,
     required this.username,
     required this.email,
-    required this.rol,
-    this.fotoPerfilUrl, // <-- ¡NUEVO CAMPO!
+    this.fotoPerfilUrl,
+    required this.esModerador,
+    required this.esAdministrador,
   });
 
   /// "Constructor de fábrica"
@@ -24,8 +28,12 @@ class PerfilUsuario {
       id: json['id'],
       username: json['username'],
       email: json['email'],
-      rol: json['rol'],
-      fotoPerfilUrl: json['fotoPerfilUrl'] as String?, // <-- ¡NUEVO MAPEO!
+      fotoPerfilUrl: json['fotoPerfilUrl'] as String?,
+      
+      // --- ¡NUEVO MAPEO DE ROLES! ---
+      // Esto ahora coincide con el JSON de la API
+      esModerador: json['esModerador'] as bool,
+      esAdministrador: json['esAdministrador'] as bool,
     );
   }
 }

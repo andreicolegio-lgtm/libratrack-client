@@ -1,12 +1,17 @@
 // lib/src/features/profile/profile_screen.dart
+import 'dart:io'; // <-- ¡NUEVA IMPORTACIÓN!
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import 'package:cached_network_image/cached_network_image.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import 'package:libratrack_client/src/core/utils/api_client.dart'; // <-- ¡NUEVA IMPORTACIÓN!
 import 'package:libratrack_client/src/core/services/auth_service.dart';
 import 'package:libratrack_client/src/core/services/user_service.dart'; 
 import 'package:libratrack_client/src/model/perfil_usuario.dart'; 
 import 'package:libratrack_client/src/features/auth/login_screen.dart';
 import 'package:libratrack_client/src/features/moderacion/moderacion_panel_screen.dart';
-import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; // <-- IMPORTA EL HELPER
+import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; 
 
+/// --- ¡ACTUALIZADO (Sprint 3)! ---
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -15,14 +20,24 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // --- Servicios y Estado ---
+  // --- Servicios ---
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
+  final ApiClient _apiClient = ApiClient();
+  final ImagePicker _picker = ImagePicker();
+
+  // --- Estado ---
   bool _isScreenLoading = true;
   String? _loadingError;
   bool _isLoadingUpdate = false;
   bool _isLoadingPasswordChange = false;
   bool _isLoadingLogout = false;
+  bool _isUploadingFoto = false; // <-- ¡NUEVO!
+  
+  // ¡NUEVO! Guardamos el perfil completo
+  PerfilUsuario? _perfil;
+
+  // --- Controladores ---
   final GlobalKey<FormState> _profileFormKey = GlobalKey<FormState>();
   final _nombreController = TextEditingController();
   final _emailController = TextEditingController();
@@ -30,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final GlobalKey<FormState> _passwordFormKey = GlobalKey<FormState>();
   final _contrasenaActualController = TextEditingController();
   final _nuevaContrasenaController = TextEditingController();
-  String? _userRol; 
+  
 
   @override
   void initState() {
@@ -42,11 +57,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final PerfilUsuario perfil = await _userService.getMiPerfil();
       if (!mounted) return;
-      _nombreController.text = perfil.username;
-      _emailController.text = perfil.email;
-      _originalUsername = perfil.username; 
+      
+      // Actualizamos el estado con el objeto Perfil
       setState(() {
-        _userRol = perfil.rol;
+        _perfil = perfil;
+        _nombreController.text = perfil.username;
+        _emailController.text = perfil.email;
+        _originalUsername = perfil.username; 
         _isScreenLoading = false;
       });
     } catch (e) {
@@ -57,12 +74,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
+  
+  // --- ¡NUEVO MÉTODO! (Petición 6) ---
+  /// Lógica completa para elegir y subir la foto de perfil
+  Future<void> _handlePickAndUploadFoto() async {
+    if (_isAnyLoading()) return;
 
+    // --- ¡CORRECCIÓN! ---
+    // Capturamos el contexto ANTES del 'await'
+    final msgContext = ScaffoldMessenger.of(context);
+    // --- FIN DE LA CORRECCIÓN ---
+
+    // 1. Elegir imagen de la galería
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return; // El usuario canceló
+    
+    setState(() { _isUploadingFoto = true; });
+
+    try {
+      final File imageFile = File(image.path);
+
+      // 2. Subir la imagen a GCS (usando ApiClient)
+      final String fotoUrl = await _apiClient.upload(imageFile);
+      
+      // 3. Enviar la nueva URL a nuestra API para guardarla
+      final PerfilUsuario perfilActualizado = await _userService.updateFotoPerfil(fotoUrl);
+      
+      if (!mounted) return;
+      
+      // 4. Actualizar la UI
+      setState(() {
+        _perfil = perfilActualizado; // Actualiza el perfil con la nueva URL
+        _isUploadingFoto = false;
+      });
+      SnackBarHelper.showTopSnackBar(msgContext, '¡Foto de perfil actualizada!', isError: false);
+
+    } catch (e) {
+      if (!mounted) return;
+      setState(() { _isUploadingFoto = false; });
+      SnackBarHelper.showTopSnackBar(msgContext, e.toString(), isError: true);
+    }
+  }
+  
+  // ... (Lógica _handleUpdateProfile, _handleChangePassword, _handleLogout, _goToModeracionPanel, _goToSettings sin cambios) ...
   Future<void> _handleUpdateProfile() async {
     if (!_profileFormKey.currentState!.validate()) { return; }
     final String nuevoUsername = _nombreController.text.trim();
     if (nuevoUsername == _originalUsername) {
-      // Usa el helper
       SnackBarHelper.showTopSnackBar(
         ScaffoldMessenger.of(context), 
         'No has realizado ningún cambio.', 
@@ -71,19 +129,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     setState(() { _isLoadingUpdate = true; });
-    
-    // Guardamos el contexto ANTES del await
     final msgContext = ScaffoldMessenger.of(context);
-
     try {
       final PerfilUsuario perfilActualizado = await _userService.updateMiPerfil(nuevoUsername);
       if (!mounted) return;
       setState(() {
+        _perfil = perfilActualizado; // Guardamos el perfil actualizado
         _nombreController.text = perfilActualizado.username; 
         _originalUsername = perfilActualizado.username;
         _isLoadingUpdate = false;
       });
-      // Usa el helper
       SnackBarHelper.showTopSnackBar(
         msgContext, 
         '¡Nombre de usuario actualizado!', 
@@ -92,7 +147,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() { _isLoadingUpdate = false; });
-      // Usa el helper
       SnackBarHelper.showTopSnackBar(
         msgContext, 
         e.toString().replaceFirst("Exception: ", ""), 
@@ -104,11 +158,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _handleChangePassword() async {
     if (!_passwordFormKey.currentState!.validate()) { return; }
     setState(() { _isLoadingPasswordChange = true; });
-
-    // Guardamos TODOS los contextos ANTES del await
     final msgContext = ScaffoldMessenger.of(context);
     final focusScope = FocusScope.of(context);
-    
     final String actual = _contrasenaActualController.text;
     final String nueva = _nuevaContrasenaController.text;
     try {
@@ -119,10 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _contrasenaActualController.clear();
         _nuevaContrasenaController.clear();
       });
-      
       focusScope.unfocus(); 
-      
-      // Usa el helper
       SnackBarHelper.showTopSnackBar(
         msgContext, 
         '¡Contraseña actualizada con éxito!', 
@@ -131,7 +179,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() { _isLoadingPasswordChange = false; });
-      // Usa el helper
       SnackBarHelper.showTopSnackBar(
         msgContext, 
         e.toString().replaceFirst("Exception: ", ""), 
@@ -142,11 +189,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _handleLogout() async {
     setState(() { _isLoadingLogout = true; });
-    
-    // Guardamos TODOS los contextos ANTES del await
     final nav = Navigator.of(context);
     final msgContext = ScaffoldMessenger.of(context);
-    
     try {
       await _authService.logout();
       if (!mounted) return;
@@ -157,7 +201,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() { _isLoadingLogout = false; });
-      // Usa el helper
       SnackBarHelper.showTopSnackBar(
         msgContext, 
         'Error al cerrar sesión: ${e.toString()}', 
@@ -176,13 +219,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _goToSettings() {
-    // Es seguro usar 'context' aquí porque no hay 'await'
     SnackBarHelper.showTopSnackBar(
       ScaffoldMessenger.of(context), 
       'Funcionalidad de Ajustes (Modo Oscuro/Claro) Pendiente', 
       isError: false
     );
   }
+  // --- Fin de Lógica ---
 
   @override
   void dispose() {
@@ -197,9 +240,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // --- LÍNEA CORREGIDA ---
         title: Text('LibraTrack', style: Theme.of(context).textTheme.titleLarge),
-        centerTitle: true, // <-- AÑADIDO para consistencia
+        centerTitle: true,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -232,14 +274,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          // --- Avatar (Punto 8) ---
+          
+          // --- ¡WIDGET DE AVATAR MODIFICADO! (Petición 6) ---
           Center(
             child: Stack(
               children: [
-                const CircleAvatar(
+                // El Círculo principal
+                CircleAvatar(
                   radius: 60,
-                  child: Icon(Icons.person, size: 60),
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  // Si estamos subiendo, mostramos un spinner
+                  child: _isUploadingFoto
+                      ? const CircularProgressIndicator()
+                      // Si tenemos URL, mostramos la imagen de GCS
+                      : (_perfil?.fotoPerfilUrl != null)
+                          ? ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: _perfil!.fotoPerfilUrl!,
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const CircularProgressIndicator(),
+                                errorWidget: (context, url, error) => const Icon(Icons.person, size: 60),
+                              ),
+                            )
+                          // Si no, mostramos el icono por defecto
+                          : const Icon(Icons.person, size: 60),
                 ),
+                // El botón de editar
                 Positioned(
                   bottom: 0,
                   right: 0,
@@ -255,17 +317,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
+                // El detector de Taps
                 Positioned.fill(
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () {
-                        SnackBarHelper.showTopSnackBar(
-                          ScaffoldMessenger.of(context), 
-                          'Selector de Imagen Pendiente (Mejora UX)', 
-                          isError: false
-                        );
-                      },
+                      onTap: _isAnyLoading() ? null : _handlePickAndUploadFoto,
                       customBorder: const CircleBorder(),
                     ),
                   ),
@@ -356,7 +413,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           
           // --- Botón de Panel de Moderación (RF03) ---
-          if (_userRol == 'ROLE_MODERADOR') ...[
+          if (_perfil?.rol == 'ROLE_MODERADOR') ...[
             const SizedBox(height: 32.0),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -396,7 +453,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // --- Helpers de UI (Definidos UNA VEZ) ---
 
   bool _isAnyLoading() {
-    return _isLoadingUpdate || _isLoadingPasswordChange || _isLoadingLogout;
+    return _isLoadingUpdate || _isLoadingPasswordChange || _isLoadingLogout || _isUploadingFoto;
   }
 
   Widget _buildSmallSpinner() {
@@ -407,6 +464,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // --- ¡MÉTODO CORREGIDO! ---
+  // (Vuelve a incluir la lógica de 'fillColor' y 'disabledBorder')
   Widget _buildInputField(
     BuildContext context,
     {
@@ -426,17 +485,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         labelText: labelText,
         labelStyle: Theme.of(context).textTheme.labelLarge,
         filled: true,
-        // --- LÍNEA CORREGIDA ---
-        // Si no está habilitado, usa un color de fondo más oscuro/diferente
-        fillColor: enabled ? Theme.of(context).colorScheme.surface : Theme.of(context).scaffoldBackgroundColor,
+        
+        // --- ¡LÓGICA RESTAURADA! ---
+        // Si no está habilitado, usa un color de fondo diferente
+        fillColor: enabled 
+            ? Theme.of(context).colorScheme.surface 
+            : Theme.of(context).scaffoldBackgroundColor,
+            
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
           borderSide: BorderSide.none,
         ),
+        
+        // --- ¡LÓGICA RESTAURADA! ---
+        // Mantenemos un borde visible cuando está deshabilitado
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          // --- LÍNEA CORREGIDA ---
-          // Mantenemos el borde "surface" para que no desaparezca
           borderSide: BorderSide(color: Theme.of(context).colorScheme.surface),
         ),
         focusedBorder: OutlineInputBorder(

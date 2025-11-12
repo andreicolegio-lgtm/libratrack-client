@@ -1,16 +1,17 @@
 // Archivo: lib/src/core/utils/api_client.dart
 import 'dart:convert';
+import 'dart:io'; // <-- ¡NUEVA IMPORTACIÓN!
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p; // <-- ¡NUEVA IMPORTACIÓN!
+import 'package:http_parser/http_parser.dart'; // <-- ¡NUEVA IMPORTACIÓN!
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-// --- ¡NUEVAS IMPORTACIONES! ---
-import 'package:flutter/material.dart'; // Para MaterialPageRoute
-import 'package:libratrack_client/main.dart'; // Para el navigatorKey
-import 'package:libratrack_client/src/core/services/auth_service.dart'; // Para .logout()
-import 'package:libratrack_client/src/features/auth/login_screen.dart'; // Para la navegación
+import 'package:flutter/material.dart'; 
+import 'package:libratrack_client/main.dart'; 
+import 'package:libratrack_client/src/core/services/auth_service.dart'; 
+import 'package:libratrack_client/src/features/auth/login_screen.dart'; 
 
 // Definición del cliente HTTP centralizado con manejo de errores
 class ApiClient {
-  // ... (propiedades _storage, _tokenKey, baseUrl, _instance, _getAuthHeaders sin cambios) ...
   final _storage = const FlutterSecureStorage();
   final String _tokenKey = 'jwt_token';
   final String baseUrl = 'http://10.0.2.2:8080/api'; 
@@ -18,9 +19,12 @@ class ApiClient {
   factory ApiClient() => _instance;
   ApiClient._internal();
 
+  /// Obtiene las cabeceras de autenticación (JWT)
   Future<Map<String, String>> _getAuthHeaders() async {
     final String? token = await _storage.read(key: _tokenKey);
     if (token == null) {
+      // Si el token no se encuentra, manejamos el logout global
+      await _handleGlobalLogout();
       throw Exception('No estás autenticado. Token JWT no encontrado.');
     }
     return {
@@ -29,38 +33,27 @@ class ApiClient {
     };
   }
   
-  // --- ¡NUEVO MÉTODO AUXILIAR! ---
-  /// Maneja globalmente un 401/403, borrando el token
-  /// y navegando a la pantalla de Login.
+  /// Maneja globalmente un 401/403
   Future<void> _handleGlobalLogout() async {
-    // 1. Borra el token inválido del almacenamiento
     await AuthService().logout();
-    
-    // 2. Navega al Login usando el GlobalKey de main.dart
     if (navigatorKey.currentState != null) {
       navigatorKey.currentState!.pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (Route<dynamic> route) => false, // Elimina todas las rutas anteriores
+        (Route<dynamic> route) => false, 
       );
     }
   }
 
-
   /// Lógica central para manejar la respuesta HTTP (incluyendo errores 4xx)
   dynamic handleResponse(http.Response response) { 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      // 2xx Success
       return response.body.isNotEmpty ? jsonDecode(response.body) : null;
     }
 
-    // --- ¡LÓGICA 401/403 MODIFICADA! ---
     if (response.statusCode == 401 || response.statusCode == 403) {
-      // ¡Llama al manejador global!
       _handleGlobalLogout(); 
-      // Lanza la excepción para que la UI sepa que algo falló
       throw Exception('Sesión expirada/no autorizada. Por favor, inicia sesión de nuevo.');
     }
-    // --- FIN DE LA MODIFICACIÓN ---
 
     String errorMessage = 'Error desconocido: ${response.statusCode}';
     if (response.body.isNotEmpty) {
@@ -80,9 +73,7 @@ class ApiClient {
       }
     }
     
-    // Interpretamos los códigos de estado y lanzamos la excepción con el mensaje limpio
     switch (response.statusCode) {
-      // Ya no necesitamos los casos 401/403 aquí
       case 404: 
       case 409: 
       case 400: 
@@ -93,7 +84,62 @@ class ApiClient {
   }
 
   // ===================================================================
-  // Métodos CRUD (sin cambios)
+  // --- ¡NUEVO MÉTODO DE SUBIDA DE ARCHIVOS! (Sprint 3) ---
+  // ===================================================================
+
+  /// Sube un archivo (ej. imagen) al endpoint de 'uploads'.
+  /// @param file El archivo a subir.
+  /// @return La URL pública devuelta por el servidor.
+  Future<String> upload(File file) async {
+    final Uri url = Uri.parse('$baseUrl/uploads');
+    
+    // 1. Obtener el token (¡las subidas están protegidas!)
+    final String? token = await _storage.read(key: _tokenKey);
+    if (token == null) {
+      _handleGlobalLogout();
+      throw Exception('No estás autenticado.');
+    }
+    final Map<String, String> headers = {
+      'Authorization': 'Bearer $token',
+    };
+
+    // 2. Crear la petición Multipart
+    final request = http.MultipartRequest('POST', url);
+    request.headers.addAll(headers);
+
+    // 3. Adjuntar el archivo
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file', // Este 'file' DEBE coincidir con @RequestParam("file") en el controlador
+        file.path,
+        filename: p.basename(file.path), // Envía el nombre del archivo
+        contentType: MediaType('image', p.extension(file.path).substring(1)), // Ej. image/jpeg
+      ),
+    );
+
+    try {
+      // 4. Enviar la petición
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      // 5. Reutilizar nuestro manejador de respuestas
+      final dynamic responseData = handleResponse(response);
+      
+      // 6. Devolver la URL
+      if (responseData is Map && responseData.containsKey('url')) {
+        return responseData['url'] as String;
+      } else {
+        throw Exception("La API no devolvió una URL válida.");
+      }
+      
+    } catch (e) {
+      // Capturamos errores de red o de handleResponse
+      throw Exception('Fallo al subir el archivo: ${e.toString()}');
+    }
+  }
+  
+  // ===================================================================
+  // Métodos CRUD (JSON)
   // ===================================================================
   
   Future<dynamic> post(String path, {dynamic body, bool protected = true}) =>
@@ -108,7 +154,7 @@ class ApiClient {
   Future<dynamic> delete(String path) =>
       _sendRequest(path, 'DELETE');
       
-  /// Única función que realiza la petición y gestiona errores de conexión/API.
+  /// Función de envío para JSON
   Future<dynamic> _sendRequest(
     String path, 
     String method, 
@@ -131,7 +177,6 @@ class ApiClient {
 
     http.Response response;
     try {
-      // El TRY solo envuelve la llamada de RED
       switch (method) {
         case 'GET':
           response = await http.get(url, headers: headers);
@@ -149,11 +194,9 @@ class ApiClient {
           throw Exception('Método HTTP no soportado: $method');
       }
     } catch (e) {
-      // Error de CONEXIÓN
       throw Exception('Fallo al conectar con el servidor.');
     }
 
-    // Dejamos que handleResponse maneje los códigos 4xx/5xx
     return handleResponse(response);
   }
 }

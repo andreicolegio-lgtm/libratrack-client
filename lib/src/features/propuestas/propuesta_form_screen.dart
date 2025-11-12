@@ -4,8 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:libratrack_client/src/core/services/propuesta_service.dart';
 import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; 
 
-/// Pantalla con el formulario para proponer un nuevo elemento (RF13).
-/// --- ¡ACTUALIZADO (Sprint 2 / V2)! ---
+/// --- ¡ACTUALIZADO (Sprint 3 / Petición 12)! ---
 class PropuestaFormScreen extends StatefulWidget {
   const PropuestaFormScreen({super.key});
 
@@ -24,22 +23,19 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
   final _descripcionController = TextEditingController();
   final _tipoController = TextEditingController();
   final _generosController = TextEditingController();
-  final _imagenUrlController = TextEditingController();
+  // final _imagenUrlController = TextEditingController(); // <-- ¡ELIMINADO!
   
-  // --- ¡CONTROLADORES REFACTORIZADOS! ---
-  final _episodiosPorTemporadaController = TextEditingController(); // Para Series
-  final _totalUnidadesController = TextEditingController();         // Para Anime/Manga
-  final _totalCapitulosLibroController = TextEditingController();   // Para Libros
-  final _totalPaginasLibroController = TextEditingController();     // Para Libros
+  final _episodiosPorTemporadaController = TextEditingController(); 
+  final _totalUnidadesController = TextEditingController();         
+  final _totalCapitulosLibroController = TextEditingController();   
+  final _totalPaginasLibroController = TextEditingController();     
   
-  // Estado local para mostrar campos dinámicos
   String _tipoSeleccionado = "";
 
 
   @override
   void initState() {
     super.initState();
-    // Escuchamos los cambios en el campo "Tipo"
     _tipoController.addListener(_actualizarCamposDinamicos);
   }
 
@@ -47,10 +43,10 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
   void dispose() {
     _tituloController.dispose();
     _descripcionController.dispose();
-    _tipoController.removeListener(_actualizarCamposDinamicos); // Limpiamos listener
+    _tipoController.removeListener(_actualizarCamposDinamicos); 
     _tipoController.dispose();
     _generosController.dispose();
-    _imagenUrlController.dispose();
+    // _imagenUrlController.dispose(); // <-- ¡ELIMINADO!
     _episodiosPorTemporadaController.dispose();
     _totalUnidadesController.dispose();
     _totalCapitulosLibroController.dispose();
@@ -58,7 +54,6 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     super.dispose();
   }
   
-  /// ¡NUEVO! Detecta el tipo y actualiza la UI
   void _actualizarCamposDinamicos() {
     setState(() {
       _tipoSeleccionado = _tipoController.text.trim().toLowerCase();
@@ -75,15 +70,13 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     final navContext = Navigator.of(context); 
 
     try {
-      // 2. Llamar al servicio con TODOS los campos
       await _propuestaService.proponerElemento(
         titulo: _tituloController.text,
         descripcion: _descripcionController.text,
         tipo: _tipoController.text,
         generos: _generosController.text,
-        imagenUrl: _imagenUrlController.text.isEmpty ? null : _imagenUrlController.text,
+        // imagenUrl: _imagenUrlController.text.isEmpty ? null : _imagenUrlController.text, // <-- ¡ELIMINADO!
         
-        // --- ¡PARÁMETROS REFACTORIZADOS! ---
         episodiosPorTemporada: _episodiosPorTemporadaController.text.isEmpty ? null : _episodiosPorTemporadaController.text,
         totalUnidades: _totalUnidadesController.text.isEmpty ? null : int.tryParse(_totalUnidadesController.text),
         totalCapitulosLibro: _totalCapitulosLibroController.text.isEmpty ? null : int.tryParse(_totalCapitulosLibroController.text),
@@ -156,22 +149,10 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 labelText: 'Géneros (separados por coma)',
                 validator: (value) => (value == null || value.isEmpty) ? 'Los géneros son obligatorios' : null,
               ),
-              const SizedBox(height: 16),
-              _buildInputField(
-                context,
-                controller: _imagenUrlController,
-                labelText: 'URL Imagen Portada (Opcional)',
-                hintText: 'https://example.com/portada.jpg',
-                keyboardType: TextInputType.url,
-                validator: (value) {
-                  if (value != null && value.isNotEmpty && !value.startsWith('http')) {
-                    return 'Debe ser una URL válida (ej. empezar con http).';
-                  }
-                  return null;
-                }
-              ),
-
-              // --- ¡CAMPOS DE PROGRESO DINÁMICOS! (Petición c) ---
+              
+              // --- CAMPO DE URL DE IMAGEN ELIMINADO (Petición 12) ---
+              
+              // --- Campos de Progreso Dinámicos ---
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),
@@ -180,9 +161,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 'Datos de Progreso (Opcional)', 
                 style: Theme.of(context).textTheme.titleLarge
               ),
-              const SizedBox(height: 8),
-              
-              // --- Lógica condicional ---
+              const SizedBox(height: 16),
               
               // 1. Para Series
               if (_tipoSeleccionado == 'serie')
@@ -195,7 +174,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 
               // 2. Para Libros
               if (_tipoSeleccionado == 'libro')
-                ...[ // Usamos '...' para añadir múltiples widgets
+                ...[ 
                   _buildInputField(
                     context,
                     controller: _totalCapitulosLibroController,
@@ -223,7 +202,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
                 
-              // 4. Para Película o Videojuego (No mostramos NADA)
+              // 4. Para Película o Videojuego
               if (_tipoSeleccionado != 'serie' && 
                   _tipoSeleccionado != 'libro' && 
                   _tipoSeleccionado != 'anime' && 
@@ -233,7 +212,6 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                   'El tipo "${_tipoController.text}" no requiere datos de progreso.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-              // --- FIN DE CAMPOS DINÁMICOS ---
 
               const SizedBox(height: 32.0),
               ElevatedButton(
@@ -259,6 +237,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     );
   }
 
+  // ... (Widget _buildInputField sin cambios)
   Widget _buildInputField(
     BuildContext context,
     {

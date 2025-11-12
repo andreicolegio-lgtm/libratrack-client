@@ -1,13 +1,17 @@
 // lib/src/features/moderacion/propuesta_edit_screen.dart
+import 'dart:io'; // <-- ¡NUEVA IMPORTACIÓN!
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; 
+import 'package:image_picker/image_picker.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import 'package:libratrack_client/src/core/utils/api_client.dart'; // <-- ¡NUEVA IMPORTACIÓN!
 import 'package:libratrack_client/src/core/services/moderacion_service.dart';
 import 'package:libratrack_client/src/model/propuesta.dart';
 import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
 
 /// Pantalla para que un Moderador EDITE y APRUEBE una propuesta (Petición d).
+/// --- ¡ACTUALIZADO (Sprint 3)! ---
 class PropuestaEditScreen extends StatefulWidget {
-  final Propuesta propuesta; // <-- Recibe la propuesta a editar
+  final Propuesta propuesta; 
 
   const PropuestaEditScreen({super.key, required this.propuesta});
 
@@ -18,47 +22,46 @@ class PropuestaEditScreen extends StatefulWidget {
 class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final ModeracionService _moderacionService = ModeracionService();
+  final ApiClient _apiClient = ApiClient(); // Para el servicio de subida
 
-  bool _isLoading = false;
+  bool _isLoading = false; // Para el botón de "Aprobar"
+  bool _isUploading = false; // Para el botón de "Subir Imagen"
 
-  // Controladores para TODOS los campos
+  // Controladores
   late TextEditingController _tituloController;
   late TextEditingController _descripcionController;
   late TextEditingController _tipoController;
   late TextEditingController _generosController;
-  
   late TextEditingController _episodiosPorTemporadaController;
   late TextEditingController _totalUnidadesController;
   late TextEditingController _totalCapitulosLibroController;
   late TextEditingController _totalPaginasLibroController;
   
-  // Estado local para mostrar campos dinámicos
   String _tipoSeleccionado = "";
+  
+  // --- ¡NUEVO ESTADO PARA IMÁGENES! (Petición 6) ---
+  File? _pickedImage; // El archivo seleccionado de la galería
+  String? _uploadedImageUrl; // La URL de GCS devuelta por la API
 
   @override
   void initState() {
     super.initState();
-    
-    // Rellenamos el formulario con los datos de la propuesta que recibimos
     final p = widget.propuesta;
     _tituloController = TextEditingController(text: p.tituloSugerido);
     _descripcionController = TextEditingController(text: p.descripcionSugerida ?? '');
     _tipoController = TextEditingController(text: p.tipoSugerido);
     _generosController = TextEditingController(text: p.generosSugeridos);
-    
     _episodiosPorTemporadaController = TextEditingController(text: p.episodiosPorTemporada ?? '');
     _totalUnidadesController = TextEditingController(text: p.totalUnidades?.toString() ?? '');
     _totalCapitulosLibroController = TextEditingController(text: p.totalCapitulosLibro?.toString() ?? '');
     _totalPaginasLibroController = TextEditingController(text: p.totalPaginasLibro?.toString() ?? '');
-    
     _tipoSeleccionado = p.tipoSugerido.toLowerCase();
-    
-    // Escuchamos los cambios en el campo "Tipo"
     _tipoController.addListener(_actualizarCamposDinamicos);
   }
 
   @override
   void dispose() {
+    // ... (limpiamos todos los controllers) ...
     _tituloController.dispose();
     _descripcionController.dispose();
     _tipoController.removeListener(_actualizarCamposDinamicos);
@@ -71,17 +74,68 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     super.dispose();
   }
   
-  /// Detecta el tipo y actualiza la UI
   void _actualizarCamposDinamicos() {
     setState(() {
       _tipoSeleccionado = _tipoController.text.trim().toLowerCase();
     });
   }
 
+  /// --- ¡NUEVO MÉTODO! (Petición 6) ---
+  /// Abre la galería para seleccionar una imagen
+  Future<void> _handlePickImage() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _pickedImage = File(image.path);
+          _uploadedImageUrl = null; // Reseteamos la URL si se elige una nueva
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      SnackBarHelper.showTopSnackBar(ScaffoldMessenger.of(context), 'Error al seleccionar imagen: $e', isError: true);
+    }
+  }
+  
+  /// --- ¡NUEVO MÉTODO! (Petición 6) ---
+  /// Sube la imagen seleccionada al endpoint /api/uploads
+  Future<void> _handleUploadImage() async {
+    if (_pickedImage == null) return;
+
+    setState(() { _isUploading = true; });
+    final msgContext = ScaffoldMessenger.of(context);
+
+    try {
+      // Usamos el método de subida del ApiClient
+      final String url = await _apiClient.upload(_pickedImage!);
+      
+      if (mounted) {
+        setState(() {
+          _uploadedImageUrl = url; // Guardamos la URL de GCS
+          _isUploading = false;
+        });
+        SnackBarHelper.showTopSnackBar(msgContext, '¡Imagen subida!', isError: false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() { _isUploading = false; });
+        SnackBarHelper.showTopSnackBar(msgContext, e.toString(), isError: true);
+      }
+    }
+  }
+
+
   /// Lógica para "Guardar y Aprobar" (RF15)
   Future<void> _handleAprobar() async {
     if (!_formKey.currentState!.validate()) {
       return; 
+    }
+    
+    // Validamos que se haya subido una imagen
+    if (_uploadedImageUrl == null) {
+      SnackBarHelper.showTopSnackBar(ScaffoldMessenger.of(context), 'Por favor, sube una imagen de portada antes de aprobar.', isError: true);
+      return;
     }
     
     setState(() { _isLoading = true; });
@@ -96,12 +150,14 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         'tipoSugerido': _tipoController.text,
         'generosSugeridos': _generosController.text,
         
+        // --- ¡NUEVO! Enviamos la URL de la imagen ---
+        'urlImagen': _uploadedImageUrl, 
+        
         'episodiosPorTemporada': _episodiosPorTemporadaController.text.isEmpty ? null : _episodiosPorTemporadaController.text,
         'totalUnidades': _totalUnidadesController.text.isEmpty ? null : int.tryParse(_totalUnidadesController.text),
         'totalCapitulosLibro': _totalCapitulosLibroController.text.isEmpty ? null : int.tryParse(_totalCapitulosLibroController.text),
         'totalPaginasLibro': _totalPaginasLibroController.text.isEmpty ? null : int.tryParse(_totalPaginasLibroController.text),
       };
-      // Quitamos nulos para un JSON limpio
       body.removeWhere((key, value) => value == null);
 
       // 2. Llamamos al servicio de moderación
@@ -110,7 +166,6 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
       if (!mounted) return;
       
       // 3. Cerramos la pantalla y devolvemos 'true'
-      // Esto le dice a ModeracionPanelScreen que debe recargar.
       navContext.pop(true); 
 
     } catch (e) {
@@ -146,6 +201,10 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
               ),
               const SizedBox(height: 24),
               
+              // --- ¡NUEVO WIDGET DE IMAGEN! (Petición 6) ---
+              _buildImageUploader(),
+              const SizedBox(height: 24),
+
               // --- Campos Editables ---
               _buildInputField(
                 context,
@@ -154,6 +213,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                 validator: (value) => (value == null || value.isEmpty) ? 'El título es obligatorio' : null,
               ),
               const SizedBox(height: 16),
+              // ... (resto de campos: desc, tipo, generos)
               _buildInputField(
                 context,
                 controller: _descripcionController,
@@ -187,9 +247,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
               ),
               const SizedBox(height: 16),
               
-              // --- Lógica condicional ---
-              
-              // 1. Para Series
+              // ... (Lógica condicional de campos de progreso sin cambios) ...
               if (_tipoSeleccionado == 'serie')
                 _buildInputField(
                   context,
@@ -198,8 +256,6 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                   hintText: 'Ej. 10,8,12 (para T1, T2, T3)',
                   validator: (value) => (value == null || value.isEmpty) ? 'Este campo es obligatorio para Series' : null,
                 ),
-                
-              // 2. Para Libros
               if (_tipoSeleccionado == 'libro')
                 ...[ 
                   _buildInputField(
@@ -220,8 +276,6 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                     validator: (value) => (value == null || value.isEmpty) ? 'Este campo es obligatorio para Libros' : null,
                   ),
                 ],
-                
-              // 3. Para Anime o Manga
               if (_tipoSeleccionado == 'anime' || _tipoSeleccionado == 'manga')
                 _buildInputField(
                   context,
@@ -231,8 +285,6 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (value) => (value == null || value.isEmpty) ? 'Este campo es obligatorio' : null,
                 ),
-                
-              // 4. Para Película o Videojuego (No mostramos NADA)
               if (_tipoSeleccionado == 'película' || _tipoSeleccionado == 'videojuego')
                 Text(
                   'El tipo "${_tipoController.text}" no requiere datos de progreso.',
@@ -242,7 +294,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
               const SizedBox(height: 32.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[600], // Botón de Aprobar
+                  backgroundColor: Colors.green[600], 
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
@@ -260,6 +312,75 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// --- ¡NUEVO WIDGET! (Petición 6) ---
+  /// Muestra el selector/visor de imagen
+  Widget _buildImageUploader() {
+    Widget content;
+    if (_pickedImage != null) {
+      // 1. Imagen seleccionada, lista para subir
+      content = Image.file(_pickedImage!, fit: BoxFit.cover);
+    } else if (_uploadedImageUrl != null) {
+      // 2. Imagen ya subida, mostrando la URL
+      content = Image.network(_uploadedImageUrl!, fit: BoxFit.cover);
+    } else {
+      // 3. Placeholder por defecto
+      content = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.image_search, size: 48, color: Colors.grey[600]),
+          const SizedBox(height: 8),
+          Text('Sin portada', style: Theme.of(context).textTheme.bodyMedium),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Visor
+        Container(
+          height: 200,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10.0),
+            child: content,
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        // Botones
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Botón 1: Elegir de la Galería
+            TextButton.icon(
+              icon: const Icon(Icons.photo_library),
+              label: const Text('Galería'),
+              onPressed: _isLoading || _isUploading ? null : _handlePickImage,
+            ),
+            
+            // Botón 2: Subir
+            ElevatedButton.icon(
+              icon: _isUploading
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.cloud_upload),
+              label: Text(_isUploading ? 'Subiendo...' : 'Subir'),
+              onPressed: _pickedImage == null || _isUploading || _isLoading ? null : _handleUploadImage,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        )
+      ],
     );
   }
 

@@ -1,8 +1,8 @@
 // lib/src/model/resena.dart
 
 /// Modelo de datos para representar una única Reseña (RF12).
-///
 /// Corresponde al 'ResenaResponseDTO.java' del backend.
+/// --- ¡ACTUALIZADO (Sprint 3)! ---
 class Resena {
   final int id;
   final int valoracion; // 1-5
@@ -10,6 +10,7 @@ class Resena {
   final DateTime fechaCreacion;
   final int elementoId;
   final String usernameAutor;
+  final String? autorFotoPerfilUrl; // <-- ¡NUEVO CAMPO!
 
   Resena({
     required this.id,
@@ -18,10 +19,10 @@ class Resena {
     required this.fechaCreacion,
     required this.elementoId,
     required this.usernameAutor,
+    this.autorFotoPerfilUrl, // <-- ¡NUEVO CAMPO!
   });
 
-  /// "Constructor de fábrica" (Factory Constructor) para crear una instancia
-  /// a partir del JSON (Map) decodificado de la API.
+  /// "Constructor de fábrica" (Factory Constructor)
   factory Resena.fromJson(Map<String, dynamic> json) {
     return Resena(
       id: json['id'],
@@ -30,6 +31,7 @@ class Resena {
       fechaCreacion: DateTime.parse(json['fechaCreacion']),
       elementoId: json['elementoId'],
       usernameAutor: json['usernameAutor'],
+      autorFotoPerfilUrl: json['autorFotoPerfilUrl'] as String?, // <-- ¡NUEVO MAPEO!
     );
   }
 }

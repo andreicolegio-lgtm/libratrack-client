@@ -37,9 +37,9 @@ class ApiClient {
   // --- MÉTODOS PÚBLICOS DE PETICIÓN (AHORA CON LÓGICA DE 'RETRY') ---
 
   // --- ¡CORREGIDO (ID: QA-078)! Añadido 'isAuthEndpoint' ---
-  Future<dynamic> get(String endpoint, {bool isAuthEndpoint = false}) async {
+  Future<dynamic> get(String endpoint, {Map<String, String>? queryParams, bool isAuthEndpoint = false}) async {
     try {
-      final uri = Uri.parse('$_baseUrl/$endpoint');
+      final uri = Uri.parse('$_baseUrl/$endpoint').replace(queryParameters: queryParams);
       final response = await http.get(uri, headers: await _getHeaders());
       return _handleResponse(response);
     } on UnauthorizedException {

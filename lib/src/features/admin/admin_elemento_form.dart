@@ -1,20 +1,26 @@
 // Archivo: lib/src/features/admin/admin_elemento_form.dart
-// (¡CORREGIDO Y REFACTORIZADO!)
+// (¡MODIFICADO POR GEMINI PARA AÑADIR RELACIONES!)
 
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:provider/provider.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import 'package:provider/provider.dart'; 
 
 import 'package:libratrack_client/src/core/utils/api_client.dart';
 import 'package:libratrack_client/src/core/services/admin_service.dart';
 import 'package:libratrack_client/src/model/elemento.dart';
 import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
-import 'package:libratrack_client/src/core/utils/api_exceptions.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart'; 
+
+// --- ¡NUEVAS IMPORTACIONES AÑADIDAS POR GEMINI! ---
+import 'package:libratrack_client/src/core/services/elemento_service.dart';
+import 'package:libratrack_client/src/model/elemento_relacion.dart';
+// ---
 
 /// Formulario para que un Admin/Mod CREE (Petición 15) o EDITE (Petición 8) un Elemento.
+/// --- ¡ACTUALIZADO (Sprint 10 / Relaciones)! ---
 class AdminElementoFormScreen extends StatefulWidget {
   // Si 'elemento' es null, estamos en modo CREAR.
   // Si 'elemento' no es null, estamos en modo EDITAR.
@@ -32,10 +38,11 @@ class AdminElementoFormScreen extends StatefulWidget {
 class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // --- ¡CORREGIDO (Error 1)! ---
-  // Ya no creamos instancias nuevas. Las obtendremos de Provider en initState.
+  // Servicios
   late final AdminService _adminService;
   late final ApiClient _apiClient;
+  // --- ¡NUEVO SERVICIO AÑADIDO POR GEMINI! ---
+  late final ElementoService _elementoService;
   // ---
 
   bool _isLoading = false;
@@ -53,9 +60,13 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
   String _tipoSeleccionado = "";
 
+  // --- ¡NUEVOS CAMPOS DE ESTADO PARA RELACIONES! (Añadidos por Gemini) ---
+  late Future<List<ElementoRelacion>> _elementosFuture;
+  List<ElementoRelacion> _allElementos = []; // Lista completa
+  final Set<int> _selectedSecuelaIds = {}; // IDs de las secuelas seleccionadas
+  // ---
+
   // Estado de Imágenes
-  // --- ¡CORREGIDO (Error 2b)! ---
-  // Almacenamos el XFile original, no el File.
   XFile? _pickedImage; 
   String? _uploadedImageUrl;
 
@@ -63,11 +74,11 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   void initState() {
     super.initState();
 
-    // --- ¡CORREGIDO (Error 1)! ---
     // Obtenemos los servicios desde Provider.
-    // Usamos context.read() porque solo los necesitamos una vez, no para "escuchar" cambios.
     _adminService = context.read<AdminService>();
     _apiClient = context.read<ApiClient>();
+    // --- ¡NUEVA LÍNEA AÑADIDA POR GEMINI! ---
+    _elementoService = context.read<ElementoService>();
     // ---
 
     // Si estamos en modo Editar, rellenamos el formulario
@@ -83,7 +94,24 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       _totalPaginasLibroController.text = e.totalPaginasLibro?.toString() ?? '';
       _tipoSeleccionado = e.tipo.toLowerCase();
       _uploadedImageUrl = e.urlImagen; // <-- Cargamos la imagen existente
+
+      // --- ¡NUEVA LÓGICA DE PRE-SELECCIÓN! (Añadida por Gemini) ---
+      // Pre-seleccionar Secuelas (asume que 'elemento.dart' fue actualizado)
+      _selectedSecuelaIds.addAll(e.secuelas.map((s) => s.id));
+      // ---
     }
+
+    // --- ¡NUEVA CARGA DE DATOS! (Añadida por Gemini) ---
+    // Cargar la lista simple de todos los elementos para el selector
+    _elementosFuture = _elementoService.getSimpleElementoList();
+    _elementosFuture.then((lista) {
+      if (mounted) {
+        setState(() {
+          _allElementos = lista;
+        });
+      }
+    });
+    // ---
 
     _tipoController.addListener(_actualizarCamposDinamicos);
   }
@@ -110,13 +138,12 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   }
 
   Future<void> _handlePickImage() async {
+    // ... (Tu código de _handlePickImage no cambia) ...
     final ImagePicker picker = ImagePicker();
     try {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         setState(() {
-          // --- ¡CORREGIDO (Error 2b)! ---
-          // Guardamos el XFile directamente.
           _pickedImage = image; 
           _uploadedImageUrl = null;
         });
@@ -124,25 +151,21 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     } catch (e) {
       if (!mounted) return;
       SnackBarHelper.showTopSnackBar(
-          ScaffoldMessenger.of(context), 'Error al seleccionar imagen: $e',
-          isError: true);
+        ScaffoldMessenger.of(context), 'Error al seleccionar imagen: $e',
+        isError: true);
     }
   }
 
   Future<void> _handleUploadImage() async {
+    // ... (Tu código de _handleUploadImage no cambia) ...
     if (_pickedImage == null) return;
     setState(() {
       _isUploading = true;
     });
     final msgContext = ScaffoldMessenger.of(context);
     try {
-      // --- ¡CORREGIDO (Error 2a y 2c)! ---
-      // 1. Añadimos el endpoint 'uploads'.
-      // 2. _pickedImage ya es un XFile.
-      // 3. Extraemos la URL de la respuesta Map.
       final dynamic data = await _apiClient.upload('uploads', _pickedImage!);
       final String url = data['url'];
-      // ---
 
       if (mounted) {
         setState(() {
@@ -202,14 +225,16 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         'totalPaginasLibro': _totalPaginasLibroController.text.isEmpty
             ? null
             : int.tryParse(_totalPaginasLibroController.text),
+            
+        // --- ¡NUEVO CAMPO EN EL MAPA! (Añadido por Gemini) ---
+        "secuelaIds": _selectedSecuelaIds.toList(),
+        // ---
       };
       body.removeWhere((key, value) => value == null);
 
       // 2. Decidimos si llamar a "Crear" o "Actualizar"
       if (widget.isEditMode) {
         // --- MODO EDICIÓN (Petición 8) ---
-        // --- ¡CORREGIDO (Error 3)! ---
-        // Convertimos el ID a String.
         await _adminService.updateElemento(widget.elemento!.id, body);
       } else {
         // --- MODO CREACIÓN (Petición 15) ---
@@ -225,8 +250,6 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       SnackBarHelper.showTopSnackBar(msgContext, successMessage, isError: false);
       navContext.pop(true); // Devolvemos 'true' para refrescar la pantalla anterior
 
-    // --- ¡MEJORADO! ---
-    // Capturamos la excepción específica de la API
     } on ApiException catch (e) {
       if (mounted) {
         setState(() {
@@ -321,8 +344,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               const SizedBox(height: 16),
 
               // --- Lógica condicional ---
-
-              // 1. Para Series
+              // (Tu lógica de _tipoSeleccionado no cambia)
               if (_tipoSeleccionado == 'serie')
                 _buildInputField(
                   context,
@@ -330,8 +352,6 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                   labelText: 'Episodios por Temporada',
                   hintText: 'Ej. 10,8,12 (para T1, T2, T3)',
                 ),
-
-              // 2. Para Libros
               if (_tipoSeleccionado == 'libro')
                 ...[
                   _buildInputField(
@@ -350,8 +370,6 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ],
-
-              // 3. Para Anime o Manga
               if (_tipoSeleccionado == 'anime' || _tipoSeleccionado == 'manga')
                 _buildInputField(
                   context,
@@ -362,15 +380,22 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
-
               if (_tipoSeleccionado == 'película' ||
                   _tipoSeleccionado == 'videojuego')
                 Text(
                   'El tipo "${_tipoController.text}" no requiere datos de progreso.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-
+              
+              // --- ¡NUEVA SECCIÓN AÑADIDA POR GEMINI! ---
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24.0),
+                child: Divider(),
+              ),
+              _buildSecuelasSelector(), // <-- Widget
               const SizedBox(height: 32.0),
+              // ---
+
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,
@@ -396,14 +421,11 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
   /// Muestra el selector/visor de imagen
   Widget _buildImageUploader() {
+    // ... (Tu código de _buildImageUploader no cambia) ...
     Widget content;
     if (_pickedImage != null) {
-      // 1. Imagen nueva, lista para subir
-      // --- ¡CORREGIDO (Error 2b)! ---
-      // Se usa File(_pickedImage!.path) para mostrar el XFile.
       content = Image.file(File(_pickedImage!.path), fit: BoxFit.cover);
     } else if (_uploadedImageUrl != null) {
-      // 2. Imagen existente (de GCS), mostrando la URL
       content = CachedNetworkImage(
         imageUrl: _uploadedImageUrl!,
         fit: BoxFit.cover,
@@ -412,7 +434,6 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
             Icon(Icons.image_not_supported, size: 48, color: Colors.grey[600]),
       );
     } else {
-      // 3. Placeholder por defecto
       content = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -426,7 +447,6 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Visor
         Container(
           height: 200,
           width: double.infinity,
@@ -440,19 +460,14 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           ),
         ),
         const SizedBox(height: 16),
-
-        // Botones
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Botón 1: Elegir de la Galería
             TextButton.icon(
               icon: const Icon(Icons.photo_library),
               label: const Text('Galería'),
               onPressed: _isLoading || _isUploading ? null : _handlePickImage,
             ),
-
-            // Botón 2: Subir
             ElevatedButton.icon(
               icon: _isUploading
                   ? const SizedBox(
@@ -486,6 +501,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     String? Function(String?)? validator,
     List<TextInputFormatter>? inputFormatters,
   }) {
+    // ... (Tu código de _buildInputField no cambia) ...
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
@@ -521,4 +537,76 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       ),
     );
   }
+
+  // --- ¡NUEVO WIDGET AÑADIDO POR GEMINI! ---
+  Widget _buildSecuelasSelector() {
+    return FutureBuilder<List<ElementoRelacion>>(
+      future: _elementosFuture,
+      builder: (context, snapshot) {
+        // Mostrar un loader simple mientras la lista de elementos carga
+        if (snapshot.connectionState == ConnectionState.waiting && _allElementos.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Secuelas (Opcional)',
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              const Center(child: CircularProgressIndicator()),
+            ],
+          );
+        }
+        if (snapshot.hasError) {
+          return Text('Error al cargar elementos: ${snapshot.error}');
+        }
+
+        // Usamos _allElementos (que se pobló en initState.then)
+        // Filtramos el elemento actual (un elemento no puede ser secuela de sí mismo)
+        final elementosDisponibles = _allElementos.where((el) {
+          if (widget.elemento == null) return true; // "Crear"
+          return el.id != widget.elemento!.id; // "Editar"
+        }).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Secuelas (Opcional)',
+                style: Theme.of(context).textTheme.titleLarge),
+            Text('Elementos que van DESPUÉS de este.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[400])),
+            const SizedBox(height: 16),
+            Container(
+              height: 300, // Altura fija para el contenedor scrollable
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: ListView(
+                  children: elementosDisponibles.map((ElementoRelacion el) {
+                    final isSelected = _selectedSecuelaIds.contains(el.id);
+                    return CheckboxListTile(
+                      title: Text(el.titulo),
+                      value: isSelected,
+                      onChanged: (bool? selected) {
+                        if (selected == null) return;
+                        setState(() {
+                          if (selected) {
+                            _selectedSecuelaIds.add(el.id);
+                          } else {
+                            _selectedSecuelaIds.remove(el.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  // --- FIN DE WIDGET AÑADIDO ---
 }

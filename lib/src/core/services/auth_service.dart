@@ -35,13 +35,20 @@ class AuthService with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   AuthService(this._apiClient, this._secureStorage) {
+    // Inicialización asíncrona sin esperar (fire and forget)
     _initialize();
   }
 
   /// Inicialización asíncrona del servicio
   Future<void> _initialize() async {
-    await _initializeGoogleSignIn();
-    await _tryAutoLogin();
+    try {
+      await _initializeGoogleSignIn();
+      await _tryAutoLogin();
+    } catch (e) {
+      debugPrint('❌ Error durante inicialización: $e');
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Inicializa GoogleSignIn de forma segura
@@ -57,13 +64,17 @@ class AuthService with ChangeNotifier {
     try {
       _accessToken = await _secureStorage.read(key: _accessTokenKey);
       _refreshToken = await _secureStorage.read(key: _refreshTokenKey);
+      
+      debugPrint('🔐 Auto-login: accessToken=${_accessToken != null ? "✅" : "❌"}, refreshToken=${_refreshToken != null ? "✅" : "❌"}');
 
       if (_accessToken != null && _refreshToken != null) {
         await _loadUserProfile(shouldNotify: false);
       } else {
+        debugPrint('⚠️ No hay tokens guardados, cerrando sesión');
         await logout(shouldNotify: false);
       }
     } catch (e) {
+      debugPrint('❌ Error en auto-login: $e');
       await logout(shouldNotify: false);
     } finally {
       _isLoading = false;
@@ -73,12 +84,16 @@ class AuthService with ChangeNotifier {
 
   Future<void> _loadUserProfile({bool shouldNotify = true}) async {
     try {
+      debugPrint('📥 Cargando perfil de usuario desde /usuarios/me...');
       final data = await _apiClient.get('usuarios/me');
       _perfilUsuario = PerfilUsuario.fromJson(data);
+      debugPrint('✅ Perfil cargado: ${_perfilUsuario?.username}');
       if (shouldNotify) notifyListeners();
-    } on UnauthorizedException {
+    } on UnauthorizedException catch (e) {
+      debugPrint('❌ UnauthorizedException en _loadUserProfile: ${e.message}');
       await logout(shouldNotify: shouldNotify);
     } catch (e) {
+      debugPrint('❌ Error en _loadUserProfile: $e');
       await logout(shouldNotify: shouldNotify);
     }
   }

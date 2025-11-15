@@ -1,67 +1,55 @@
 // Archivo: lib/src/core/services/elemento_service.dart
+// (¡REFACTORIZADO! Acepta 'int' para IDs)
 
-import 'package:libratrack_client/src/core/utils/api_client.dart'; 
-import 'package:libratrack_client/src/model/elemento.dart'; 
-// NUEVA IMPORTACIÓN
-import 'package:libratrack_client/src/model/paginated_response.dart'; 
+import 'package:flutter/material.dart';
+import 'package:libratrack_client/src/core/utils/api_client.dart';
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
+import 'package:libratrack_client/src/model/elemento.dart';
+import 'package:libratrack_client/src/model/paginated_response.dart';
 
-/// Servicio para gestionar todas las llamadas a la API relacionadas con los
-/// elementos públicos del catálogo (Búsqueda, Fichas de detalle).
-/// REFACTORIZADO: Utiliza ApiClient y Paginación.
-class ElementoService {
-  
-  // Ruta base relativa al ApiClient.baseUrl
-  final String _basePath = '/elementos';
+class ElementoService with ChangeNotifier {
+  final ApiClient _apiClient;
+  ElementoService(this._apiClient);
 
-  /// Obtiene la lista global de elementos o busca por los 3 criterios (RF09).
-  ///
-  /// REFACTORIZADO: Ahora acepta paginación y devuelve un PaginatedResponse.
-  Future<PaginatedResponse<Elemento>> getElementos({
-    String? searchText,
-    String? tipoName,
-    String? generoName,
-    int page = 0,
+  /// Busca elementos en la API con paginación y filtros.
+  Future<PaginatedResponse<Elemento>> searchElementos({
+    required int page,
     int size = 20,
+    String? search,
+    String? tipo,
+    String? genero,
   }) async {
-    
-    // 1. Construir el Mapa de Query Parameters (incluyendo paginación)
-    final Map<String, String> queryParams = {
-      'page': page.toString(),
-      'size': size.toString(),
-    };
-    if (searchText != null && searchText.isNotEmpty) {
-      queryParams['search'] = searchText;
+    try {
+      String endpoint = 'elementos?page=$page&size=$size';
+      if (search != null && search.isNotEmpty) {
+        endpoint += '&search=$search';
+      }
+      if (tipo != null && tipo.isNotEmpty) {
+        endpoint += '&tipo=$tipo';
+      }
+      if (genero != null && genero.isNotEmpty) {
+        endpoint += '&genero=$genero';
+      }
+      final data = await _apiClient.get(endpoint);
+      return PaginatedResponse.fromJson(data, Elemento.fromJson);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al buscar elementos: ${e.toString()}');
     }
-    if (tipoName != null && tipoName.isNotEmpty) {
-      queryParams['tipo'] = tipoName; 
-    }
-    if (generoName != null && generoName.isNotEmpty) {
-      queryParams['genero'] = generoName; 
-    }
-
-    // 2. Llamar al ApiClient.get
-    // La respuesta ya no es una Lista, es un Mapa (el objeto Page)
-    final dynamic responseData = await api.get(
-      _basePath, 
-      queryParams: queryParams,
-    );
-
-    // 3. Mapear la respuesta paginada
-    return PaginatedResponse.fromJson(
-      responseData as Map<String, dynamic>,
-      // Le decimos CÓMO construir cada Elemento individual
-      (json) => Elemento.fromJson(json),
-    );
   }
-  
-  /// Obtiene la ficha detallada de un elemento por su ID (RF10).
-  /// REFACTORIZADO: Utiliza ApiClient.
+
+  /// Obtiene los detalles de un solo elemento por su ID.
+  // --- ¡CORREGIDO! Acepta int elementoId ---
   Future<Elemento> getElementoById(int elementoId) async {
-    
-    // 1. Llamar al ApiClient.get
-    final dynamic responseData = await api.get('$_basePath/$elementoId');
-    
-    // 2. Mapear la respuesta
-    return Elemento.fromJson(responseData as Map<String, dynamic>);
+    try {
+      // Convierte a String en el último momento
+      final data = await _apiClient.get('elementos/${elementoId.toString()}');
+      return Elemento.fromJson(data);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al cargar el elemento: ${e.toString()}');
+    }
   }
 }

@@ -1,11 +1,12 @@
-// lib/src/features/auth/login_screen.dart
+// Archivo: lib/src/features/auth/login_screen.dart
+// (¡CORREGIDO!)
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:libratrack_client/src/core/services/auth_service.dart';
 import 'package:libratrack_client/src/features/auth/registration_screen.dart';
-import 'package:libratrack_client/src/features/home/home_screen.dart';
-import 'package:libratrack_client/src/core/utils/snackbar_helper.dart'; 
-// --- ¡NUEVA IMPORTACIÓN! ---
-import 'package:libratrack_client/src/core/l10n/app_localizations.dart';
+import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,39 +16,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController(); 
-  final _passwordController = TextEditingController();
-  final _authService = AuthService();
-  bool _isLoading = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) { return; }
-    setState(() { _isLoading = true; });
-
-    final navContext = Navigator.of(context);
-    final msgContext = ScaffoldMessenger.of(context); 
-
-    try {
-      await _authService.login(_emailController.text, _passwordController.text);
-      
-      if (!mounted) return; 
-
-      navContext.pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } catch (e) {
-      if (mounted) {
-        setState(() { _isLoading = false; });
-      }
-      
-      SnackBarHelper.showTopSnackBar(
-        msgContext, 
-        e.toString().replaceFirst("Exception: ", ""), 
-        isError: true
-      );
-    }
-  }
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -56,129 +29,154 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // --- ¡NUEVO! Obtenemos las traducciones ---
-    final l10n = AppLocalizations.of(context)!;
-    
-    return Scaffold(
-      // (AppBar eliminada en 20251108-A15)
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                
-                Text(
-                  l10n.appTitle, // <-- TRADUCIDO
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 48), 
-                ),
-                const SizedBox(height: 64.0), 
-                
-                _buildInputField(
-                  context,
-                  controller: _emailController,
-                  labelText: l10n.loginEmailLabel, // <-- TRADUCIDO
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) { return l10n.loginEmailRequired; } // <-- TRADUCIDO
-                    if (!value.contains('@') || !value.contains('.')) { return l10n.loginEmailInvalid; } // <-- TRADUCIDO
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16.0),
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-                _buildInputField(
-                  context,
-                  controller: _passwordController,
-                  labelText: l10n.loginPasswordLabel, // <-- TRADUCIDO
-                  isPassword: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) { return l10n.loginPasswordRequired; } // <-- TRADUCIDO
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 32.0),
+    setState(() {
+      _isLoading = true;
+    });
 
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                  onPressed: _isLoading ? null : _handleLogin,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          l10n.loginButton, // <-- TRADUCIDO
-                          style: const TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                ),
-                const SizedBox(height: 16.0),
-                
-                TextButton(
-                  onPressed: _isLoading ? null : () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const RegistrationScreen()),
-                    );
-                  },
-                  child: Text(
-                    l10n.loginRegisterPrompt, // <-- TRADUCIDO
-                    style: TextStyle(color: Theme.of(context).colorScheme.primary),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    final authService = context.read<AuthService>();
+    final msgContext = ScaffoldMessenger.of(context);
+
+    try {
+      await authService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+      // ÉXITO: El login completó. El AuthWrapper verá el cambio y destruirá
+      // este widget para navegar a HomeScreen. No se necesita más código aquí.
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() { _isLoading = false; }); // <-- Apaga en caso de error API
+        SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() { _isLoading = false; }); // <-- Apaga en caso de error general
+        SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: ${e.toString()}', isError: true);
+      }
+    } 
+    // El bloque FINALLY se elimina, ya que la navegación se encarga del reseteo.
+  }
+
+  void _goToRegistration() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const RegistrationScreen()),
     );
   }
 
-  // ... (Widget _buildInputField sin cambios)
-  Widget _buildInputField(
-    BuildContext context,
-    {
-      required TextEditingController controller,
-      required String labelText,
-      TextInputType keyboardType = TextInputType.text,
-      bool isPassword = false,
-      String? Function(String?)? validator,
-    }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: isPassword,
-      style: Theme.of(context).textTheme.bodyMedium,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: Theme.of(context).textTheme.labelLarge,
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Bienvenido a LibraTrack',
+                    style: textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Inicia sesión para continuar',
+                    style: textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 48),
+
+                  // --- Campo de Email ---
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, introduce tu email';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Email no válido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // --- Campo de Contraseña ---
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(
+                      labelText: 'Contraseña',
+                      prefixIcon: Icon(Icons.lock_outline),
+                      border: OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _handleLogin(),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, introduce tu contraseña';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 32),
+
+                  // --- Botón de Login ---
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                    onPressed: _isLoading ? null : _handleLogin,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const Text('Iniciar Sesión'),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- Botón de Registro ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('¿No tienes cuenta?'),
+                      TextButton(
+                        onPressed: _isLoading ? null : _goToRegistration,
+                        child: const Text('Regístrate'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

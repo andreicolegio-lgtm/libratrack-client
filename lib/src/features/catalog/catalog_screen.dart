@@ -1,9 +1,14 @@
-// lib/src/features/catalog/catalog_screen.dart
+// Archivo: lib/src/features/catalog/catalog_screen.dart
+// (¡CORREGIDO!)
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:libratrack_client/src/core/services/catalog_service.dart';
 import 'package:libratrack_client/src/model/catalogo_entrada.dart';
 import 'package:libratrack_client/src/model/estado_personal.dart';
 import 'package:libratrack_client/src/features/catalog/widgets/catalog_entry_card.dart';
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
+import 'package:libratrack_client/src/core/services/auth_service.dart'; // <-- ¡NUEVA IMPORTACIÓN!
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -12,46 +17,70 @@ class CatalogScreen extends StatefulWidget {
   State<CatalogScreen> createState() => _CatalogScreenState();
 }
 
-class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProviderStateMixin {
-  final CatalogService _catalogService = CatalogService();
+class _CatalogScreenState extends State<CatalogScreen>
+    with SingleTickerProviderStateMixin {
   
+  late final CatalogService _catalogService;
+  late final AuthService _authService; // <-- ¡AÑADIDO!
+
   bool _isLoading = true;
   String? _loadingError;
   List<CatalogoEntrada> _catalogoCompleto = [];
-  
+
   final List<EstadoPersonal> _estados = [
-    EstadoPersonal.EN_PROGRESO, 
-    EstadoPersonal.PENDIENTE, 
-    EstadoPersonal.TERMINADO, 
+    EstadoPersonal.EN_PROGRESO,
+    EstadoPersonal.PENDIENTE,
+    EstadoPersonal.TERMINADO,
     EstadoPersonal.ABANDONADO
   ];
 
   @override
   void initState() {
     super.initState();
+    _catalogService = context.read<CatalogService>();
+    _authService = context.read<AuthService>(); // <-- ¡AÑADIDO!
     _loadCatalog();
   }
 
   /// Método para cargar (o recargar) el catálogo (RF08)
   Future<void> _loadCatalog() async {
     try {
-      final catalogo = await _catalogService.getMyCatalog();
+      await _catalogService.fetchCatalog(); 
+
       if (mounted) {
         setState(() {
-          _catalogoCompleto = catalogo;
+          _catalogoCompleto = _catalogService.entradas; 
           _isLoading = false;
         });
       }
+      
+    // --- ¡BLOQUE CATCH CORREGIDO (ID: QA-068)! ---
+    } on ApiException catch (e) {
+      if (mounted) {
+        // ¡ESTA ES LA LÓGICA CLAVE!
+        if (e is UnauthorizedException) {
+          // Si el error es 401/403 (Token caducado),
+          // no mostramos un error, sino que cerramos sesión.
+          // El AuthWrapper nos redirigirá a Login.
+          _authService.logout();
+        } else {
+          // Para cualquier otra excepción (404, 500), SÍ mostramos el error.
+          setState(() {
+            _loadingError = e.message;
+            _isLoading = false;
+          });
+        }
+      }
+    // ---
     } catch (e) {
       if (mounted) {
         setState(() {
-          _loadingError = e.toString().replaceFirst("Exception: ", "");
+          _loadingError = e.toString();
           _isLoading = false;
         });
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +89,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
       child: Scaffold(
         appBar: AppBar(
           // REFACTORIZADO: Usa tipografía titleLarge y centrado (Corrección 6)
-          title: Text('LibraTrack', style: Theme.of(context).textTheme.titleLarge), 
+          title: Text('LibraTrack', style: Theme.of(context).textTheme.titleLarge),
           centerTitle: true,
           bottom: TabBar(
             // --- LÍNEAS CORREGIDAS (Corrección 8) ---
@@ -91,12 +120,13 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
           child: Text(
             'Error: $_loadingError',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
+            style:
+                Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
           ),
         ),
       );
     }
-    
+
     return TabBarView(
       children: _estados.map((estado) {
         final filteredList = _catalogoCompleto
@@ -108,7 +138,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
             child: Text(
               'No hay elementos en estado: ${estado.displayName}',
               textAlign: TextAlign.center, // Alineación central
-              style: Theme.of(context).textTheme.bodyMedium, 
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           );
         }
@@ -120,7 +150,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
             // La lógica de actualización está dentro de CatalogEntryCard
             return CatalogEntryCard(
               entrada: item,
-              onUpdate: _loadCatalog, 
+              onUpdate: _loadCatalog,
             );
           },
         );

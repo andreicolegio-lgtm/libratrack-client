@@ -1,27 +1,36 @@
 // Archivo: lib/src/core/services/tipo_service.dart
+// (¡REFACTORIZADO!)
 
-// Se eliminan imports innecesarios: dart:convert, http, flutter_secure_storage
-import 'package:libratrack_client/src/core/utils/api_client.dart'; // Importar el nuevo ApiClient
+import 'package:flutter/material.dart';
+import 'package:libratrack_client/src/core/utils/api_client.dart';
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
 import 'package:libratrack_client/src/model/tipo.dart';
 
-/// Servicio para obtener la lista de Tipos de contenido (ej. Serie, Libro).
-/// REFACTORIZADO: Utiliza ApiClient.
-class TipoService {
-  
-  // Ruta base relativa al ApiClient.baseUrl
-  final String _basePath = '/tipos'; 
+class TipoService with ChangeNotifier {
+  // --- ¡MODIFICADO! ---
+  final ApiClient _apiClient;
+  TipoService(this._apiClient);
+  // ---
 
-  /// Obtiene la lista de todos los Tipos (RF09).
-  Future<List<Tipo>> getAllTipos() async {
-    
-    // 1. Llamar al ApiClient.get
-    // (ApiClient se encarga de las cabeceras, try-catch, y errores 403)
-    final List<dynamic> jsonList = await api.get(_basePath) as List<dynamic>;
-    
-    // 2. Mapear la respuesta
-    // El JSON ahora viene del TipoResponseDTO
-    return jsonList
-        .map((json) => Tipo.fromJson(json as Map<String, dynamic>))
-        .toList();
+  List<Tipo>? _tipos;
+  List<Tipo>? get tipos => _tipos;
+
+  /// Obtiene la lista de tipos (para filtros y formularios).
+  Future<List<Tipo>> fetchTipos() async {
+    // Cache simple
+    if (_tipos != null) return _tipos!;
+
+    try {
+      // ¡Lógica simplificada!
+      final List<dynamic> data = await _apiClient.get('tipos');
+      
+      _tipos = data.map((item) => Tipo.fromJson(item)).toList();
+      notifyListeners();
+      return _tipos!;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al cargar los tipos: ${e.toString()}');
+    }
   }
 }

@@ -1,11 +1,17 @@
 // lib/src/features/moderacion/moderacion_panel_screen.dart
+// (¡CORREGIDO!)
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // <-- ¡NUEVA IMPORTACIÓN!
 import 'package:libratrack_client/src/core/services/moderacion_service.dart';
 import 'package:libratrack_client/src/model/propuesta.dart';
-import 'package:libratrack_client/src/model/estado_propuesta.dart'; 
+import 'package:libratrack_client/src/model/estado_propuesta.dart';
 import 'package:libratrack_client/src/core/widgets/maybe_marquee.dart';
 // ¡NUEVA IMPORTACIÓN!
-import 'package:libratrack_client/src/features/moderacion/propuesta_edit_screen.dart'; 
+import 'package:libratrack_client/src/features/moderacion/propuesta_edit_screen.dart';
+// ¡NUEVA IMPORTACIÓN!
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
+
 
 class ModeracionPanelScreen extends StatefulWidget {
   const ModeracionPanelScreen({super.key});
@@ -14,8 +20,8 @@ class ModeracionPanelScreen extends StatefulWidget {
   State<ModeracionPanelScreen> createState() => _ModeracionPanelScreenState();
 }
 
-class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> with SingleTickerProviderStateMixin {
-  
+class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
+    with SingleTickerProviderStateMixin {
   final List<EstadoPropuesta> _estados = [
     EstadoPropuesta.PENDIENTE,
     EstadoPropuesta.APROBADO,
@@ -28,13 +34,15 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> with Sing
       length: _estados.length,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Panel de Moderación', style: Theme.of(context).textTheme.titleLarge),
+          title: Text('Panel de Moderación',
+              style: Theme.of(context).textTheme.titleLarge),
           backgroundColor: Theme.of(context).colorScheme.surface,
           centerTitle: true,
           bottom: TabBar(
-            isScrollable: false, 
+            isScrollable: false,
             tabAlignment: TabAlignment.center,
-            tabs: _estados.map((estado) => Tab(text: estado.displayName)).toList(),
+            tabs:
+                _estados.map((estado) => Tab(text: estado.displayName)).toList(),
             indicatorColor: Theme.of(context).colorScheme.primary,
             labelColor: Theme.of(context).colorScheme.primary,
             unselectedLabelColor: Colors.grey[500],
@@ -44,7 +52,7 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> with Sing
           children: _estados.map((estado) {
             return _PropuestasTab(
               estado: estado,
-              key: ValueKey(estado.apiValue), 
+              key: ValueKey(estado.apiValue),
             );
           }).toList(),
         ),
@@ -52,7 +60,6 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> with Sing
     );
   }
 }
-
 
 /// --- WIDGET INTERNO _PropuestasTab ---
 class _PropuestasTab extends StatefulWidget {
@@ -62,8 +69,15 @@ class _PropuestasTab extends StatefulWidget {
   State<_PropuestasTab> createState() => _PropuestasTabState();
 }
 
-class _PropuestasTabState extends State<_PropuestasTab> with AutomaticKeepAliveClientMixin {
-  final ModeracionService _moderacionService = ModeracionService();
+class _PropuestasTabState extends State<_PropuestasTab>
+    with AutomaticKeepAliveClientMixin {
+  
+  // --- ¡CORREGIDO (Error 1)! ---
+  // Se elimina la instancia local y se declara 'late final'
+  late final ModeracionService _moderacionService;
+  // final ModeracionService _moderacionService = ModeracionService();
+  // ---
+
   late Future<List<Propuesta>> _propuestasFuture;
   List<Propuesta> _propuestas = [];
   final Set<int> _processingItems = {};
@@ -71,24 +85,34 @@ class _PropuestasTabState extends State<_PropuestasTab> with AutomaticKeepAliveC
   @override
   void initState() {
     super.initState();
+    // --- ¡CORREGIDO (Error 1)! ---
+    // Obtenemos el servicio desde Provider
+    _moderacionService = context.read<ModeracionService>();
+    // ---
     _loadPropuestas();
   }
 
   @override
-  bool get wantKeepAlive => true; 
+  bool get wantKeepAlive => true;
 
   Future<void> _loadPropuestas() async {
-    _propuestasFuture = _moderacionService.getPropuestasPorEstado(widget.estado.apiValue);
+    // --- ¡CORREGIDO (Error 2)! ---
+    // Se renombró el método
+    _propuestasFuture =
+        _moderacionService.fetchPropuestasPorEstado(widget.estado.apiValue);
+    // ---
     try {
       _propuestas = await _propuestasFuture;
       if (mounted) {
-        setState(() {}); 
+        setState(() {});
       }
-    } catch (e) {
+    } on ApiException {
+      // El FutureBuilder maneja el error
+    } catch(e) {
       // El FutureBuilder maneja el error
     }
   }
-  
+
   // --- ¡MÉTODO MODIFICADO (Petición d)! ---
   /// Lógica para navegar a la pantalla de Revisión/Edición
   Future<void> _handleRevisar(Propuesta propuesta) async {
@@ -107,31 +131,36 @@ class _PropuestasTabState extends State<_PropuestasTab> with AutomaticKeepAliveC
         _propuestas.removeWhere((p) => p.id == propuesta.id);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('¡Propuesta aprobada!'), backgroundColor: Colors.green),
+        const SnackBar(
+            content: Text('¡Propuesta aprobada!'),
+            backgroundColor: Colors.green),
       );
     }
   }
-  
+
   /// Lógica para rechazar (Sigue igual)
   Future<void> _handleRechazar(int propuestaId) async {
-    setState(() { _processingItems.add(propuestaId); });
-    await Future.delayed(const Duration(seconds: 1)); 
+    setState(() {
+      _processingItems.add(propuestaId);
+    });
+    await Future.delayed(const Duration(seconds: 1));
     if (mounted) {
       setState(() {
         _propuestas.removeWhere((p) => p.id == propuestaId);
         _processingItems.remove(propuestaId);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Propuesta rechazada (simulado).'), backgroundColor: Colors.grey),
+        const SnackBar(
+            content: Text('Propuesta rechazada (simulado).'),
+            backgroundColor: Colors.grey),
       );
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    super.build(context); 
-    
+    super.build(context);
+
     return FutureBuilder<List<Propuesta>>(
       future: _propuestasFuture,
       builder: (context, snapshot) {
@@ -143,20 +172,23 @@ class _PropuestasTabState extends State<_PropuestasTab> with AutomaticKeepAliveC
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Error al cargar:\n${snapshot.error.toString().replaceFirst("Exception: ", "")}',
+                // --- ¡MEJORADO! ---
+                // Se muestra el error limpio de ApiException
+                'Error al cargar:\n${snapshot.error.toString()}',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: Colors.red),
               ),
             ),
           );
         }
         if (_propuestas.isEmpty) {
           return Center(
-            child: Text(
-              widget.estado == EstadoPropuesta.PENDIENTE
+            child: Text(widget.estado == EstadoPropuesta.PENDIENTE
                 ? '¡Buen trabajo! No hay propuestas pendientes.'
-                : 'No hay propuestas ${widget.estado.displayName.toLowerCase()}.'
-            ),
+                : 'No hay propuestas ${widget.estado.displayName.toLowerCase()}.'),
           );
         }
         return ListView.builder(
@@ -173,7 +205,8 @@ class _PropuestasTabState extends State<_PropuestasTab> with AutomaticKeepAliveC
   }
 
   /// Construye la tarjeta para una Propuesta (Mockup 4)
-  Widget _buildPropuestaCard(BuildContext context, Propuesta propuesta, bool isProcessing) {
+  Widget _buildPropuestaCard(
+      BuildContext context, Propuesta propuesta, bool isProcessing) {
     return Card(
       color: Theme.of(context).cardTheme.color,
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
@@ -185,7 +218,7 @@ class _PropuestasTabState extends State<_PropuestasTab> with AutomaticKeepAliveC
             MaybeMarquee(
               text: propuesta.tituloSugerido,
               style: Theme.of(context).textTheme.titleLarge ?? const TextStyle(),
-              height: 28, 
+              height: 28,
             ),
             const SizedBox(height: 8),
             Text(
@@ -202,7 +235,7 @@ class _PropuestasTabState extends State<_PropuestasTab> with AutomaticKeepAliveC
               'Géneros: ${propuesta.generosSugeridos}',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            
+
             // --- ¡BOTONES MODIFICADOS (Petición d)! ---
             if (widget.estado == EstadoPropuesta.PENDIENTE) ...[
               const Padding(
@@ -213,8 +246,10 @@ class _PropuestasTabState extends State<_PropuestasTab> with AutomaticKeepAliveC
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    style: TextButton.styleFrom(foregroundColor: Colors.red[300]),
-                    onPressed: isProcessing ? null : () => _handleRechazar(propuesta.id),
+                    style:
+                        TextButton.styleFrom(foregroundColor: Colors.red[300]),
+                    onPressed:
+                        isProcessing ? null : () => _handleRechazar(propuesta.id),
                     child: const Text('Rechazar'),
                   ),
                   const SizedBox(width: 8),
@@ -224,12 +259,14 @@ class _PropuestasTabState extends State<_PropuestasTab> with AutomaticKeepAliveC
                       foregroundColor: Colors.white,
                     ),
                     // Llamamos a la nueva función de navegación
-                    onPressed: isProcessing ? null : () => _handleRevisar(propuesta),
+                    onPressed:
+                        isProcessing ? null : () => _handleRevisar(propuesta),
                     child: isProcessing
-                        ? const SizedBox( 
+                        ? const SizedBox(
                             height: 16,
                             width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
                           )
                         // Cambiamos el texto del botón
                         : const Text('Revisar'),

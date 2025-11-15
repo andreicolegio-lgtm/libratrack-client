@@ -1,105 +1,102 @@
-// lib/src/core/services/admin_service.dart
-import 'package:libratrack_client/src/core/utils/api_client.dart'; 
-import 'package:libratrack_client/src/model/perfil_usuario.dart'; 
-import 'package:libratrack_client/src/model/elemento.dart'; 
-// --- ¡NUEVAS IMPORTACIONES! ---
-import 'package:libratrack_client/src/model/paginated_response.dart'; 
+// Archivo: lib/src/core/services/admin_service.dart
+// (¡REFACTORIZADO! Acepta 'int' para IDs)
 
-/// Servicio para gestionar las llamadas a la API de Administración (ROLE_ADMIN).
-/// --- ¡ACTUALIZADO (Sprint 7)! ---
-class AdminService {
-  
-  final String _basePath = '/admin'; 
+import 'package:flutter/material.dart';
+import 'package:libratrack_client/src/core/utils/api_client.dart';
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
+import 'package:libratrack_client/src/model/elemento.dart';
+import 'package:libratrack_client/src/model/paginated_response.dart';
+import 'package:libratrack_client/src/model/perfil_usuario.dart';
 
-  // --- Métodos de Gestión de Usuarios (Petición 14) ---
+class AdminService with ChangeNotifier {
+  final ApiClient _apiClient;
+  AdminService(this._apiClient);
 
-  /// --- ¡REFACTORIZADO (Sprint 7)! ---
-  /// (Petición B, C, G) Obtiene la lista de TODOS los usuarios
-  /// con paginación, búsqueda y filtros.
-  Future<PaginatedResponse<PerfilUsuario>> getAllUsuarios({
-    int page = 0,
+  /// (B, C, G) Obtiene usuarios con paginación, búsqueda y filtros.
+  Future<PaginatedResponse<PerfilUsuario>> getUsuarios({
+    required int page,
     int size = 20,
     String? search,
     String? roleFilter,
   }) async {
-    
-    // 1. Construir el Mapa de Query Parameters
-    final Map<String, String> queryParams = {
-      'page': page.toString(),
-      'size': size.toString(),
-    };
-    if (search != null && search.isNotEmpty) {
-      queryParams['search'] = search;
+    try {
+      String endpoint = 'admin/usuarios?page=$page&size=$size';
+      if (search != null && search.isNotEmpty) {
+        endpoint += '&search=$search';
+      }
+      if (roleFilter != null && roleFilter.isNotEmpty) {
+        endpoint += '&role=$roleFilter';
+      }
+      final data = await _apiClient.get(endpoint);
+      return PaginatedResponse.fromJson(data, PerfilUsuario.fromJson);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al cargar usuarios: ${e.toString()}');
     }
-    if (roleFilter != null && roleFilter.isNotEmpty) {
-      queryParams['role'] = roleFilter; 
-    }
-
-    // 2. Llamar al ApiClient.get
-    final dynamic responseData = await api.get(
-      '$_basePath/usuarios', 
-      queryParams: queryParams
-    );
-
-    // 3. Mapear la respuesta paginada
-    return PaginatedResponse.fromJson(
-      responseData as Map<String, dynamic>,
-      // Le decimos CÓMO construir cada PerfilUsuario individual
-      (json) => PerfilUsuario.fromJson(json),
-    );
   }
-  
-  /// (Petición 14) Actualiza los roles de un usuario específico.
+
+  /// (14) Actualiza los roles de un usuario.
+  // --- ¡CORREGIDO! Acepta int userId ---
   Future<PerfilUsuario> updateUserRoles(
-    int userId, {
-    required bool esModerador,
-    required bool esAdministrador,
-  }) async {
-    // ... (código sin cambios)
-    final Map<String, dynamic> body = {
-      'esModerador': esModerador,
-      'esAdministrador': esAdministrador,
-    };
-    final dynamic responseData = await api.put(
-      '$_basePath/usuarios/$userId/roles',
-      body: body,
-    );
-    return PerfilUsuario.fromJson(responseData as Map<String, dynamic>);
+      int userId, bool esModerador, bool esAdministrador) async {
+    try {
+      final body = {
+        'esModerador': esModerador,
+        'esAdministrador': esAdministrador,
+      };
+      // Convierte a String en el último momento
+      final data = await _apiClient.put('admin/usuarios/${userId.toString()}/roles', body);
+      return PerfilUsuario.fromJson(data);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al actualizar roles: ${e.toString()}');
+    }
   }
-  
-  // --- Métodos de Gestión de Contenido ---
 
+  /// (15) Crea un elemento OFICIAL.
   Future<Elemento> crearElementoOficial(Map<String, dynamic> body) async {
-    // ... (código sin cambios)
-    final dynamic responseData = await api.post(
-      '$_basePath/elementos',
-      body: body,
-    );
-    return Elemento.fromJson(responseData as Map<String, dynamic>);
-  }
-  
-  Future<Elemento> updateElemento(int elementoId, Map<String, dynamic> body) async {
-    // ... (código sin cambios)
-    final dynamic responseData = await api.put(
-      '$_basePath/elementos/$elementoId',
-      body: body,
-    );
-    return Elemento.fromJson(responseData as Map<String, dynamic>);
-  }
-  
-  Future<Elemento> oficializarElemento(int elementoId) async {
-    // ... (código sin cambios)
-    final dynamic responseData = await api.put(
-      '$_basePath/elementos/$elementoId/oficializar',
-    );
-    return Elemento.fromJson(responseData as Map<String, dynamic>);
+    try {
+      final data = await _apiClient.post('admin/elementos', body);
+      return Elemento.fromJson(data);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al crear el elemento: ${e.toString()}');
+    }
   }
 
-  Future<Elemento> comunitarizarElemento(int elementoId) async {
-    // ... (código sin cambios)
-    final dynamic responseData = await api.put(
-      '$_basePath/elementos/$elementoId/comunitarizar',
-    );
-    return Elemento.fromJson(responseData as Map<String, dynamic>);
+  /// (8) Actualiza un elemento existente (Mod/Admin).
+  // --- ¡CORREGIDO! Acepta int elementoId ---
+  Future<Elemento> updateElemento(
+      int elementoId, Map<String, dynamic> body) async {
+    try {
+      // Convierte a String en el último momento
+      final data = await _apiClient.put('admin/elementos/${elementoId.toString()}', body);
+      return Elemento.fromJson(data);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al actualizar el elemento: ${e.toString()}');
+    }
+  }
+
+  /// (17, F) Cambia el estado de un elemento (Oficial/Comunitario).
+  // --- ¡CORREGIDO! Acepta int elementoId ---
+  Future<Elemento> toggleElementoOficial(
+      int elementoId, bool oficializar) async {
+    try {
+      final String endpoint = oficializar
+          ? 'admin/elementos/${elementoId.toString()}/oficializar'
+          : 'admin/elementos/${elementoId.toString()}/comunitarizar';
+      
+      final data = await _apiClient.put(endpoint, {});
+      return Elemento.fromJson(data);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al cambiar el estado del elemento: ${e.toString()}');
+    }
   }
 }

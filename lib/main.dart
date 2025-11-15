@@ -1,182 +1,167 @@
-// lib/main.dart
+// Archivo: lib/main.dart
+// (¡SIN CAMBIOS! El código de ID: QA-016 ahora es correcto)
+
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+// --- ¡NUEVAS IMPORTACIONES! ---
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+// ---
+import 'package:libratrack_client/src/core/l10n/app_localizations.dart';
+import 'package:libratrack_client/src/core/services/admin_service.dart';
 import 'package:libratrack_client/src/core/services/auth_service.dart';
+import 'package:libratrack_client/src/core/services/catalog_service.dart';
+import 'package:libratrack_client/src/core/services/elemento_service.dart';
+import 'package:libratrack_client/src/core/services/genero_service.dart';
+import 'package:libratrack_client/src/core/services/moderacion_service.dart';
+import 'package:libratrack_client/src/core/services/propuesta_service.dart';
+import 'package:libratrack_client/src/core/services/resena_service.dart';
+import 'package:libratrack_client/src/core/services/settings_service.dart';
+import 'package:libratrack_client/src/core/services/tipo_service.dart';
+import 'package:libratrack_client/src/core/services/user_service.dart';
 import 'package:libratrack_client/src/features/auth/login_screen.dart';
 import 'package:libratrack_client/src/features/home/home_screen.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-// --- ¡IMPORTACIÓN RENOMBRADA! ---
-import 'package:libratrack_client/src/core/services/settings_service.dart';
+import 'package:libratrack_client/src/core/utils/api_client.dart';
 
-// --- Importaciones de Localización (ya las tenías) ---
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:libratrack_client/src/core/l10n/app_localizations.dart'; 
-
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-  
-  // --- ¡SERVICIO RENOMBRADO! ---
-  // (Paso 4.1) Cambiamos ThemeService por SettingsService
-  final SettingsService settingsService = SettingsService(prefs);
-
+void main() {
   runApp(
-    // (Paso 4.2) Proveemos el SettingsService
-    ChangeNotifierProvider(
-      create: (context) => settingsService,
-      child: const LibraTrackApp(),
+    MultiProvider(
+      providers: [
+        
+        // --- NIVEL 0: UTILIDADES BASE ---
+        // (ID: QA-075) Proveemos el storage para que los servicios lo usen
+        Provider<FlutterSecureStorage>(
+          create: (_) => const FlutterSecureStorage(),
+        ),
+
+        // --- NIVEL 1: SERVICIOS BASE (Independientes) ---
+        
+        // (ID: QA-075) ApiClient ahora necesita el storage
+        Provider<ApiClient>(
+          create: (context) => ApiClient(
+            context.read<FlutterSecureStorage>(),
+          ),
+        ),
+
+        ChangeNotifierProvider<SettingsService>(
+          create: (_) => SettingsService(),
+        ),
+
+        // --- NIVEL 2: SERVICIOS DE AUTENTICACIÓN ---
+        
+        // (ID: QA-075) AuthService necesita ApiClient y el Storage
+        ChangeNotifierProvider<AuthService>(
+          create: (context) => AuthService(
+            context.read<ApiClient>(),
+            context.read<FlutterSecureStorage>(),
+          ),
+        ),
+
+        // --- NIVEL 3: SERVICIOS DE DATOS ---
+        // (Estos no cambian, ya reciben el ApiClient configurado)
+        
+        ChangeNotifierProvider<AdminService>(
+          create: (context) => AdminService(context.read<ApiClient>()),
+        ),
+        ChangeNotifierProvider<CatalogService>(
+          create: (context) => CatalogService(context.read<ApiClient>()),
+        ),
+        ChangeNotifierProvider<ElementoService>(
+          create: (context) => ElementoService(context.read<ApiClient>()),
+        ),
+        ChangeNotifierProvider<GeneroService>(
+          create: (context) => GeneroService(context.read<ApiClient>()),
+        ),
+        ChangeNotifierProvider<ModeracionService>(
+          create: (context) => ModeracionService(context.read<ApiClient>()),
+        ),
+        ChangeNotifierProvider<PropuestaService>(
+          create: (context) => PropuestaService(context.read<ApiClient>()),
+        ),
+        ChangeNotifierProvider<ResenaService>(
+          create: (context) => ResenaService(context.read<ApiClient>()),
+        ),
+        ChangeNotifierProvider<TipoService>(
+          create: (context) => TipoService(context.read<ApiClient>()),
+        ),
+        ChangeNotifierProvider<UserService>(
+          create: (context) => UserService(context.read<ApiClient>()),
+        ),
+      ],
+      child: const MyApp(),
     ),
   );
 }
 
-class LibraTrackApp extends StatefulWidget {
-  const LibraTrackApp({super.key});
-
-  @override
-  State<LibraTrackApp> createState() => _LibraTrackAppState();
-}
-
-class _LibraTrackAppState extends State<LibraTrackApp> {
-  final AuthService _authService = AuthService();
-  Future<String?>? _tokenCheckFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _tokenCheckFuture = _authService.getToken(); 
-  }
-
-  // --- (Tema Claro - sin cambios) ---
-  ThemeData _buildLightTheme() {
-    const Color primaryColor = Colors.blue;
-    const Color secondaryColor = Color(0xFF1E88E5); 
-    const Color background = Color(0xFFF4F4F4); 
-    const Color surfaceColor = Colors.white;   
-    const Color onSurfaceColor = Colors.black; 
-
-    return ThemeData(
-      brightness: Brightness.light,
-      colorScheme: const ColorScheme.light(
-        primary: primaryColor,
-        secondary: secondaryColor,
-        surface: surfaceColor,        
-        onSurface: onSurfaceColor,
-      ),
-      useMaterial3: true,
-      scaffoldBackgroundColor: background, 
-      textTheme: TextTheme(
-        headlineLarge: TextStyle(fontSize: 32.0, fontWeight: FontWeight.bold, color: onSurfaceColor),
-        titleLarge: TextStyle(fontSize: 24.0, fontWeight: FontWeight.w600, color: onSurfaceColor),
-        titleMedium: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: onSurfaceColor),
-        bodyMedium: TextStyle(fontSize: 14.0, color: Colors.grey[800]),
-        labelLarge: TextStyle(fontSize: 16.0, color: Colors.grey[600]),
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: surfaceColor,
-        elevation: 1, 
-        titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: onSurfaceColor),
-        iconTheme: IconThemeData(color: onSurfaceColor), 
-      ),
-      cardTheme: const CardThemeData( 
-        color: surfaceColor, 
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
-      ),
-    );
-  }
-
-  // --- (Tema Oscuro - sin cambios) ---
-  ThemeData _buildDarkTheme() {
-    const Color primaryColor = Colors.blue;
-    const Color secondaryColor = Color(0xFF1E88E5); 
-    const Color background = Color(0xFF121212);
-    const Color surfaceColor = Color(0xFF1E1E1E); 
-
-    return ThemeData(
-      brightness: Brightness.dark,
-      colorScheme: const ColorScheme.dark(
-        primary: primaryColor,
-        secondary: secondaryColor,
-        surface: surfaceColor,
-        onSurface: Colors.white, 
-      ),
-      useMaterial3: true,
-      scaffoldBackgroundColor: background, 
-      textTheme: TextTheme(
-        headlineLarge: TextStyle(fontSize: 32.0, fontWeight: FontWeight.bold, color: Colors.white),
-        titleLarge: TextStyle(fontSize: 24.0, fontWeight: FontWeight.w600, color: Colors.white),
-        titleMedium: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
-        bodyMedium: TextStyle(fontSize: 14.0, color: Colors.grey[300]),
-        labelLarge: TextStyle(fontSize: 16.0, color: Colors.grey[500]),
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: surfaceColor,
-        elevation: 0,
-        titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-        iconTheme: IconThemeData(color: Colors.white), 
-      ),
-      cardTheme: const CardThemeData( 
-        color: surfaceColor, 
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
-      ),
-    );
-  }
-
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // --- ¡SERVICIO RENOMBRADO! ---
-    // 2. Escuchamos los cambios del SettingsService
+    // Escuchamos el SettingsService para el tema y el idioma
     return Consumer<SettingsService>(
-      builder: (context, settingsService, child) {
-        
+      builder: (context, settings, child) {
         return MaterialApp(
-          // --- (Sección de Localización - sin cambios) ---
-          onGenerateTitle: (context) {
-            final localizations = AppLocalizations.of(context);
-            return localizations?.appTitle ?? 'LibraTrack';
-          },
+          title: 'LibraTrack',
+          debugShowCheckedModeBanner: false,
+
+          // --- Configuración de Idioma (i18n) ---
+          locale: settings.locale,
           localizationsDelegates: const [
-            AppLocalizations.delegate, 
+            AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: const [
-            Locale('es'), // Español
-            Locale('en'), // Inglés
+            Locale('en', ''), // Inglés
+            Locale('es', ''), // Español
           ],
-          // --- ¡LÍNEA AÑADIDA! (Paso 4.3) ---
-          locale: settingsService.locale, // (Conecta el idioma al servicio)
-          
-          debugShowCheckedModeBanner: false,
-          
-          // --- Configuración de Tema (Conectada) ---
-          theme: _buildLightTheme(),     
-          darkTheme: _buildDarkTheme(),    
-          themeMode: settingsService.themeMode, 
 
-          navigatorKey: navigatorKey, 
-
-          home: FutureBuilder<String?>(
-            future: _tokenCheckFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snapshot.hasData && snapshot.data != null) {
-                return const HomeScreen();
-              }
-              return const LoginScreen();
-            },
+          // --- Configuración de Tema (Claro/Oscuro) ---
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            brightness: Brightness.light,
+            useMaterial3: true,
           ),
+          darkTheme: ThemeData(
+            primarySwatch: Colors.blue,
+            brightness: Brightness.dark,
+            useMaterial3: true,
+          ),
+          themeMode: settings.themeMode,
+
+          // --- Lógica de Navegación Inicial ---
+          home: const AuthWrapper(),
         );
-      }
+      },
+    );
+  }
+}
+
+/// Widget que decide qué pantalla mostrar al inicio (Carga, Login o Home)
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthService>(
+      builder: (context, auth, child) {
+        if (auth.isLoading) {
+          // Pantalla de carga mientras se verifica el token
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else if (auth.isAuthenticated) {
+          // Usuario autenticado
+          return const HomeScreen();
+        } else {
+          // Usuario no autenticado
+          return const LoginScreen();
+        }
+      },
     );
   }
 }

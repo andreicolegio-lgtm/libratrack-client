@@ -1,10 +1,13 @@
-// lib/src/features/elemento/elemento_detail_screen.dart
+// Archivo: lib/src/features/elemento/elemento_detail_screen.dart
+// (¡CORREGIDO Y REFACTORIZADO!)
+
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart'; 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart'; // <-- ¡NUEVA IMPORTACIÓN!
 import 'package:libratrack_client/src/core/services/elemento_service.dart';
 import 'package:libratrack_client/src/core/services/catalog_service.dart';
 import 'package:libratrack_client/src/core/services/resena_service.dart';
-import 'package:libratrack_client/src/core/services/user_service.dart';
+import 'package:libratrack_client/src/core/services/auth_service.dart'; // <-- ¡NUEVA IMPORTACIÓN!
 import 'package:libratrack_client/src/model/elemento.dart';
 import 'package:libratrack_client/src/model/catalogo_entrada.dart';
 import 'package:libratrack_client/src/model/resena.dart';
@@ -14,12 +17,12 @@ import 'package:libratrack_client/src/features/elemento/widgets/resena_card.dart
 import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
 import 'package:libratrack_client/src/core/services/admin_service.dart';
 import 'package:libratrack_client/src/features/admin/admin_elemento_form.dart';
-// import 'dart:math'; // <-- Ya no es necesario
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart'; // <-- ¡NUEVA IMPORTACIÓN!
 
 /// --- ¡ACTUALIZADO (Sprint 6)! ---
 class ElementoDetailScreen extends StatefulWidget {
   final int elementoId;
-  
+
   const ElementoDetailScreen({
     super.key,
     required this.elementoId,
@@ -30,29 +33,41 @@ class ElementoDetailScreen extends StatefulWidget {
 }
 
 class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
-  // --- Servicios ---
-  final ElementoService _elementoService = ElementoService();
-  final CatalogService _catalogService = CatalogService();
-  final ResenaService _resenaService = ResenaService();
-  final UserService _userService = UserService();
-  final AdminService _adminService = AdminService(); 
+  
+  // --- ¡CORREGIDO (Errores 1-5)! ---
+  // Se eliminan las instancias locales. Se declaran como 'late final'
+  // para ser inicializadas en initState.
+  late final ElementoService _elementoService;
+  late final CatalogService _catalogService;
+  late final ResenaService _resenaService;
+  late final AdminService _adminService;
+  late final AuthService _authService;
+  // ---
 
-  late Future<Map<String, dynamic>> _screenDataFuture; 
+  late Future<Map<String, dynamic>> _screenDataFuture;
 
   // --- Estado de la UI ---
   bool _isInCatalog = false;
   bool _isAdding = false;
-  bool _isDeleting = false; 
-  // --- ¡ESTADO UNIFICADO! ---
-  bool _isLoadingStatusChange = false; 
-  
+  bool _isDeleting = false;
+  bool _isLoadingStatusChange = false;
+
   List<Resena> _resenas = [];
-  bool _haResenado = false; 
-  String? _usernameActual; 
+  bool _haResenado = false;
+  String? _usernameActual;
 
   @override
   void initState() {
     super.initState();
+    // --- ¡CORREGIDO (Errores 1-5)! ---
+    // Obtenemos todos los servicios necesarios desde Provider.
+    _elementoService = context.read<ElementoService>();
+    _catalogService = context.read<CatalogService>();
+    _resenaService = context.read<ResenaService>();
+    _adminService = context.read<AdminService>();
+    _authService = context.read<AuthService>();
+    // ---
+
     _loadScreenData();
   }
 
@@ -64,26 +79,38 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     }
   }
 
+  // --- ¡REFACTORIZADO (Errores 6, 7, 8, 9)! ---
   Future<Map<String, dynamic>> _fetchData() async {
-    // ... (código sin cambios)
     try {
+      // 1. Obtenemos el perfil y el catálogo primero (uno es síncrono, el otro void)
+      
+      // (Corrección Error 9) Obtenemos el perfil desde AuthService (síncrono)
+      final PerfilUsuario perfil = _authService.perfilUsuario!;
+      _usernameActual = perfil.username;
+
+      // (Corrección Error 7) Llamamos a fetchCatalog (es void)
+      await _catalogService.fetchCatalog();
+      // Leemos el resultado desde el getter del servicio
+      final List<CatalogoEntrada> catalogo = _catalogService.entradas;
+
+      // 2. Buscamos el resto de datos en paralelo
       final results = await Future.wait([
-        _elementoService.getElementoById(widget.elementoId), 
-        _catalogService.getMyCatalog(),                     
-        _resenaService.getResenas(widget.elementoId),       
-        _userService.getMiPerfil(),                         
+        // (Corrección Error 6) Pasamos el ID como String
+        _elementoService.getElementoById(widget.elementoId),
+        // (Corrección Error 8) Pasamos el ID como String
+        _resenaService.getResenas(widget.elementoId),
       ]);
+
+      // 3. Procesamos los resultados
       final Elemento elemento = results[0] as Elemento;
-      final List<CatalogoEntrada> catalogo = results[1] as List<CatalogoEntrada>;
-      final List<Resena> resenas = results[2] as List<Resena>;
-      final PerfilUsuario perfil = results[3] as PerfilUsuario;
-      final bool inCatalog = catalogo.any(
-        (entrada) => entrada.elementoId == widget.elementoId
-      );
-      _usernameActual = perfil.username; 
-      final bool haResenado = resenas.any(
-        (resena) => resena.usernameAutor == _usernameActual
-      );
+      final List<Resena> resenas = results[1] as List<Resena>;
+
+      final bool inCatalog =
+          catalogo.any((entrada) => entrada.elementoId == widget.elementoId);
+
+      final bool haResenado =
+          resenas.any((resena) => resena.usernameAutor == _usernameActual);
+
       if (mounted) {
         setState(() {
           _isInCatalog = inCatalog;
@@ -91,7 +118,12 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           _haResenado = haResenado;
         });
       }
-      return { 'elemento': elemento, 'perfil': perfil };
+      return {'elemento': elemento, 'perfil': perfil};
+    // --- ¡MEJORADO! ---
+    } on ApiException {
+      // Si el token expira (401), el AuthService se encargará del logout.
+      // Solo relanzamos el error para el FutureBuilder.
+      rethrow;
     } catch (e) {
       rethrow;
     }
@@ -100,61 +132,70 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   // --- Lógica de Acciones ---
 
   Future<void> _handleAddElemento() async {
-    // ... (código sin cambios)
-    setState(() { _isAdding = true; });
+    setState(() {
+      _isAdding = true;
+    });
     final msgContext = ScaffoldMessenger.of(context);
     try {
-      await _catalogService.addElementoAlCatalogo(widget.elementoId);
+      // --- ¡CORREGIDO (Error 10)! ---
+      // Se llama a 'addElemento' y se pasa el ID como String
+      await _catalogService.addElemento(widget.elementoId);
+      // ---
+
       if (!mounted) return;
       setState(() {
         _isAdding = false;
         _isInCatalog = true;
       });
       SnackBarHelper.showTopSnackBar(
-        msgContext, 
-        '¡Añadido al catálogo!', 
-        isError: false
-      );
+          msgContext, '¡Añadido al catálogo!', isError: false);
+    // --- ¡MEJORADO! ---
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isAdding = false;
+      });
+      SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
     } catch (e) {
       if (!mounted) return;
       setState(() { _isAdding = false; });
-      SnackBarHelper.showTopSnackBar(
-        msgContext, 
-        e.toString().replaceFirst("Exception: ", ""),
-        isError: true
-      );
+      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e', isError: true);
     }
   }
 
   Future<void> _handleRemoveElemento() async {
-    // ... (código sin cambios)
-    setState(() { _isDeleting = true; });
+    setState(() {
+      _isDeleting = true;
+    });
     final msgContext = ScaffoldMessenger.of(context);
     try {
-      await _catalogService.removeElementoDelCatalogo(widget.elementoId);
+      // --- ¡CORREGIDO (Error 11)! ---
+      // Se llama a 'removeElemento' y se pasa el ID como String
+      await _catalogService.removeElemento(widget.elementoId);
+      // ---
+
       if (!mounted) return;
       setState(() {
         _isDeleting = false;
-        _isInCatalog = false; 
+        _isInCatalog = false;
       });
       SnackBarHelper.showTopSnackBar(
-        msgContext, 
-        'Elemento quitado del catálogo', 
-        isError: false
-      );
+          msgContext, 'Elemento quitado del catálogo', isError: false);
+    // --- ¡MEJORADO! ---
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isDeleting = false;
+      });
+      SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
     } catch (e) {
       if (!mounted) return;
       setState(() { _isDeleting = false; });
-      SnackBarHelper.showTopSnackBar(
-        msgContext, 
-        e.toString().replaceFirst("Exception: ", ""),
-        isError: true
-      );
+      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e', isError: true);
     }
   }
 
   Future<void> _openWriteReviewModal() async {
-    // ... (código sin cambios)
     final resultado = await showModalBottomSheet<Resena>(
       context: context,
       isScrollControlled: true,
@@ -174,38 +215,50 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   Future<void> _handleToggleOficial(Elemento elemento) async {
     // Determinamos qué acción tomar
     final bool esOficial = elemento.estadoContenido == 'OFICIAL';
-    
-    setState(() { _isLoadingStatusChange = true; });
+
+    setState(() {
+      _isLoadingStatusChange = true;
+    });
     final msgContext = ScaffoldMessenger.of(context);
-    
+
     try {
-      if (esOficial) {
-        // --- (Petición F) ---
-        await _adminService.comunitarizarElemento(elemento.id);
-        SnackBarHelper.showTopSnackBar(msgContext, 'Elemento marcado como COMUNITARIO.', isError: false);
-      } else {
-        // --- (Petición 17) ---
-        await _adminService.oficializarElemento(elemento.id);
-        SnackBarHelper.showTopSnackBar(msgContext, '¡Elemento marcado como OFICIAL!', isError: false);
-      }
+      // --- ¡CORREGIDO (Errores 12 y 13)! ---
+      // Se llama al método unificado 'toggleElementoOficial'.
+      // Se pasa 'false' para "Comunitarizar" (si era oficial)
+      // Se pasa 'true' para "Oficializar" (si no lo era)
+      await _adminService.toggleElementoOficial(
+        elemento.id,
+        !esOficial, // Invertimos la lógica
+      );
+      // ---
       
+      final successMessage = esOficial
+          ? 'Elemento marcado como COMUNITARIO.'
+          : '¡Elemento marcado como OFICIAL!';
+      SnackBarHelper.showTopSnackBar(msgContext, successMessage, isError: false);
+
+
       if (!mounted) return;
       // Recarga todos los datos de la pantalla (para actualizar el tag y el botón)
-      _loadScreenData(); 
-      
+      _loadScreenData();
+    // --- ¡MEJORADO! ---
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
     } catch (e) {
       if (!mounted) return;
-      SnackBarHelper.showTopSnackBar(msgContext, e.toString().replaceFirst("Exception: ", ""), isError: true);
+      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e', isError: true);
     } finally {
       if (mounted) {
         // Aseguramos que el spinner se oculte
-        setState(() { _isLoadingStatusChange = false; });
+        setState(() {
+          _isLoadingStatusChange = false;
+        });
       }
     }
   }
 
   Future<void> _goToEditarElemento(Elemento elemento) async {
-    // ... (código sin cambios)
     if (_isAnyLoading()) return;
     final bool? seHaActualizado = await Navigator.push<bool>(
       context,
@@ -217,7 +270,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       _loadScreenData();
     }
   }
-  
+
   bool _isAnyLoading() {
     return _isAdding || _isDeleting || _isLoadingStatusChange; // <-- ¡ACTUALIZADO!
   }
@@ -228,52 +281,58 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       body: FutureBuilder<Map<String, dynamic>>(
         future: _screenDataFuture,
         builder: (context, snapshot) {
-          
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            // ... (código de error sin cambios) ...
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  'Error al cargar el elemento:\n${snapshot.error.toString().replaceFirst("Exception: ", "")}',
+                  // --- ¡MEJORADO! ---
+                  'Error al cargar el elemento:\n${snapshot.error.toString()}',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.red),
                 ),
               ),
             );
           }
-          
+
           final Elemento elemento = snapshot.data!['elemento'];
           final PerfilUsuario perfil = snapshot.data!['perfil'];
-          
+
           return CustomScrollView(
             slivers: <Widget>[
               // --- Cabecera con Imagen (SliverAppBar) ---
               SliverAppBar(
-                // ... (código de SliverAppBar sin cambios) ...
                 expandedHeight: 300.0,
                 pinned: true,
-                backgroundColor: Theme.of(context).colorScheme.surface, 
+                backgroundColor: Theme.of(context).colorScheme.surface,
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
-                  titlePadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+                  titlePadding:
+                      const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
                   title: Text(
                     elemento.titulo,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(shadows: [const Shadow(blurRadius: 10)], fontSize: 20),
-                    textAlign: TextAlign.center, 
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        shadows: [const Shadow(blurRadius: 10)], fontSize: 20),
+                    textAlign: TextAlign.center,
                   ),
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      if (elemento.urlImagen != null && elemento.urlImagen!.isNotEmpty)
+                      if (elemento.urlImagen != null &&
+                          elemento.urlImagen!.isNotEmpty)
                         CachedNetworkImage(
-                          imageUrl: elemento.urlImagen!, 
+                          imageUrl: elemento.urlImagen!,
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(color: Theme.of(context).colorScheme.surface),
-                          errorWidget: (context, url, error) => Container(color: Theme.of(context).colorScheme.surface),
+                          placeholder: (context, url) =>
+                              Container(color: Theme.of(context).colorScheme.surface),
+                          errorWidget: (context, url, error) =>
+                              Container(color: Theme.of(context).colorScheme.surface),
                         )
                       else
                         Container(color: Theme.of(context).colorScheme.surface),
@@ -290,13 +349,14 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                       Positioned(
                         top: 40,
                         right: 16,
-                        child: _buildEstadoChip(context, elemento.estadoContenido),
+                        child:
+                            _buildEstadoChip(context, elemento.estadoContenido),
                       ),
                     ],
                   ),
                 ),
               ),
-              
+
               // --- Cuerpo de la Página (Detalles) ---
               SliverList(
                 delegate: SliverChildListDelegate(
@@ -309,27 +369,32 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                           // --- Tipo y Géneros ---
                           Text(
                             '${elemento.tipo} | ${elemento.generos.join(", ")}',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: 16,
-                              color: Colors.grey[400],
-                              fontStyle: FontStyle.italic,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  fontSize: 16,
+                                  color: Colors.grey[400],
+                                  fontStyle: FontStyle.italic,
+                                ),
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // --- Botones de Admin/Mod ---
                           _buildAdminButtons(context, perfil, elemento),
 
                           // --- Botón de Añadir / Quitar (RF05) ---
                           _buildAddOrRemoveButton(),
-                          
+
                           const SizedBox(height: 24),
 
                           // --- Sinopsis (RF10) ---
-                          Text('Sinopsis', style: Theme.of(context).textTheme.titleLarge),
+                          Text('Sinopsis',
+                              style: Theme.of(context).textTheme.titleLarge),
                           const SizedBox(height: 8),
-                          Text(elemento.descripcion, style: Theme.of(context).textTheme.bodyMedium),
-                          
+                          Text(elemento.descripcion,
+                              style: Theme.of(context).textTheme.bodyMedium),
+
                           // --- Detalles del Progreso (Petición 9) ---
                           _buildProgresoTotalInfo(elemento),
 
@@ -362,9 +427,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       ),
     );
   }
-  
+
   // --- WIDGETS AUXILIARES ---
-  
+
   // (Este código es el que me enviaste)
   List<int> _parseEpisodiosPorTemporada(String? data) {
     if (data == null || data.isEmpty) return [];
@@ -374,35 +439,41 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       return [];
     }
   }
-  
+
   Widget _buildProgresoTotalInfo(Elemento elemento) {
     // (Este código es el que me enviaste)
     final tipo = elemento.tipo.toLowerCase();
-    final List<Widget> infoWidgets = []; 
+    final List<Widget> infoWidgets = [];
     if (tipo == 'serie') {
-      final epCounts = _parseEpisodiosPorTemporada(elemento.episodiosPorTemporada);
+      final epCounts =
+          _parseEpisodiosPorTemporada(elemento.episodiosPorTemporada);
       final totalTemps = epCounts.length;
       if (totalTemps > 0) {
-        infoWidgets.add(_buildInfoRow(context, Icons.movie_filter, 'Total Temporadas', '$totalTemps'));
-        infoWidgets.add(_buildInfoRow(context, Icons.list_alt, 'Episodios', epCounts.join(', ')));
+        infoWidgets.add(_buildInfoRow(
+            context, Icons.movie_filter, 'Total Temporadas', '$totalTemps'));
+        infoWidgets.add(
+            _buildInfoRow(context, Icons.list_alt, 'Episodios', epCounts.join(', ')));
       }
-    } 
-    else if (tipo == 'libro') {
-      if (elemento.totalCapitulosLibro != null && elemento.totalCapitulosLibro! > 0) {
-        infoWidgets.add(_buildInfoRow(context, Icons.book_outlined, 'Total Capítulos', '${elemento.totalCapitulosLibro}'));
+    } else if (tipo == 'libro') {
+      if (elemento.totalCapitulosLibro != null &&
+          elemento.totalCapitulosLibro! > 0) {
+        infoWidgets.add(_buildInfoRow(context, Icons.book_outlined,
+            'Total Capítulos', '${elemento.totalCapitulosLibro}'));
       }
-      if (elemento.totalPaginasLibro != null && elemento.totalPaginasLibro! > 0) {
-        infoWidgets.add(_buildInfoRow(context, Icons.pages_outlined, 'Total Páginas', '${elemento.totalPaginasLibro}'));
+      if (elemento.totalPaginasLibro != null &&
+          elemento.totalPaginasLibro! > 0) {
+        infoWidgets.add(_buildInfoRow(context, Icons.pages_outlined,
+            'Total Páginas', '${elemento.totalPaginasLibro}'));
       }
-    } 
-    else if (tipo == 'anime' || tipo == 'manga') {
+    } else if (tipo == 'anime' || tipo == 'manga') {
       if (elemento.totalUnidades != null && elemento.totalUnidades! > 0) {
         final label = tipo == 'anime' ? 'Total Episodios' : 'Total Capítulos';
-        infoWidgets.add(_buildInfoRow(context, Icons.list, label, '${elemento.totalUnidades}'));
+        infoWidgets.add(
+            _buildInfoRow(context, Icons.list, label, '${elemento.totalUnidades}'));
       }
     }
     if (infoWidgets.isEmpty) {
-      return const SizedBox.shrink(); 
+      return const SizedBox.shrink();
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,14 +482,16 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           padding: EdgeInsets.symmetric(vertical: 24.0),
           child: Divider(),
         ),
-        Text('Detalles del Progreso', style: Theme.of(context).textTheme.titleLarge),
+        Text('Detalles del Progreso',
+            style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 16),
-        ...infoWidgets, 
+        ...infoWidgets,
       ],
     );
   }
-  
-  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
+
+  Widget _buildInfoRow(
+      BuildContext context, IconData icon, String label, String value) {
     // (Este código es el que me enviaste)
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -427,36 +500,38 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         children: [
           Icon(icon, size: 20, color: Colors.grey[400]),
           const SizedBox(width: 16),
-          Text(
-            '$label:', 
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)
-          ),
+          Text('$label:',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              value, 
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[300])
-            ),
+            child: Text(value,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(color: Colors.grey[300])),
           ),
         ],
       ),
     );
   }
-  
+
   Widget _buildEstadoChip(BuildContext context, String estado) {
     // (Este código es el que me enviaste)
-    final bool isOficial = estado == "OFICIAL"; 
-    final Color chipColor = isOficial 
-        ? Theme.of(context).colorScheme.secondary 
-        : Colors.grey[700]!; 
+    final bool isOficial = estado == "OFICIAL";
+    final Color chipColor = isOficial
+        ? Theme.of(context).colorScheme.secondary
+        : Colors.grey[700]!;
     return Chip(
       label: Text(
         isOficial ? "OFICIAL" : "COMUNITARIO",
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-        ),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
       ),
       backgroundColor: chipColor,
       shape: RoundedRectangleBorder(
@@ -491,7 +566,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         label: const Text('Quitar del catálogo'),
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.surface,
-          foregroundColor: Colors.red[300], 
+          foregroundColor: Colors.red[300],
           minimumSize: const Size(double.infinity, 50),
         ),
         onPressed: _isAnyLoading() ? null : _handleRemoveElemento,
@@ -524,7 +599,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       onPressed: _isAnyLoading() ? null : _handleAddElemento,
     );
   }
-  
+
   Widget _buildWriteReviewButton() {
     // (Este código es el que me enviaste)
     if (_haResenado) {
@@ -536,11 +611,12 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     return TextButton.icon(
       icon: const Icon(Icons.edit, size: 16),
       label: const Text('Escribir Reseña'),
-      style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.primary),
+      style: TextButton.styleFrom(
+          foregroundColor: Theme.of(context).colorScheme.primary),
       onPressed: _openWriteReviewModal,
     );
   }
-  
+
   Widget _buildReviewList() {
     // (Este código es el que me enviaste)
     if (_resenas.isEmpty) {
@@ -565,15 +641,15 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
 
   /// --- ¡WIDGET REFACTORIZADO! (Petición 8, 17, F) ---
-  Widget _buildAdminButtons(BuildContext context, PerfilUsuario perfil, Elemento elemento) {
-    
+  Widget _buildAdminButtons(
+      BuildContext context, PerfilUsuario perfil, Elemento elemento) {
     if (!perfil.esModerador) {
-      return const SizedBox.shrink(); 
+      return const SizedBox.shrink();
     }
-    
+
     // --- Lógica del "interruptor" (Petición F) ---
     final bool esOficial = elemento.estadoContenido == 'OFICIAL';
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
@@ -587,27 +663,38 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                 backgroundColor: Theme.of(context).colorScheme.surface,
                 foregroundColor: Theme.of(context).colorScheme.primary,
               ),
-              onPressed: _isAnyLoading() ? null : () => _goToEditarElemento(elemento),
+              onPressed:
+                  _isAnyLoading() ? null : () => _goToEditarElemento(elemento),
             ),
           ),
-          
+
           // (Petición 17 y F) Botón de Oficializar/Comunitarizar (Solo Admins)
           if (perfil.esAdministrador) ...[
             const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton.icon(
-                icon: _isLoadingStatusChange 
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      // Icono dinámico
-                      : Icon(esOficial ? Icons.public_off : Icons.verified, size: 18),
+                icon: _isLoadingStatusChange
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    // Icono dinámico
+                    : Icon(esOficial ? Icons.public_off : Icons.verified,
+                        size: 18),
                 // Texto dinámico
-                label: Text(_isLoadingStatusChange ? '...' : (esOficial ? 'Comunitarizar' : 'Oficializar')),
+                label: Text(_isLoadingStatusChange
+                    ? '...'
+                    : (esOficial ? 'Comunitarizar' : 'Oficializar')),
                 style: ElevatedButton.styleFrom(
                   // Color dinámico
-                  backgroundColor: esOficial ? Colors.grey[700] : Theme.of(context).colorScheme.secondary,
+                  backgroundColor: esOficial
+                      ? Colors.grey[700]
+                      : Theme.of(context).colorScheme.secondary,
                   foregroundColor: Colors.white,
                 ),
-                onPressed: _isAnyLoading() ? null : () => _handleToggleOficial(elemento),
+                onPressed:
+                    _isAnyLoading() ? null : () => _handleToggleOficial(elemento),
               ),
             ),
           ]

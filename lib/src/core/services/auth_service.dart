@@ -1,100 +1,153 @@
 // Archivo: lib/src/core/services/auth_service.dart
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; 
-import 'package:libratrack_client/src/core/utils/api_client.dart'; 
-import 'package:libratrack_client/src/model/perfil_usuario.dart'; 
+// (¡LINTER CORREGIDO!)
 
-/// Servicio de Autenticación (AuthService).
-/// --- ¡ACTUALIZADO Y CORREGIDO (Sprint 4)! ---
-class AuthService {
-  
-  final _storage = const FlutterSecureStorage();
-  final String _tokenKey = 'jwt_token'; 
-  final String _authPath = '/auth';
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-  // ===================================================================
-  // MÉTODOS PÚBLICOS
-  // ===================================================================
+import 'package:libratrack_client/src/core/utils/api_client.dart';
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
+import 'package:libratrack_client/src/model/perfil_usuario.dart';
 
-  /// Llama al endpoint de registro (RF01).
-  ///
-  /// --- ¡CORREGIDO! ---
-  /// 1. Ahora devuelve 'PerfilUsuario' para coincidir con la API.
-  /// 2. Ahora tiene un try-catch para manejar los errores 409 (Conflicto).
-  Future<PerfilUsuario> register(String username, String email, String password) async {
-    
-    final Map<String, String> body = {
-      'username': username,
-      'email': email,
-      'password': password,
-    };
+// --- ¡CORREGIDO (LINTER)! ---
+const String _accessTokenKey = 'jwt_access_token';
+const String _refreshTokenKey = 'jwt_refresh_token';
+// ---
 
-    try {
-      // ApiClient.post ahora devolverá un Map<String, dynamic>
-      final dynamic responseData = await api.post(
-        '$_authPath/register',
-        body: body,
-        protected: false, 
-      );
-      
-      // Mapeamos la respuesta al modelo de Flutter
-      return PerfilUsuario.fromJson(responseData as Map<String, dynamic>);
+class AuthService with ChangeNotifier {
+  final ApiClient _apiClient;
+  final FlutterSecureStorage _secureStorage;
 
-    } catch (e) {
-      // Si api.post() lanza un 409, lo relanzamos para que la UI lo atrape
-      rethrow; 
-    }
+  // Estado en memoria
+  String? _accessToken;
+  String? _refreshToken;
+  PerfilUsuario? _perfilUsuario;
+  bool _isLoading = true;
+
+  String? get token => _accessToken;
+  PerfilUsuario? get perfilUsuario => _perfilUsuario;
+  bool get isAuthenticated => _accessToken != null && _perfilUsuario != null;
+  bool get isLoading => _isLoading;
+
+  AuthService(this._apiClient, this._secureStorage) {
+    _tryAutoLogin();
   }
 
-  /// Llama al endpoint de login (RF02) usando email y contraseña.
-  ///
-  /// --- ¡REFACTORIZADO! ---
-  /// Ahora usa api.post() en lugar de http.post() manual.
-  Future<String> login(String email, String password) async {
-    final Map<String, String> body = {
-      'email': email,
-      'password': password,
-    };
-    
+  /// Intenta cargar tokens desde el almacenamiento seguro al iniciar la app.
+  Future<void> _tryAutoLogin() async {
     try {
-      // 1. Usamos api.post()
-      final dynamic responseData = await api.post(
-        '$_authPath/login',
-        body: body,
-        protected: false, 
-      );
-      
-      final String token = responseData['token'];
+      // 1. Intentamos leer ambos tokens
+      // --- ¡CORREGIDO (LINTER)! ---
+      _accessToken = await _secureStorage.read(key: _accessTokenKey);
+      _refreshToken = await _secureStorage.read(key: _refreshTokenKey);
+      // ---
 
-      // 2. Guarda el token en el almacenamiento seguro
-      await _saveToken(token);
-      
-      return token;
-
-    } on Exception catch (e) {
-      // 3. Convertimos el error 401 en un mensaje amigable
-      if (e.toString().contains('401') || e.toString().contains('Usuario o contraseña incorrectos')) {
-          throw Exception('Usuario o contraseña incorrectos.');
+      if (_accessToken != null && _refreshToken != null) {
+        // 2. Si existen, cargamos el perfil
+        await _loadUserProfile(shouldNotify: false);
+      } else {
+        // 3. Si falta alguno, limpiamos todo
+        await logout(shouldNotify: false);
       }
-      rethrow;
+    } catch (e) {
+      // 4. Si algo falla (ej. storage corrupto), limpiamos todo
+      await logout(shouldNotify: false);
+    } finally {
+      _isLoading = false;
+      notifyListeners(); 
     }
   }
 
-  /// Lee el token JWT guardado en el almacenamiento seguro.
-  Future<String?> getToken() async {
-    return await _storage.read(key: _tokenKey);
+  /// Carga el perfil del usuario desde la API (/api/usuarios/me)
+  Future<void> _loadUserProfile({bool shouldNotify = true}) async {
+    try {
+      // --- ¡CORREGIDO (ID: QA-078)! ---
+      // get() por defecto NO es un auth endpoint, lo cual es correcto.
+      final data = await _apiClient.get('usuarios/me');
+      _perfilUsuario = PerfilUsuario.fromJson(data);
+      if (shouldNotify) notifyListeners();
+    } on UnauthorizedException {
+      await logout(shouldNotify: shouldNotify);
+    } catch (e) {
+      await logout(shouldNotify: shouldNotify);
+    }
   }
 
-  /// Borra el token JWT del almacenamiento seguro (para Logout).
-  Future<void> logout() async {
-    await _storage.delete(key: _tokenKey);
+  /// Inicia sesión (Login)
+  Future<void> login(String email, String password) async {
+    try {
+      // --- ¡CORREGIDO (ID: QA-078)! ---
+      // Le decimos al ApiClient que esta es una llamada de autenticación
+      // para que no intente refrescar si falla.
+      final data = await _apiClient.post('auth/login', {
+        'email': email,
+        'password': password,
+      }, isAuthEndpoint: true); // <-- AÑADIDO
+      // ---
+
+      _accessToken = data['accessToken'];
+      _refreshToken = data['refreshToken'];
+
+      await _secureStorage.write(key: _accessTokenKey, value: _accessToken!);
+      await _secureStorage.write(key: _refreshTokenKey, value: _refreshToken!);
+      
+      await _loadUserProfile(shouldNotify: false);
+      
+      notifyListeners();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Ocurrió un error inesperado: ${e.toString()}');
+    }
   }
 
-  // ===================================================================
-  // MÉTODOS PRIVADOS (Auxiliares)
-  // ===================================================================
+  /// Cierra la sesión
+  Future<void> logout({bool shouldNotify = true}) async {
+    try {
+      await _apiClient.logout();
+    } catch (e) {
+      // --- ¡CORREGIDO (LINTER)! ---
+      // Se elimina el print()
+      // print("Error during API logout, proceeding with local cleanup: $e");
+      // ---
+    }
 
-  /// Método auxiliar privado para guardar el token JWT
-  Future<void> _saveToken(String token) async {
-    await _storage.write(key: _tokenKey, value: token);
+    _accessToken = null;
+    _refreshToken = null;
+    _perfilUsuario = null;
+    
+    if (shouldNotify) {
+      notifyListeners();
+    }
+  }
+
+  /// Registra un nuevo usuario
+  Future<PerfilUsuario> register(
+      String username, String email, String password) async {
+    try {
+      // --- ¡CORREGIDO (ID: QA-078)! ---
+      // Le decimos al ApiClient que esta es una llamada de autenticación
+      final data = await _apiClient.post('auth/register', {
+        'username': username,
+        'email': email,
+        'password': password,
+      }, isAuthEndpoint: true); // <-- AÑADIDO
+      // ---
+      return PerfilUsuario.fromJson(data);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Ocurrió un error inesperado: ${e.toString()}');
+    }
+  }
+
+  // --- ¡NUEVO MÉTODO (ID: QA-079)! ---
+  /// Actualiza la copia local del perfil de usuario.
+  /// Llamado desde ProfileScreen después de una actualización exitosa
+  /// (ej. cambio de nombre, cambio de foto) para mantener el estado sincronizado.
+  void updateLocalProfileData(PerfilUsuario perfilActualizado) {
+    _perfilUsuario = perfilActualizado;
+    // Notificamos a cualquier widget que pueda estar escuchando el perfil
+    // (aunque en ProfileScreen no es estrictamente necesario, es buena práctica).
+    notifyListeners();
   }
 }

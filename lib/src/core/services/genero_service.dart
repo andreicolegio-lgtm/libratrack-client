@@ -1,27 +1,36 @@
 // Archivo: lib/src/core/services/genero_service.dart
+// (¡REFACTORIZADO!)
 
-// Se eliminan imports innecesarios: dart:convert, http, flutter_secure_storage
-import 'package:libratrack_client/src/core/utils/api_client.dart'; // Importar el nuevo ApiClient
+import 'package:flutter/material.dart';
+import 'package:libratrack_client/src/core/utils/api_client.dart';
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
 import 'package:libratrack_client/src/model/genero.dart';
 
-/// Servicio para obtener la lista de Géneros de contenido (ej. Fantasía, Drama).
-/// REFACTORIZADO: Utiliza ApiClient.
-class GeneroService {
-  
-  // Ruta base relativa al ApiClient.baseUrl
-  final String _basePath = '/generos'; 
+class GeneroService with ChangeNotifier {
+  // --- ¡MODIFICADO! ---
+  final ApiClient _apiClient;
+  GeneroService(this._apiClient);
+  // ---
 
-  /// Obtiene la lista de todos los Géneros (RF09).
-  Future<List<Genero>> getAllGeneros() async {
-    
-    // 1. Llamar al ApiClient.get
-    // (ApiClient se encarga de las cabeceras, try-catch, y errores 403)
-    final List<dynamic> jsonList = await api.get(_basePath) as List<dynamic>;
+  List<Genero>? _generos;
+  List<Genero>? get generos => _generos;
 
-    // 2. Mapear la respuesta
-    // El JSON ahora viene del GeneroResponseDTO
-    return jsonList
-        .map((json) => Genero.fromJson(json as Map<String, dynamic>))
-        .toList();
+  /// Obtiene la lista de géneros (para filtros y formularios).
+  Future<List<Genero>> fetchGeneros() async {
+    // Si ya los tenemos, los devolvemos (cache simple)
+    if (_generos != null) return _generos!;
+
+    try {
+      // ¡Lógica simplificada!
+      final List<dynamic> data = await _apiClient.get('generos');
+
+      _generos = data.map((item) => Genero.fromJson(item)).toList();
+      notifyListeners();
+      return _generos!;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al cargar los géneros: ${e.toString()}');
+    }
   }
 }

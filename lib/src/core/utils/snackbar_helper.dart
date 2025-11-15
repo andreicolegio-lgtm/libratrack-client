@@ -1,45 +1,44 @@
-// lib/src/core/utils/snackbar_helper.dart
+// Archivo: lib/src/core/utils/snackbar_helper.dart
+// (¡REFACTORIZADO!)
+
 import 'package:flutter/material.dart';
 
-/// Helper de UI para mostrar SnackBars de forma consistente (Punto 3).
-/// Todos los SnackBars se mostrarán en la parte superior.
 class SnackBarHelper {
-  
-  // CORREGIDO: Acepta ScaffoldMessengerState (msgContext) en lugar de BuildContext
+  /// Muestra un SnackBar en la PARTE SUPERIOR de la pantalla.
+  /// Esto evita que el teclado lo oculte (Bug 5b).
   static void showTopSnackBar(
-    ScaffoldMessengerState messenger, 
-    String message, 
-    {bool isError = false}
-  ) {
-    // Asegura que no se muestren SnackBars antiguos
-    messenger.hideCurrentSnackBar();
+    ScaffoldMessengerState msgContext,
+    String message, {
+    required bool isError,
+  }) {
+    // Oculta cualquier SnackBar anterior
+    msgContext.hideCurrentSnackBar();
     
-    // Obtenemos el contexto (de forma segura) desde el messenger
-    final context = messenger.context;
-
-    // --- CORRECCIÓN ---
-    // Calcula la altura de la pantalla
-    final screenHeight = MediaQuery.of(context).size.height;
-    // Calcula la altura del AppBar + Safe Area
-    final topPadding = MediaQuery.of(context).viewPadding.top + kToolbarHeight;
-    // Calcula el margen inferior para "empujar" el SnackBar hacia arriba,
-    // dejando espacio para él (ej. 100px) y el padding superior.
-    final bottomMargin = screenHeight - topPadding - 100; 
-
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red[700] : Colors.green[700],
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-        // --- LÍNEA CORREGIDA ---
-        // Usamos 'bottom' para empujarlo hacia arriba, en lugar de 'top'
-        margin: EdgeInsets.only(
-          bottom: bottomMargin, // <--- CORREGIDO
-          left: 16,
-          right: 16,
-        ),
+    // Crea el nuevo SnackBar
+    final snackBar = SnackBar(
+      content: Text(
+        message,
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+      backgroundColor: isError ? Colors.red[700] : Colors.green[600],
+      
+      // --- ¡CORREGIDO (Bug 5b)! ---
+      // 'fixed' fuerza al SnackBar a no moverse cuando aparece el teclado.
+      behavior: SnackBarBehavior.fixed, 
+      margin: null, // Se anula el margen
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      // ---
+      
+      duration: const Duration(seconds: 3),
+      action: SnackBarAction(
+        label: 'CERRAR',
+        textColor: Colors.white,
+        onPressed: () {
+          msgContext.hideCurrentSnackBar();
+        },
       ),
     );
+
+    msgContext.showSnackBar(snackBar);
   }
 }

@@ -1,63 +1,116 @@
-// lib/src/core/services/catalog_service.dart
-import 'package:libratrack_client/src/core/utils/api_client.dart'; 
-import 'package:libratrack_client/src/model/catalogo_entrada.dart'; 
+// Archivo: lib/src/core/services/catalog_service.dart
+// (¡REFACTORIZADO! Acepta 'int' para IDs y corrige el bug de 'removeWhere')
 
-/// Servicio para gestionar el Catálogo Personal del usuario (RF05-RF08).
-/// --- ¡ACTUALIZADO (Sprint 2 / V2)! ---
-class CatalogService {
-  
-  final String _basePath = '/catalogo'; 
-  final String _elementosPath = '/elementos';
+import 'package:flutter/material.dart';
+import 'package:libratrack_client/src/core/utils/api_client.dart';
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
+import 'package:libratrack_client/src/model/catalogo_entrada.dart';
 
-  /// Obtiene el catálogo completo del usuario (RF08).
-  Future<List<CatalogoEntrada>> getMyCatalog() async {
-    final List<dynamic> jsonList = await api.get(_basePath) as List<dynamic>;
-    
-    return jsonList
-        .map((json) => CatalogoEntrada.fromJson(json as Map<String, dynamic>))
-        .toList();
+class CatalogService with ChangeNotifier {
+  final ApiClient _apiClient;
+  CatalogService(this._apiClient);
+
+  List<CatalogoEntrada> _entradas = [];
+  bool _isLoading = true;
+
+  List<CatalogoEntrada> get entradas => _entradas;
+  bool get isLoading => _isLoading;
+
+  /// Obtiene el catálogo completo del usuario.
+  Future<void> fetchCatalog() async {
+    try {
+      _isLoading = true;
+
+      final List<dynamic> data = await _apiClient.get('catalogo');
+      _entradas = data.map((item) => CatalogoEntrada.fromJson(item)).toList();
+    } on ApiException {
+      _entradas = [];
+      rethrow;
+    } catch (e) {
+      _entradas = [];
+      throw ApiException('Error al cargar el catálogo: ${e.toString()}');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
-  
-  /// Añade un elemento al catálogo (RF05).
-  Future<CatalogoEntrada> addElementoAlCatalogo(int elementoId) async {
-    final dynamic responseData = await api.post('$_basePath$_elementosPath/$elementoId');
-    return CatalogoEntrada.fromJson(responseData as Map<String, dynamic>);
-  }
-  
-  /// Quita un elemento del catálogo.
-  Future<void> removeElementoDelCatalogo(int elementoId) async {
-    await api.delete('$_basePath$_elementosPath/$elementoId');
+
+  /// Añade un elemento al catálogo.
+  // --- ¡CORREGIDO! Acepta int elementoId ---
+  Future<void> addElemento(int elementoId) async {
+    try {
+      // Convierte a String en el último momento
+      final data = await _apiClient.post('catalogo/elementos/${elementoId.toString()}', {});
+
+      final nuevaEntrada = CatalogoEntrada.fromJson(data);
+      _entradas.add(nuevaEntrada);
+      notifyListeners();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al añadir elemento: ${e.toString()}');
+    }
   }
 
-  /// Actualiza el estado o progreso de un elemento (RF06, RF07).
-  ///
-  /// --- ¡ACTUALIZADO! (Petición b) ---
-  /// Acepta todos los campos de progreso granular.
-  Future<CatalogoEntrada> updateElementoDelCatalogo(
-    int elementoId, {
-    String? estado,
-    int? temporadaActual, // Para Series
-    int? unidadActual,   // Para Episodios (Serie) / Capítulos (Manga) / Episodios (Anime)
-    int? capituloActual, // Para Capítulos (Libro)
-    int? paginaActual,   // Para Páginas (Libro)
-  }) async {
-    
-    final Map<String, dynamic> body = {
-      'estadoPersonal': estado,
-      'temporadaActual': temporadaActual,
-      'unidadActual': unidadActual,
-      'capituloActual': capituloActual,
-      'paginaActual': paginaActual,
-    };
-    
-    // Eliminamos nulos para no sobrescribir datos en la API
-    body.removeWhere((key, value) => value == null);
+  /// Elimina un elemento del catálogo.
+  // --- ¡CORREGIDO! Acepta int elementoId ---
+  Future<void> removeElemento(int elementoId) async {
+    try {
+      // Convierte a String en el último momento
+      await _apiClient.delete('catalogo/elementos/${elementoId.toString()}');
 
-    final dynamic responseData = await api.put(
-      '$_basePath$_elementosPath/$elementoId',
-      body: body,
-    );
-    
-    return CatalogoEntrada.fromJson(responseData as Map<String, dynamic>);
+      // --- ¡CORREGIDO (ID: QA-048)! ---
+      // Ahora es una comparación limpia de int == int
+      _entradas.removeWhere((entrada) => entrada.elementoId == elementoId);
+      // ---
+      notifyListeners();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al eliminar elemento: ${e.toString()}');
+    }
+  }
+
+  /// Actualiza el progreso de una entrada del catálogo.
+  // --- ¡CORREGIDO! Acepta int elementoId ---
+  Future<void> updateProgreso(int elementoId, Map<String, dynamic> body) async {
+    try {
+      // Convierte a String en el último momento
+      final data = await _apiClient.put('catalogo/elementos/${elementoId.toString()}', body);
+
+      final entradaActualizada = CatalogoEntrada.fromJson(data);
+      _actualizarEntradaEnLista(entradaActualizada);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al actualizar el progreso: ${e.toString()}');
+    }
+  }
+
+  /// Actualiza solo el estado de una entrada del catálogo.
+  // --- ¡CORREGIDO! Acepta int elementoId ---
+  Future<void> updateEstado(int elementoId, String estado) async {
+    try {
+      final Map<String, dynamic> body = {'estadoPersonal': estado};
+      // Convierte a String en el último momento
+      final data = await _apiClient.put('catalogo/elementos/${elementoId.toString()}', body);
+
+      final entradaActualizada = CatalogoEntrada.fromJson(data);
+      _actualizarEntradaEnLista(entradaActualizada);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException('Error al actualizar el estado: ${e.toString()}');
+    }
+  }
+
+  /// Helper interno para actualizar la lista local sin recargar todo.
+  void _actualizarEntradaEnLista(CatalogoEntrada entradaActualizada) {
+    final index =
+        _entradas.indexWhere((entrada) => entrada.id == entradaActualizada.id);
+    if (index != -1) {
+      _entradas[index] = entradaActualizada;
+      notifyListeners();
+    }
   }
 }

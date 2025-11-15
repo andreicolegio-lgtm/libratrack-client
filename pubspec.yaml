@@ -13,9 +13,9 @@ dependencies:
   # --- ¡NUEVO! Dependencia de Localización ---
   flutter_localizations:
     sdk: flutter
-  intl: 0.20.2 # (O la versión más reciente que 'pub add' te dé)
-  # ---
-
+  
+  # --- ¡VERSIONES RESTAURADAS AL ORIGINAL FUNCIONAL! ---
+  intl: 0.20.2 
   http: ^1.5.0
   flutter_secure_storage: ^9.2.4
   cached_network_image: ^3.3.1

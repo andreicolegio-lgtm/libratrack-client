@@ -1,64 +1,78 @@
-// lib/src/core/services/settings_service.dart
+// Archivo: lib/src/core/services/settings_service.dart
+// (¡REFACTORIZADO!)
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:libratrack_client/src/core/l10n/app_localizations.dart'; // <-- Importación no utilizada
 
-/// Servicio que gestiona los ajustes del usuario (Tema e Idioma).
 class SettingsService with ChangeNotifier {
-  final SharedPreferences _prefs;
-  
-  // Claves de guardado
-  static const String _themeKey = 'theme_mode';
-  static const String _localeKey = 'locale';
+  ThemeMode _themeMode = ThemeMode.system;
+  Locale? _locale;
 
-  // --- Estado ---
-  ThemeMode _themeMode = ThemeMode.dark;
-  Locale? _locale; // null = idioma del sistema
-
-  SettingsService(this._prefs) {
-    _loadTheme();
-    _loadLocale();
-  }
-  
-  // --- Getters ---
   ThemeMode get themeMode => _themeMode;
   Locale? get locale => _locale;
-  
-  // --- Lógica de Tema ---
-  void _loadTheme() {
-    final String? theme = _prefs.getString(_themeKey);
-    if (theme == 'light') {
-      _themeMode = ThemeMode.light;
-    } else {
-      _themeMode = ThemeMode.dark; // Default a oscuro
-    }
-    // No notificar, se carga al inicio
+
+  // --- ¡CONSTRUCTOR MODIFICADO! ---
+  // Se elimina la dependencia 'onLanguageChanged'.
+  // El 'Consumer' en main.dart ya maneja la actualización de la UI.
+  SettingsService() {
+    _loadSettings();
   }
 
-  Future<void> toggleTheme() async {
-    _themeMode = (_themeMode == ThemeMode.dark) ? ThemeMode.light : ThemeMode.dark;
-    await _prefs.setString(_themeKey, _themeMode == ThemeMode.light ? 'light' : 'dark');
-    notifyListeners();
-  }
-  
-  // --- Lógica de Idioma ---
-  void _loadLocale() {
-    final String? languageCode = _prefs.getString(_localeKey);
-    if (languageCode != null) {
-      _locale = Locale(languageCode);
-    }
-    // Si es null, Flutter usará el idioma del sistema
-    // No notificar, se carga al inicio
-  }
-  
-  /// Cambia el idioma actual y lo guarda
-  Future<void> setLocale(String? languageCode) async {
-    if (languageCode == null) {
-      _locale = null;
-      await _prefs.remove(_localeKey);
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Cargar Tema
+    final theme = prefs.getString('themeMode');
+    if (theme == 'light') {
+      _themeMode = ThemeMode.light;
+    } else if (theme == 'dark') {
+      _themeMode = ThemeMode.dark;
     } else {
-      _locale = Locale(languageCode);
-      await _prefs.setString(_localeKey, languageCode);
+      _themeMode = ThemeMode.system;
     }
+
+    // Cargar Idioma
+    final langCode = prefs.getString('languageCode');
+    if (langCode == 'en') {
+      _locale = const Locale('en');
+    } else if (langCode == 'es') {
+      _locale = const Locale('es');
+    } else {
+      _locale = null; // Sistema (Por defecto)
+    }
+    
     notifyListeners();
+  }
+
+  Future<void> updateThemeMode(ThemeMode? newThemeMode) async {
+    if (newThemeMode == null || newThemeMode == _themeMode) return;
+
+    _themeMode = newThemeMode;
+    notifyListeners();
+
+    final prefs = await SharedPreferences.getInstance();
+    if (newThemeMode == ThemeMode.light) {
+      await prefs.setString('themeMode', 'light');
+    } else if (newThemeMode == ThemeMode.dark) {
+      await prefs.setString('themeMode', 'dark');
+    } else {
+      await prefs.setString('themeMode', 'system');
+    }
+  }
+
+  Future<void> updateLocale(Locale? newLocale) async {
+    if (newLocale == _locale) return;
+
+    _locale = newLocale;
+    // ¡Ya no se llama al callback! El 'notifyListeners' es suficiente.
+    notifyListeners(); 
+
+    final prefs = await SharedPreferences.getInstance();
+    if (newLocale == null) {
+      await prefs.remove('languageCode'); // 'Sistema' es la ausencia de la clave
+    } else {
+      await prefs.setString('languageCode', newLocale.languageCode);
+    }
   }
 }

@@ -36,7 +36,8 @@ class SettingsScreen extends StatelessWidget {
             ),
             value: settingsService.themeMode == ThemeMode.dark,
             onChanged: (value) {
-              context.read<SettingsService>().toggleTheme();
+              final newMode = value ? ThemeMode.dark : ThemeMode.light;
+              context.read<SettingsService>().updateThemeMode(newMode);
             },
             secondary: Icon(
               settingsService.themeMode == ThemeMode.dark 
@@ -58,8 +59,14 @@ class SettingsScreen extends StatelessWidget {
               dropdownColor: Theme.of(context).colorScheme.surface,
               style: Theme.of(context).textTheme.bodyMedium,
               onChanged: (String? newLanguageCode) {
-                // Usamos 'read' en el callback
-                context.read<SettingsService>().setLocale(newLanguageCode);
+                Locale? newLocale;
+                if (newLanguageCode == 'en') {
+                  newLocale = const Locale('en');
+                } else if (newLanguageCode == 'es') {
+                  newLocale = const Locale('es');
+                }
+                // Si newLanguageCode es null, newLocale se queda null (Sistema)
+                context.read<SettingsService>().updateLocale(newLocale);
               },
               items: [
                 // 1. Opción "Idioma del Sistema"

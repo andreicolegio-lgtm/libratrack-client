@@ -1,205 +1,301 @@
 // Archivo: lib/src/core/utils/api_client.dart
+// (¡ACTUALIZADO - SPRINT 10: REFRESH TOKENS!)
+
 import 'dart:convert';
-import 'dart:io'; // <-- ¡NUEVA IMPORTACIÓN!
+import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as p; // <-- ¡NUEVA IMPORTACIÓN!
-import 'package:http_parser/http_parser.dart'; // <-- ¡NUEVA IMPORTACIÓN!
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter/material.dart'; 
-import 'package:libratrack_client/main.dart'; 
-import 'package:libratrack_client/src/core/services/auth_service.dart'; 
-import 'package:libratrack_client/src/features/auth/login_screen.dart'; 
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
+import 'package:image_picker/image_picker.dart';
 
-// Definición del cliente HTTP centralizado con manejo de errores
+const String _accessTokenKey = 'jwt_access_token';
+const String _refreshTokenKey = 'jwt_refresh_token';
+
 class ApiClient {
-  final _storage = const FlutterSecureStorage();
-  final String _tokenKey = 'jwt_token';
-  final String baseUrl = 'http://10.0.2.2:8080/api'; 
-  static final ApiClient _instance = ApiClient._internal();
-  factory ApiClient() => _instance;
-  ApiClient._internal();
-
-  /// Obtiene las cabeceras de autenticación (JWT)
-  Future<Map<String, String>> _getAuthHeaders() async {
-    final String? token = await _storage.read(key: _tokenKey);
-    if (token == null) {
-      // Si el token no se encuentra, manejamos el logout global
-      await _handleGlobalLogout();
-      throw Exception('No estás autenticado. Token JWT no encontrado.');
-    }
-    return {
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer $token', 
-    };
-  }
+  final String _baseUrl = 'http://10.0.2.2:8080/api';
   
-  /// Maneja globalmente un 401/403
-  Future<void> _handleGlobalLogout() async {
-    await AuthService().logout();
-    if (navigatorKey.currentState != null) {
-      navigatorKey.currentState!.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (Route<dynamic> route) => false, 
+  final FlutterSecureStorage _storage;
+  ApiClient(this._storage);
+
+  bool _isRefreshing = false;
+
+  /// Construye las cabeceras para cada petición.
+  Future<Map<String, String>> _getHeaders() async {
+    final headers = <String, String>{
+      // --- ¡CORREGIDO (ID: QA-079)! ---
+      // Era 'UTF-F', se ha corregido a 'UTF-8'
+      'Content-Type': 'application/json; charset=UTF-8',
+      // ---
+    };
+    final token = await _storage.read(key: _accessTokenKey);
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
+
+  // --- MÉTODOS PÚBLICOS DE PETICIÓN (AHORA CON LÓGICA DE 'RETRY') ---
+
+  // --- ¡CORREGIDO (ID: QA-078)! Añadido 'isAuthEndpoint' ---
+  Future<dynamic> get(String endpoint, {bool isAuthEndpoint = false}) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/$endpoint');
+      final response = await http.get(uri, headers: await _getHeaders());
+      return _handleResponse(response);
+    } on UnauthorizedException {
+      if (isAuthEndpoint || _isRefreshing) rethrow; 
+      await _handleRefresh(); // Intenta refrescar
+      // Reintenta
+      final uri = Uri.parse('$_baseUrl/$endpoint');
+      final response = await http.get(uri, headers: await _getHeaders());
+      return _handleResponse(response);
+    } on SocketException {
+      throw ConnectionException('Error de conexión. Revisa tu red.');
+    } on http.ClientException {
+      throw ConnectionException('Error al contactar al servidor.');
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Error inesperado: ${e.toString()}');
+    }
+  }
+
+  Future<dynamic> post(String endpoint, Map<String, dynamic> body, {bool isAuthEndpoint = false}) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/$endpoint');
+      final response = await http.post(
+        uri,
+        headers: await _getHeaders(),
+        body: json.encode(body),
       );
+      return _handleResponse(response);
+    } on UnauthorizedException {
+      if (isAuthEndpoint || _isRefreshing) rethrow;
+      await _handleRefresh(); // Intenta refrescar
+      // Reintenta
+      final uri = Uri.parse('$_baseUrl/$endpoint');
+      final response = await http.post(
+        uri,
+        headers: await _getHeaders(),
+        body: json.encode(body),
+      );
+      return _handleResponse(response);
+    } on SocketException {
+      throw ConnectionException('Error de conexión. Revisa tu red.');
+    } on http.ClientException {
+      throw ConnectionException('Error al contactar al servidor.');
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Error inesperado: ${e.toString()}');
     }
   }
 
-  /// Lógica central para manejar la respuesta HTTP (incluyendo errores 4xx)
-  dynamic handleResponse(http.Response response) { 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return response.body.isNotEmpty ? jsonDecode(response.body) : null;
-    }
-
-    if (response.statusCode == 401 || response.statusCode == 403) {
-      _handleGlobalLogout(); 
-      throw Exception('Sesión expirada/no autorizada. Por favor, inicia sesión de nuevo.');
-    }
-
-    String errorMessage = 'Error desconocido: ${response.statusCode}';
-    if (response.body.isNotEmpty) {
-      try {
-        final dynamic errorBody = jsonDecode(response.body);
-        if (errorBody is Map && errorBody.containsKey('message')) {
-           errorMessage = errorBody['message'] as String;
-        } else if (errorBody is String) {
-           errorMessage = errorBody;
-        } else {
-          errorMessage = response.body; 
-        }
-      } on FormatException {
-        errorMessage = response.body;
-      } catch (_) {
-        // Fallback
-      }
-    }
-    
-    switch (response.statusCode) {
-      case 404: 
-      case 409: 
-      case 400: 
-        throw Exception(errorMessage); 
-      default:
-        throw Exception('Error en la API. Código: ${response.statusCode}. $errorMessage');
+  Future<dynamic> put(String endpoint, Map<String, dynamic> body, {bool isAuthEndpoint = false}) async {
+     try {
+      final uri = Uri.parse('$_baseUrl/$endpoint');
+      final response = await http.put(
+        uri,
+        headers: await _getHeaders(),
+        body: json.encode(body),
+      );
+      return _handleResponse(response);
+    } on UnauthorizedException {
+      if (isAuthEndpoint || _isRefreshing) rethrow;
+      await _handleRefresh(); // Intenta refrescar
+      // Reintenta
+      final uri = Uri.parse('$_baseUrl/$endpoint');
+      final response = await http.put(
+        uri,
+        headers: await _getHeaders(),
+        body: json.encode(body),
+      );
+      return _handleResponse(response);
+    } on SocketException {
+      throw ConnectionException('Error de conexión. Revisa tu red.');
+    } on http.ClientException {
+      throw ConnectionException('Error al contactar al servidor.');
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Error inesperado: ${e.toString()}');
     }
   }
 
-  // ===================================================================
-  // --- ¡NUEVO MÉTODO DE SUBIDA DE ARCHIVOS! (Sprint 3) ---
-  // ===================================================================
-
-  /// Sube un archivo (ej. imagen) al endpoint de 'uploads'.
-  /// @param file El archivo a subir.
-  /// @return La URL pública devuelta por el servidor.
-  Future<String> upload(File file) async {
-    final Uri url = Uri.parse('$baseUrl/uploads');
-    
-    // 1. Obtener el token (¡las subidas están protegidas!)
-    final String? token = await _storage.read(key: _tokenKey);
-    if (token == null) {
-      _handleGlobalLogout();
-      throw Exception('No estás autenticado.');
+  Future<dynamic> delete(String endpoint, {bool isAuthEndpoint = false}) async {
+    try {
+      final uri = Uri.parse('$_baseUrl/$endpoint');
+      final response = await http.delete(uri, headers: await _getHeaders());
+      return _handleResponse(response);
+    } on UnauthorizedException {
+      if (isAuthEndpoint || _isRefreshing) rethrow;
+      await _handleRefresh(); // Intenta refrescar
+      // Reintenta
+      final uri = Uri.parse('$_baseUrl/$endpoint');
+      final response = await http.delete(uri, headers: await _getHeaders());
+      return _handleResponse(response);
+    } on SocketException {
+      throw ConnectionException('Error de conexión. Revisa tu red.');
+    } on http.ClientException {
+      throw ConnectionException('Error al contactar al servidor.');
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Error inesperado: ${e.toString()}');
     }
-    final Map<String, String> headers = {
-      'Authorization': 'Bearer $token',
-    };
+  }
 
-    // 2. Crear la petición Multipart
-    final request = http.MultipartRequest('POST', url);
-    request.headers.addAll(headers);
+  Future<dynamic> upload(String endpoint, XFile file, {bool isAuthEndpoint = false}) async {
+    try {
+      final response = await _uploadAttempt(endpoint, file);
+      return _handleResponse(response);
+    } on UnauthorizedException {
+      if (isAuthEndpoint || _isRefreshing) rethrow;
+      await _handleRefresh(); // Intenta refrescar
+      // Reintenta
+      final response = await _uploadAttempt(endpoint, file);
+      return _handleResponse(response);
+    } on SocketException {
+      throw ConnectionException('Error de conexión. Revisa tu red.');
+    } on http.ClientException {
+      throw ConnectionException('Error al contactar al servidor.');
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Error inesperado al subir el archivo: ${e.toString()}');
+    }
+  }
 
-    // 3. Adjuntar el archivo
+  Future<http.Response> _uploadAttempt(String endpoint, XFile file) async {
+    final uri = Uri.parse('$_baseUrl/$endpoint');
+    final request = http.MultipartRequest('POST', uri);
+    final token = await _storage.read(key: _accessTokenKey);
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
     request.files.add(
-      await http.MultipartFile.fromPath(
-        'file', // Este 'file' DEBE coincidir con @RequestParam("file") en el controlador
-        file.path,
-        filename: p.basename(file.path), // Envía el nombre del archivo
-        contentType: MediaType('image', p.extension(file.path).substring(1)), // Ej. image/jpeg
-      ),
+      await http.MultipartFile.fromPath('file', file.path, filename: file.name),
     );
+    final streamedResponse = await request.send();
+    return await http.Response.fromStream(streamedResponse);
+  }
+
+  // --- ¡NUEVA LÓGICA DE REFRESH Y LOGOUT! ---
+
+  /// Llama al endpoint /refresh para obtener un nuevo Access Token.
+  Future<void> _handleRefresh() async {
+    if (_isRefreshing) {
+      await Future.delayed(const Duration(seconds: 2));
+      return;
+    }
+    
+    _isRefreshing = true;
 
     try {
-      // 4. Enviar la petición
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-      
-      // 5. Reutilizar nuestro manejador de respuestas
-      final dynamic responseData = handleResponse(response);
-      
-      // 6. Devolver la URL
-      if (responseData is Map && responseData.containsKey('url')) {
-        return responseData['url'] as String;
-      } else {
-        throw Exception("La API no devolvió una URL válida.");
+      final refreshToken = await _storage.read(key: _refreshTokenKey);
+      if (refreshToken == null) {
+        throw UnauthorizedException('No hay sesión de refresco.');
       }
-      
+
+      final uri = Uri.parse('$_baseUrl/auth/refresh');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: json.encode({'refreshToken': refreshToken}),
+      );
+
+      // --- ¡CORREGIDO (ID: QA-080)! ---
+      // No usamos _handleResponse. Parseamos manualmente.
+      if (response.statusCode == 200) {
+        // Éxito en el refresco
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        await _storage.write(key: _accessTokenKey, value: data['accessToken']);
+        await _storage.write(key: _refreshTokenKey, value: data['refreshToken']);
+      } else {
+        // El refresco falló (ej. 403, el refresh token caducó)
+        // Lanzamos el error para que el 'catch' de abajo llame a logout()
+        throw UnauthorizedException('La sesión de refresco ha caducado.');
+      }
+      // ---
+
     } catch (e) {
-      // Capturamos errores de red o de handleResponse
-      throw Exception('Fallo al subir el archivo: ${e.toString()}');
+      // Si el refresco falla, cerramos sesión
+      await logout();
+      // Relanzamos una UnauthorizedException limpia para que la UI llame a logout()
+      throw UnauthorizedException('Sesión caducada. Por favor, inicie sesión.');
+    } finally {
+      _isRefreshing = false;
     }
   }
-  
-  // ===================================================================
-  // Métodos CRUD (JSON)
-  // ===================================================================
-  
-  Future<dynamic> post(String path, {dynamic body, bool protected = true}) =>
-      _sendRequest(path, 'POST', body: body, protected: protected);
 
-  Future<dynamic> get(String path, {Map<String, String>? queryParams, bool protected = true}) =>
-      _sendRequest(path, 'GET', queryParams: queryParams, protected: protected);
-
-  Future<dynamic> put(String path, {dynamic body}) =>
-      _sendRequest(path, 'PUT', body: body);
-
-  Future<dynamic> delete(String path) =>
-      _sendRequest(path, 'DELETE');
-      
-  /// Función de envío para JSON
-  Future<dynamic> _sendRequest(
-    String path, 
-    String method, 
-    {dynamic body, Map<String, String>? queryParams, bool protected = true}) async {
+  Future<void> logout() async {
+    final refreshToken = await _storage.read(key: _refreshTokenKey);
     
-    Uri url = Uri.parse('$baseUrl$path');
-    
-    if (queryParams != null && queryParams.isNotEmpty) {
-      url = url.replace(queryParameters: queryParams);
+    if (refreshToken != null) {
+      try {
+        final uri = Uri.parse('$_baseUrl/auth/logout');
+        
+        // --- ¡CORREGIDO (ID: QA-081)! ---
+        // No usamos _getHeaders() (que usa el Access Token caducado).
+        // El RefreshToken en el body es la única autenticación necesaria
+        // y el endpoint /logout es 'permitAll'.
+        await http.post(
+          uri,
+          // Usamos una cabecera simple en lugar de _getHeaders()
+          headers: {'Content-Type': 'application/json; charset=UTF-8'}, 
+          body: json.encode({'refreshToken': refreshToken}),
+        );
+        // ---
+        
+      } catch (e) {
+        // Ignoramos el error, lo importante es borrar localmente
+      }
     }
     
-    final Map<String, String> headers = {
-      'Content-Type': 'application/json; charset=UTF-8',
-    };
-    
-    if (protected) {
-      final Map<String, String> authHeaders = await _getAuthHeaders();
-      headers.addAll(authHeaders);
+    // Borramos todos los tokens del storage local
+    await _storage.delete(key: _accessTokenKey);
+    await _storage.delete(key: _refreshTokenKey);
+  }
+
+  // --- MANEJADOR DE RESPUESTAS INTERNO ---
+
+  dynamic _handleResponse(http.Response response) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.body.isEmpty) {
+        return <String, dynamic>{};
+      }
+      return json.decode(utf8.decode(response.bodyBytes));
     }
 
-    http.Response response;
+    String errorMessage;
+    dynamic errorData;
     try {
-      switch (method) {
-        case 'GET':
-          response = await http.get(url, headers: headers);
-          break;
-        case 'POST':
-          response = await http.post(url, headers: headers, body: body != null ? jsonEncode(body) : null);
-          break;
-        case 'PUT':
-          response = await http.put(url, headers: headers, body: body != null ? jsonEncode(body) : null);
-          break;
-        case 'DELETE':
-          response = await http.delete(url, headers: headers);
-          break;
-        default:
-          throw Exception('Método HTTP no soportado: $method');
+      if (response.body.isNotEmpty) {
+        errorData = json.decode(utf8.decode(response.bodyBytes));
+        if (errorData is Map<String, dynamic>) {
+          errorMessage = errorData['message']?.toString() ?? 'Error desconocido.';
+        } else {
+          errorMessage = errorData.toString();
+        }
+      } else {
+        errorMessage = 'Error ${response.statusCode}: Sin detalles.';
       }
     } catch (e) {
-      throw Exception('Fallo al conectar con el servidor.');
+      errorMessage = utf8.decode(response.bodyBytes);
     }
 
-    return handleResponse(response);
+    switch (response.statusCode) {
+      case 400:
+        Map<String, dynamic>? errors;
+        if (errorData is Map<String, dynamic> && errorData.containsKey('errors')) {
+          errors = errorData['errors'] as Map<String, dynamic>?;
+        }
+        throw BadRequestException(errorMessage, errors);
+      case 401:
+      case 403:
+        throw UnauthorizedException(errorMessage);
+      case 404:
+        throw NotFoundException(errorMessage);
+      case 409:
+        throw ConflictException(errorMessage);
+      case 500:
+      default:
+        throw ServerException(errorMessage);
+    }
   }
 }
-
-// Exportamos una instancia global
-final ApiClient api = ApiClient();

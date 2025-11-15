@@ -1,13 +1,17 @@
-// lib/src/features/admin/admin_panel_screen.dart
+// Archivo: lib/src/features/admin/admin_panel_screen.dart
+// (¡CORREGIDO!)
+
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart'; 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:libratrack_client/src/core/services/admin_service.dart';
 import 'package:libratrack_client/src/model/perfil_usuario.dart';
 import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
-import 'package:libratrack_client/src/features/admin/admin_elemento_form.dart'; 
+import 'package:libratrack_client/src/features/admin/admin_elemento_form.dart';
 // --- ¡NUEVAS IMPORTACIONES! ---
 import 'package:libratrack_client/src/model/paginated_response.dart';
 import 'dart:async'; // Para el Debouncer
+import 'package:provider/provider.dart'; // ¡NUEVA IMPORTACIÓN!
+import 'package:libratrack_client/src/core/utils/api_exceptions.dart'; // ¡NUEVA IMPORTACIÓN!
 
 /// Pantalla para que los Admins gestionen los roles de los usuarios (Petición 14).
 /// --- ¡ACTUALIZADO (Sprint 7 / Petición B, C, G)! ---
@@ -19,8 +23,11 @@ class AdminPanelScreen extends StatefulWidget {
 }
 
 class _AdminPanelScreenState extends State<AdminPanelScreen> {
-  final AdminService _adminService = AdminService();
-  
+  // --- ¡CORREGIDO (Error 1)! ---
+  // Ya no se crea la instancia aquí. Se obtendrá de Provider en initState.
+  late final AdminService _adminService;
+  // ---
+
   // --- ¡NUEVO ESTADO DE LISTA Y PAGINACIÓN! (Petición B) ---
   final List<PerfilUsuario> _usuarios = [];
   final ScrollController _scrollController = ScrollController();
@@ -43,12 +50,18 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   void initState() {
     super.initState();
+
+    // --- ¡CORREGIDO (Error 1)! ---
+    // Obtenemos el servicio desde Provider
+    _adminService = context.read<AdminService>();
+    // ---
+
     // 1. Cargamos la primera página
     _loadUsers(isFirstPage: true);
-    
+
     // 2. Listener para scroll infinito (Petición B)
     _scrollController.addListener(_onScroll);
-    
+
     // 3. Listener para la barra de búsqueda (Petición C)
     _searchController.addListener(_onSearchChanged);
   }
@@ -62,13 +75,18 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     _debounce?.cancel();
     super.dispose();
   }
-  
+
   // --- Lógica de Carga y Paginación (Petición B) ---
-  
+
   /// Listener del Scroll
   void _onScroll() {
-    if (_scrollController.position.pixels < _scrollController.position.maxScrollExtent - 200) return;
-    if (_isLoadingMore || !_hasNextPage) return;
+    if (_scrollController.position.pixels <
+        _scrollController.position.maxScrollExtent - 200) {
+      return;
+    }
+    if (_isLoadingMore || !_hasNextPage) {
+      return;
+    }
     _loadUsers();
   }
 
@@ -85,23 +103,37 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       });
     } else {
       if (_isLoadingMore) return;
-      setState(() { _isLoadingMore = true; });
+      setState(() {
+        _isLoadingMore = true;
+      });
     }
 
     try {
-      final PaginatedResponse<PerfilUsuario> respuesta = 
-          await _adminService.getAllUsuarios(
+      // --- ¡CORREGIDO (Error 2)! ---
+      // Renombrado de getAllUsuarios a getUsuarios
+      final PaginatedResponse<PerfilUsuario> respuesta =
+          await _adminService.getUsuarios(
         page: _currentPage,
         search: _searchController.text.isEmpty ? null : _searchController.text,
         roleFilter: _roleFilter,
       );
+      // ---
 
       if (mounted) {
         setState(() {
           _usuarios.addAll(respuesta.content);
           _currentPage++;
           _hasNextPage = !respuesta.isLast;
-          
+
+          _isLoadingFirstPage = false;
+          _isLoadingMore = false;
+        });
+      }
+    // --- ¡MEJORADO! ---
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() {
+          _loadingError = e.message;
           _isLoadingFirstPage = false;
           _isLoadingMore = false;
         });
@@ -109,22 +141,22 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _loadingError = e.toString().replaceFirst("Exception: ", "");
+          _loadingError = e.toString();
           _isLoadingFirstPage = false;
           _isLoadingMore = false;
         });
       }
     }
   }
-  
+
   // --- Lógica de Búsqueda y Filtros (Petición C, G) ---
-  
+
   /// Reinicia la búsqueda (al cambiar filtros o texto)
   void _reiniciarBusqueda() {
     _debounce?.cancel(); // Cancela búsquedas anteriores
     _loadUsers(isFirstPage: true);
   }
-  
+
   /// Añade un "Debouncer" a la búsqueda para no llamar a la API en cada tecla
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
@@ -132,7 +164,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       _reiniciarBusqueda();
     });
   }
-  
+
   /// Maneja el clic en los chips de filtro
   void _onFilterChanged(String? newFilter) {
     setState(() {
@@ -152,25 +184,32 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   Future<void> _handleUpdateRoles(int userId, PerfilUsuario currentUser) async {
     final changes = _pendingChanges[userId];
-    if (changes == null) return; 
+    if (changes == null) return;
 
     final bool esModerador = changes['mod'] ?? currentUser.esModerador;
     final bool esAdministrador = changes['admin'] ?? currentUser.esAdministrador;
-    
+
     final msgContext = ScaffoldMessenger.of(context);
-    
+
     try {
       // Guardamos una copia del ID por si la lista se refresca
-      final int editingUserId = userId; 
+      final int editingUserId = userId;
+
+      // --- ¡CORREGIDO (Errores 3, 4, 5, 6)! ---
+      // 1. Se pasa el ID como String (.toString())
+      // 2. Los booleanos se pasan como posicionales, no nombrados.
       await _adminService.updateUserRoles(
-        editingUserId, 
-        esModerador: esModerador, 
-        esAdministrador: esAdministrador
+        editingUserId,
+        esModerador,
+        esAdministrador,
       );
-      
+      // ---
+
       if (!mounted) return;
-      SnackBarHelper.showTopSnackBar(msgContext, 'Roles de ${currentUser.username} actualizados.', isError: false);
-      
+      SnackBarHelper.showTopSnackBar(
+          msgContext, 'Roles de ${currentUser.username} actualizados.',
+          isError: false);
+
       // Actualizamos solo el usuario modificado en la lista local
       // (en lugar de recargar todo)
       setState(() {
@@ -179,19 +218,26 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         int index = _usuarios.indexWhere((u) => u.id == editingUserId);
         if (index != -1) {
           _usuarios[index] = PerfilUsuario(
-            id: currentUser.id, 
-            username: currentUser.username, 
-            email: currentUser.email, 
-            fotoPerfilUrl: currentUser.fotoPerfilUrl, 
-            esModerador: esModerador, 
-            esAdministrador: esAdministrador
-          );
+              id: currentUser.id,
+              username: currentUser.username,
+              email: currentUser.email,
+              fotoPerfilUrl: currentUser.fotoPerfilUrl,
+              esModerador: esModerador,
+              esAdministrador: esAdministrador);
         }
       });
-      
+    
+    // --- ¡MEJORADO! ---
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      SnackBarHelper.showTopSnackBar(
+          msgContext, 'Error al actualizar roles: $e',
+          isError: true);
     } catch (e) {
       if (!mounted) return;
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error al actualizar roles: ${e.toString().replaceFirst("Exception: ", "")}', isError: true);
+      SnackBarHelper.showTopSnackBar(
+          msgContext, 'Error inesperado: ${e.toString()}',
+          isError: true);
     }
   }
 
@@ -205,12 +251,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Panel de Administrador', style: Theme.of(context).textTheme.titleLarge),
+        title: Text('Panel de Administrador',
+            style: Theme.of(context).textTheme.titleLarge),
         centerTitle: true,
         // --- ¡NUEVO! (Petición C) ---
         bottom: PreferredSize(
@@ -230,16 +276,17 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         foregroundColor: Colors.white,
         onPressed: _goToCrearElemento,
       ),
-      
+
       // --- ¡NUEVO! Body con Paginación ---
       body: _buildBody(context),
     );
   }
-  
+
   /// --- ¡NUEVO! Widget de Búsqueda (Petición C) ---
   Widget _buildSearchField(BuildContext context) {
-    final Color iconColor = Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
-    
+    final Color iconColor =
+        Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
       child: TextField(
@@ -254,10 +301,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             borderRadius: BorderRadius.circular(10.0),
             borderSide: BorderSide.none,
           ),
-          prefixIcon: Icon(Icons.search, color: iconColor), 
+          prefixIcon: Icon(Icons.search, color: iconColor),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
-                  icon: Icon(Icons.clear, color: iconColor), 
+                  icon: Icon(Icons.clear, color: iconColor),
                   onPressed: () {
                     _searchController.clear();
                     _reiniciarBusqueda();
@@ -270,7 +317,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       ),
     );
   }
-  
+
   /// --- ¡NUEVO! Widget de Filtros (Petición G) ---
   Widget _buildFilterChips(BuildContext context) {
     return Padding(
@@ -299,14 +346,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       ),
     );
   }
-  
+
   /// --- ¡NUEVO! Widget Body con Paginación (Petición B) ---
   Widget _buildBody(BuildContext context) {
     if (_isLoadingFirstPage) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_loadingError != null) {
-      return Center(child: Text('Error: $_loadingError', style: const TextStyle(color: Colors.red)));
+      return Center(
+          child: Text('Error: $_loadingError',
+              style: const TextStyle(color: Colors.red)));
     }
     if (_usuarios.isEmpty) {
       return const Center(child: Text('No se encontraron usuarios.'));
@@ -315,29 +364,31 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     return ListView.builder(
       controller: _scrollController,
       // (Petición A) Padding para el FAB y el Appbar
-      padding: const EdgeInsets.only(bottom: 96.0, top: 8.0, left: 8.0, right: 8.0),
+      padding:
+          const EdgeInsets.only(bottom: 96.0, top: 8.0, left: 8.0, right: 8.0),
       itemCount: _usuarios.length + 1, // +1 para el indicador de carga
       itemBuilder: (context, index) {
-        
         // Indicador de Carga
         if (index == _usuarios.length) {
           return _hasNextPage
-            ? const Center(child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(),
-              ))
-            : const SizedBox(height: 1); // No mostrar nada
+              ? const Center(
+                  child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(),
+                ))
+              : const SizedBox(height: 1); // No mostrar nada
         }
-        
+
         // Fila de Usuario
         final user = _usuarios[index];
         final bool hasChanges = _pendingChanges.containsKey(user.id);
         final bool isMod = _pendingChanges[user.id]?['mod'] ?? user.esModerador;
-        final bool isAdmin = _pendingChanges[user.id]?['admin'] ?? user.esAdministrador;
+        final bool isAdmin =
+            _pendingChanges[user.id]?['admin'] ?? user.esAdministrador;
 
         // (Petición E) ExpansionTile
         return Card(
-          clipBehavior: Clip.antiAlias, 
+          clipBehavior: Clip.antiAlias,
           margin: const EdgeInsets.symmetric(vertical: 8.0),
           child: ExpansionTile(
             // (Petición D) Avatar y Nombre
@@ -345,11 +396,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               children: [
                 _buildAvatar(context, user.fotoPerfilUrl),
                 const SizedBox(width: 16),
-                Text(user.username, style: Theme.of(context).textTheme.titleMedium),
+                Text(user.username,
+                    style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
-            subtitle: Text(user.email, style: Theme.of(context).textTheme.bodyMedium),
-            
+            subtitle:
+                Text(user.email, style: Theme.of(context).textTheme.bodyMedium),
+
             // (E) Contenido colapsable
             children: [
               const Divider(height: 1),
@@ -363,14 +416,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 title: const Text('Administrador'),
                 value: isAdmin,
                 onChanged: (val) => _onRoleChanged(user.id, 'admin', val),
-                activeTrackColor: Colors.purple[700], 
+                activeTrackColor: Colors.purple[700],
               ),
-              
               if (hasChanges)
                 Align(
                   alignment: Alignment.centerRight,
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 16.0, bottom: 8.0),
+                    padding:
+                        const EdgeInsets.only(right: 16.0, bottom: 8.0),
                     child: TextButton(
                       child: const Text('Guardar Cambios'),
                       onPressed: () => _handleUpdateRoles(user.id, user),
@@ -383,7 +436,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       },
     );
   }
-  
+
   /// Helper para el Avatar (Petición D)
   Widget _buildAvatar(BuildContext context, String? imageUrl) {
     if (imageUrl != null && imageUrl.isNotEmpty) {
@@ -393,7 +446,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         backgroundImage: CachedNetworkImageProvider(imageUrl),
       );
     }
-    
+
     return CircleAvatar(
       radius: 20,
       backgroundColor: Theme.of(context).colorScheme.surface,

@@ -1,5 +1,5 @@
 // Archivo: lib/src/features/auth/login_screen.dart
-// (¡CORREGIDO!)
+// (¡ACTUALIZADO - SPRINT 10: GOOGLE SIGN-IN!)
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -29,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// Maneja el login con Email/Contraseña
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -46,21 +47,46 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text,
         _passwordController.text,
       );
-      // ÉXITO: El login completó. El AuthWrapper verá el cambio y destruirá
-      // este widget para navegar a HomeScreen. No se necesita más código aquí.
+      // Éxito: AuthWrapper navega
     } on ApiException catch (e) {
       if (mounted) {
-        setState(() { _isLoading = false; }); // <-- Apaga en caso de error API
+        setState(() { _isLoading = false; }); 
         SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
       }
     } catch (e) {
       if (mounted) {
-        setState(() { _isLoading = false; }); // <-- Apaga en caso de error general
+        setState(() { _isLoading = false; });
         SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: ${e.toString()}', isError: true);
       }
-    } 
-    // El bloque FINALLY se elimina, ya que la navegación se encarga del reseteo.
+    }
   }
+
+  // --- ¡NUEVO MÉTODO (ID: QA-091)! ---
+  /// Maneja el login con Google
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final authService = context.read<AuthService>();
+    final msgContext = ScaffoldMessenger.of(context);
+
+    try {
+      await authService.signInWithGoogle();
+      // Éxito: AuthWrapper navega
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() { _isLoading = false; });
+        SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() { _isLoading = false; });
+        SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: ${e.toString()}', isError: true);
+      }
+    }
+  }
+  // ---
 
   void _goToRegistration() {
     Navigator.push(
@@ -160,6 +186,35 @@ class _LoginScreenState extends State<LoginScreen> {
                           )
                         : const Text('Iniciar Sesión'),
                   ),
+                  const SizedBox(height: 24),
+
+                  // --- ¡NUEVO DIVISOR (ID: QA-091)! ---
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.grey[700])),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text("O", style: textTheme.bodyMedium?.copyWith(color: Colors.grey[500])),
+                      ),
+                      Expanded(child: Divider(color: Colors.grey[700])),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- ¡NUEVO BOTÓN DE GOOGLE (ID: QA-091)! ---
+                  OutlinedButton.icon(
+                    icon: const Text('G'),
+                    label: const Text('Continuar con Google'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      side: BorderSide(color: Colors.grey[700]!),
+                    ),
+                    onPressed: _isLoading ? null : _handleGoogleSignIn,
+                  ),
+                  // ---
+
                   const SizedBox(height: 24),
 
                   // --- Botón de Registro ---

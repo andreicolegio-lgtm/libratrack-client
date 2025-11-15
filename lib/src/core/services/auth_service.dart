@@ -1,14 +1,16 @@
 // Archivo: lib/src/core/services/auth_service.dart
-// (¡LINTER CORREGIDO!)
+// (¡CORREGIDO - ID: QA-091!)
 
+// import 'dart:convert'; // <-- ¡ELIMINADO!
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart'; 
 
 import 'package:libratrack_client/src/core/utils/api_client.dart';
 import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
 import 'package:libratrack_client/src/model/perfil_usuario.dart';
 
-// --- ¡CORREGIDO (LINTER)! ---
+// --- ¡CORREGIDO (Linter)! ---
 const String _accessTokenKey = 'jwt_access_token';
 const String _refreshTokenKey = 'jwt_refresh_token';
 // ---
@@ -17,7 +19,11 @@ class AuthService with ChangeNotifier {
   final ApiClient _apiClient;
   final FlutterSecureStorage _secureStorage;
 
-  // Estado en memoria
+  // --- ¡CORRECCIÓN (ID: QA-091)! ---
+  // Usar GoogleSignIn.instance (singleton) en lugar de crear una nueva instancia
+  late final GoogleSignIn _googleSignIn;
+  // ---
+
   String? _accessToken;
   String? _refreshToken;
   PerfilUsuario? _perfilUsuario;
@@ -29,39 +35,44 @@ class AuthService with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   AuthService(this._apiClient, this._secureStorage) {
-    _tryAutoLogin();
+    _initialize();
   }
 
-  /// Intenta cargar tokens desde el almacenamiento seguro al iniciar la app.
+  /// Inicialización asíncrona del servicio
+  Future<void> _initialize() async {
+    await _initializeGoogleSignIn();
+    await _tryAutoLogin();
+  }
+
+  /// Inicializa GoogleSignIn de forma segura
+  Future<void> _initializeGoogleSignIn() async {
+    _googleSignIn = GoogleSignIn.instance;
+    // Inicializar con el serverClientId necesario para Android
+    await _googleSignIn.initialize(
+      serverClientId: '1078651925823-g53s0f6i4on4ugdc0t7pfg11vpu86rdp.apps.googleusercontent.com', // Reemplaza con tu Server Client ID de Google Cloud
+    );
+  }
+
   Future<void> _tryAutoLogin() async {
     try {
-      // 1. Intentamos leer ambos tokens
-      // --- ¡CORREGIDO (LINTER)! ---
       _accessToken = await _secureStorage.read(key: _accessTokenKey);
       _refreshToken = await _secureStorage.read(key: _refreshTokenKey);
-      // ---
 
       if (_accessToken != null && _refreshToken != null) {
-        // 2. Si existen, cargamos el perfil
         await _loadUserProfile(shouldNotify: false);
       } else {
-        // 3. Si falta alguno, limpiamos todo
         await logout(shouldNotify: false);
       }
     } catch (e) {
-      // 4. Si algo falla (ej. storage corrupto), limpiamos todo
       await logout(shouldNotify: false);
     } finally {
       _isLoading = false;
-      notifyListeners(); 
+      notifyListeners();
     }
   }
 
-  /// Carga el perfil del usuario desde la API (/api/usuarios/me)
   Future<void> _loadUserProfile({bool shouldNotify = true}) async {
     try {
-      // --- ¡CORREGIDO (ID: QA-078)! ---
-      // get() por defecto NO es un auth endpoint, lo cual es correcto.
       final data = await _apiClient.get('usuarios/me');
       _perfilUsuario = PerfilUsuario.fromJson(data);
       if (shouldNotify) notifyListeners();
@@ -72,17 +83,13 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  /// Inicia sesión (Login)
+  /// Inicia sesión con Email y Contraseña
   Future<void> login(String email, String password) async {
     try {
-      // --- ¡CORREGIDO (ID: QA-078)! ---
-      // Le decimos al ApiClient que esta es una llamada de autenticación
-      // para que no intente refrescar si falla.
       final data = await _apiClient.post('auth/login', {
         'email': email,
         'password': password,
-      }, isAuthEndpoint: true); // <-- AÑADIDO
-      // ---
+      }, isAuthEndpoint: true); 
 
       _accessToken = data['accessToken'];
       _refreshToken = data['refreshToken'];
@@ -100,15 +107,65 @@ class AuthService with ChangeNotifier {
     }
   }
 
+  // --- ¡MÉTODO CORREGIDO (ID: QA-091)! ---
+  /// Inicia sesión o se registra usando Google
+  Future<void> signInWithGoogle() async {
+    try {
+      // 1. Mostrar el Pop-up de Google
+      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+      debugPrint('✅ Google Sign-In exitoso: ${googleUser.email}');
+
+      // 2. Si el usuario cierra el pop-up, authenticate() retorna null implícitamente
+      // (pero el tipo es no-nullable, así que siempre tendremos un usuario válido aquí)
+
+      // 3. Obtener el token de ID de Google
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      final String? idToken = googleAuth.idToken;
+      debugPrint('🔑 ID Token obtenido: ${idToken?.substring(0, 20) ?? "null"}...');
+
+      if (idToken == null) {
+        throw ApiException('No se pudo obtener el token de Google.');
+      }
+
+      // 4. Enviar el token de Google a NUESTRO backend
+      debugPrint('📤 Enviando token a /auth/google...');
+      debugPrint('📦 Payload: {"token": "${idToken.substring(0, 50)}..."}');
+      final data = await _apiClient.post('auth/google', {
+        'token': idToken,
+      }, isAuthEndpoint: true);
+      debugPrint('✅ Backend respondió correctamente');
+
+      // 5. Recibir NUESTROS propios tokens (Access y Refresh)
+      _accessToken = data['accessToken'];
+      _refreshToken = data['refreshToken'];
+
+      // 6. Guardar nuestros tokens
+      await _secureStorage.write(key: _accessTokenKey, value: _accessToken!);
+      await _secureStorage.write(key: _refreshTokenKey, value: _refreshToken!);
+      
+      // 7. Cargar el perfil del usuario (desde nuestra BD)
+      await _loadUserProfile(shouldNotify: false);
+      
+      // 8. Notificar a la UI para navegar a Home
+      notifyListeners();
+
+    } on ApiException catch (e) {
+      debugPrint('❌ ApiException: ${e.message}');
+      rethrow;
+    } catch (e) {
+      debugPrint('❌ Error inesperado: $e');
+      throw ApiException('Error inesperado durante el inicio de sesión con Google: ${e.toString()}');
+    }
+  }
+  // ---
+
   /// Cierra la sesión
   Future<void> logout({bool shouldNotify = true}) async {
     try {
+      await _googleSignIn.signOut();
       await _apiClient.logout();
     } catch (e) {
-      // --- ¡CORREGIDO (LINTER)! ---
-      // Se elimina el print()
-      // print("Error during API logout, proceeding with local cleanup: $e");
-      // ---
+      // Ignoramos errores aquí
     }
 
     _accessToken = null;
@@ -124,14 +181,11 @@ class AuthService with ChangeNotifier {
   Future<PerfilUsuario> register(
       String username, String email, String password) async {
     try {
-      // --- ¡CORREGIDO (ID: QA-078)! ---
-      // Le decimos al ApiClient que esta es una llamada de autenticación
       final data = await _apiClient.post('auth/register', {
         'username': username,
         'email': email,
         'password': password,
-      }, isAuthEndpoint: true); // <-- AÑADIDO
-      // ---
+      }, isAuthEndpoint: true);
       return PerfilUsuario.fromJson(data);
     } on ApiException {
       rethrow;
@@ -140,14 +194,9 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  // --- ¡NUEVO MÉTODO (ID: QA-079)! ---
-  /// Actualiza la copia local del perfil de usuario.
-  /// Llamado desde ProfileScreen después de una actualización exitosa
-  /// (ej. cambio de nombre, cambio de foto) para mantener el estado sincronizado.
+  /// (ID: QA-079) Actualiza la copia local del perfil de usuario
   void updateLocalProfileData(PerfilUsuario perfilActualizado) {
     _perfilUsuario = perfilActualizado;
-    // Notificamos a cualquier widget que pueda estar escuchando el perfil
-    // (aunque en ProfileScreen no es estrictamente necesario, es buena práctica).
     notifyListeners();
   }
 }

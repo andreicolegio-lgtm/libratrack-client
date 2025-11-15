@@ -10,12 +10,14 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # --- ¡NUEVO! Dependencia de Localización ---
   flutter_localizations:
     sdk: flutter
   
-  # --- ¡VERSIONES RESTAURADAS AL ORIGINAL FUNCIONAL! ---
-  intl: 0.20.2 
+  # --- ¡PAQUETE AÑADIDO (ID: QA-091)! ---
+  google_sign_in: ^7.2.0
+  # ---
+
+  intl: 0.20.2
   http: ^1.5.0
   flutter_secure_storage: ^9.2.4
   cached_network_image: ^3.3.1
@@ -33,11 +35,6 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
 
-# --- ¡NUEVO! ---
-# Esta sección activa el generador de código automático
-# para nuestras traducciones.
 flutter:
   generate: true 
-  # ---
-  
   uses-material-design: true

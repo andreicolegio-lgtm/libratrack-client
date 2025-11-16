@@ -13,7 +13,9 @@ class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
 
   @override
-  State<AdminPanelScreen> createState() => _AdminPanelScreenState();
+  State<AdminPanelScreen> createState() {
+    return _AdminPanelScreenState();
+  }
 }
 
 class _AdminPanelScreenState extends State<AdminPanelScreen> {
@@ -80,7 +82,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         _loadingError = null;
       });
     } else {
-      if (_isLoadingMore) return;
+      if (_isLoadingMore) {
+        return;
+      }
       setState(() {
         _isLoadingMore = true;
       });
@@ -129,7 +133,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   }
 
   void _onSearchChanged() {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    if (_debounce?.isActive ?? false) {
+      _debounce!.cancel();
+    }
     _debounce = Timer(const Duration(milliseconds: 500), () {
       _reiniciarBusqueda();
     });
@@ -151,7 +157,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   Future<void> _handleUpdateRoles(int userId, PerfilUsuario currentUser) async {
     final Map<String, bool>? changes = _pendingChanges[userId];
-    if (changes == null) return;
+    if (changes == null) {
+      return;
+    }
 
     final bool esModerador = changes['mod'] ?? currentUser.esModerador;
     final bool esAdministrador =
@@ -168,7 +176,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         esAdministrador,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       SnackBarHelper.showTopSnackBar(
           msgContext, 'Roles de ${currentUser.username} actualizados.',
           isError: false);
@@ -188,12 +198,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         }
       });
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       SnackBarHelper.showTopSnackBar(
           msgContext, 'Error al actualizar roles: $e',
           isError: true);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       SnackBarHelper.showTopSnackBar(
           msgContext, 'Error inesperado: ${e.toString()}',
           isError: true);

@@ -112,7 +112,9 @@ class _SearchScreenState extends State<SearchScreen> {
         _loadingError = null;
       });
     } else {
-      if (_isLoadingMore) return;
+      if (_isLoadingMore) {
+        return;
+      }
       setState(() {
         _isLoadingMore = true;
       });

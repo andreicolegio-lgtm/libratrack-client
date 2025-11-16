@@ -17,9 +17,9 @@ class ModeracionPanelScreen extends StatefulWidget {
 class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
     with SingleTickerProviderStateMixin {
   final List<EstadoPropuesta> _estados = <EstadoPropuesta>[
-    EstadoPropuesta.PENDIENTE,
-    EstadoPropuesta.APROBADO,
-    EstadoPropuesta.RECHAZADO,
+    EstadoPropuesta.pendiente,
+    EstadoPropuesta.aprobado,
+    EstadoPropuesta.rechazado,
   ];
 
   @override
@@ -161,7 +161,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
         }
         if (_propuestas.isEmpty) {
           return Center(
-            child: Text(widget.estado == EstadoPropuesta.PENDIENTE
+            child: Text(widget.estado == EstadoPropuesta.pendiente
                 ? '¡Buen trabajo! No hay propuestas pendientes.'
                 : 'No hay propuestas ${widget.estado.displayName.toLowerCase()}.'),
           );
@@ -210,7 +210,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
               'Géneros: ${propuesta.generosSugeridos}',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            if (widget.estado == EstadoPropuesta.PENDIENTE) ...<Widget>[
+            if (widget.estado == EstadoPropuesta.pendiente) ...<Widget>[
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.0),
                 child: Divider(),

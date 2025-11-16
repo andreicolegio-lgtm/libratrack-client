@@ -97,7 +97,9 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         });
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       SnackBarHelper.showTopSnackBar(
           ScaffoldMessenger.of(context), 'Error al seleccionar imagen: $e',
           isError: true);
@@ -105,7 +107,9 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
   }
 
   Future<void> _handleUploadImage() async {
-    if (_pickedImage == null) return;
+    if (_pickedImage == null) {
+      return;
+    }
 
     setState(() {
       _isUploading = true;
@@ -184,7 +188,9 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
 
       await _moderacionService.aprobarPropuesta(widget.propuesta.id, body);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       navContext.pop(true);
     } on ApiException catch (e) {

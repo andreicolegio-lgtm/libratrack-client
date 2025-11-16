@@ -1,7 +1,7 @@
 enum EstadoPropuesta {
-  PENDIENTE,
-  APROBADO,
-  RECHAZADO;
+  pendiente,
+  aprobado,
+  rechazado;
 
   String get apiValue {
     return name;
@@ -9,11 +9,11 @@ enum EstadoPropuesta {
 
   String get displayName {
     switch (this) {
-      case EstadoPropuesta.PENDIENTE:
+      case EstadoPropuesta.pendiente:
         return 'Pendientes';
-      case EstadoPropuesta.APROBADO:
+      case EstadoPropuesta.aprobado:
         return 'Aprobadas';
-      case EstadoPropuesta.RECHAZADO:
+      case EstadoPropuesta.rechazado:
         return 'Rechazadas';
     }
   }

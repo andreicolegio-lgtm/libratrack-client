@@ -39,7 +39,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           _emailController.text,
           _passwordController.text);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       SnackBarHelper.showTopSnackBar(msgContext,
           '¡Registro exitoso! Bienvenido, ${nuevoUsuario.username}. Por favor, inicia sesión.',
@@ -47,7 +49,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       navContext.pop();
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoading = false;
       });
@@ -58,7 +62,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         isError: true,
       );
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoading = false;
       });

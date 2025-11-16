@@ -11,7 +11,9 @@ class TipoService with ChangeNotifier {
   List<Tipo>? get tipos => _tipos;
 
   Future<List<Tipo>> fetchTipos() async {
-    if (_tipos != null) return _tipos!;
+    if (_tipos != null) {
+      return _tipos!;
+    }
 
     try {
       final List<dynamic> data = await _apiClient.get('tipos');

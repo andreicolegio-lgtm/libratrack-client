@@ -1,7 +1,7 @@
+import 'package:nested/nested.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:nested/nested.dart';
 import 'package:provider/provider.dart';
 import 'src/core/l10n/app_localizations.dart';
 import 'src/core/services/admin_service.dart';
@@ -93,7 +93,7 @@ class MyApp extends StatelessWidget {
           title: 'LibraTrack',
           debugShowCheckedModeBanner: false,
           locale: settings.locale,
-          localizationsDelegates: const <LocalizationsDelegate>[
+          localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,

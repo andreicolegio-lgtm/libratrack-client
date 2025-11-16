@@ -24,10 +24,10 @@ class _CatalogScreenState extends State<CatalogScreen>
   List<CatalogoEntrada> _catalogoCompleto = <CatalogoEntrada>[];
 
   final List<EstadoPersonal> _estados = <EstadoPersonal>[
-    EstadoPersonal.EN_PROGRESO,
-    EstadoPersonal.PENDIENTE,
-    EstadoPersonal.TERMINADO,
-    EstadoPersonal.ABANDONADO
+    EstadoPersonal.enProgreso,
+    EstadoPersonal.pendiente,
+    EstadoPersonal.terminado,
+    EstadoPersonal.abandonado
   ];
 
   @override

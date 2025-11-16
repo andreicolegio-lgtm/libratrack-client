@@ -37,7 +37,9 @@ class SettingsService with ChangeNotifier {
   }
 
   Future<void> updateThemeMode(ThemeMode? newThemeMode) async {
-    if (newThemeMode == null || newThemeMode == _themeMode) return;
+    if (newThemeMode == null || newThemeMode == _themeMode) {
+      return;
+    }
 
     _themeMode = newThemeMode;
     notifyListeners();
@@ -53,7 +55,9 @@ class SettingsService with ChangeNotifier {
   }
 
   Future<void> updateLocale(Locale? newLocale) async {
-    if (newLocale == _locale) return;
+    if (newLocale == _locale) {
+      return;
+    }
 
     _locale = newLocale;
     notifyListeners();

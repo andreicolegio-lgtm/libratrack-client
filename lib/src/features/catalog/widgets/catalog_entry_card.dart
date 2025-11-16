@@ -116,7 +116,9 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     int? pagina,
     bool esGuardadoManual = false,
   }) async {
-    if (_isLoading) return;
+    if (_isLoading) {
+      return;
+    }
 
     if (esGuardadoManual) {
       FocusScope.of(context).unfocus();
@@ -160,8 +162,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     }
 
     if (autoTerminado &&
-        _entrada.estadoPersonal != EstadoPersonal.TERMINADO.apiValue) {
-      estadoFinal = EstadoPersonal.TERMINADO.apiValue;
+        _entrada.estadoPersonal != EstadoPersonal.terminado.apiValue) {
+      estadoFinal = EstadoPersonal.terminado.apiValue;
     }
 
     try {
@@ -211,7 +213,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
   }
 
   double get _progresoValue {
-    if (_entrada.estadoPersonal == EstadoPersonal.TERMINADO.apiValue) {
+    if (_entrada.estadoPersonal == EstadoPersonal.terminado.apiValue) {
       return 1.0;
     }
 
@@ -219,10 +221,14 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
 
     try {
       if (tipo == 'serie') {
-        if (_episodiosPorTemporada.isEmpty) return 0.0;
+        if (_episodiosPorTemporada.isEmpty) {
+          return 0.0;
+        }
         final int totalEps =
             _episodiosPorTemporada.fold<int>(0, (int prev, int e) => prev + e);
-        if (totalEps == 0) return 0.0;
+        if (totalEps == 0) {
+          return 0.0;
+        }
 
         int currentEps = 0;
         int tempActual = (_entrada.temporadaActual ?? 1)
@@ -236,11 +242,15 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
         return (currentEps / totalEps).clamp(0.0, 1.0);
       } else if (tipo == 'libro') {
         int pagTotal = _entrada.elementoTotalPaginasLibro ?? 0;
-        if (pagTotal <= 0) return 0.0;
+        if (pagTotal <= 0) {
+          return 0.0;
+        }
         return ((_entrada.paginaActual ?? 0) / pagTotal).clamp(0.0, 1.0);
       } else {
         int uniTotal = _entrada.elementoTotalUnidades ?? 0;
-        if (uniTotal <= 0) return 0.0;
+        if (uniTotal <= 0) {
+          return 0.0;
+        }
         return ((_entrada.unidadActual ?? 0) / uniTotal).clamp(0.0, 1.0);
       }
     } catch (e) {
@@ -249,7 +259,9 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
   }
 
   List<int> _parseEpisodiosPorTemporada(String? data) {
-    if (data == null || data.isEmpty) return <int>[];
+    if (data == null || data.isEmpty) {
+      return <int>[];
+    }
     try {
       return data
           .split(',')
@@ -397,7 +409,9 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
                 .toList(),
             onChanged: isEditable
                 ? (int? val) {
-                    if (val == null || val == _entrada.temporadaActual) return;
+                    if (val == null || val == _entrada.temporadaActual) {
+                      return;
+                    }
                     _handleUpdateProgreso(temporada: val, unidad: 0);
                   }
                 : null,
@@ -416,7 +430,9 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
                 .toList(),
             onChanged: isEditable
                 ? (int? val) {
-                    if (val == null || val == _entrada.unidadActual) return;
+                    if (val == null || val == _entrada.unidadActual) {
+                      return;
+                    }
                     _handleUpdateProgreso(temporada: tempActual, unidad: val);
                   }
                 : null,

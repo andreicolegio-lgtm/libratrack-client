@@ -57,10 +57,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _handlePickAndUploadFoto() async {
-    if (_isAnyLoading()) return;
+    if (_isAnyLoading()) {
+      return;
+    }
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image == null) return;
+    if (image == null) {
+      return;
+    }
 
     setState(() {
       _isUploadingFoto = true;
@@ -73,7 +77,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final PerfilUsuario perfilActualizado =
           await _userService.updateFotoPerfil(fotoUrl);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _perfil = perfilActualizado;
         _isUploadingFoto = false;
@@ -83,7 +89,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       SnackBarHelper.showTopSnackBar(msgContext, '¡Foto de perfil actualizada!',
           isError: false);
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isUploadingFoto = false;
       });
@@ -93,7 +101,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isUploadingFoto = false;
       });
@@ -123,7 +133,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final PerfilUsuario perfilActualizado =
           await _userService.updateUsername(nuevoUsername);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _perfil = perfilActualizado;
         _nombreController.text = perfilActualizado.username;
@@ -136,7 +148,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           msgContext, '¡Nombre de usuario actualizado!',
           isError: false);
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoadingUpdate = false;
       });
@@ -146,7 +160,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoadingUpdate = false;
       });
@@ -170,7 +186,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await _userService.updatePassword(actual, nueva);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoadingPasswordChange = false;
         _contrasenaActualController.clear();
@@ -181,7 +199,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           msgContext, '¡Contraseña actualizada con éxito!',
           isError: false);
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoadingPasswordChange = false;
       });
@@ -191,7 +211,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoadingPasswordChange = false;
       });
@@ -208,14 +230,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await _authService.logout();
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoadingLogout = false;
       });
       SnackBarHelper.showTopSnackBar(msgContext, 'Error al cerrar sesión: $e',
           isError: true);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoadingLogout = false;
       });

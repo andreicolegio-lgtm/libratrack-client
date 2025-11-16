@@ -11,7 +11,9 @@ class GeneroService with ChangeNotifier {
   List<Genero>? get generos => _generos;
 
   Future<List<Genero>> fetchGeneros() async {
-    if (_generos != null) return _generos!;
+    if (_generos != null) {
+      return _generos!;
+    }
 
     try {
       final List<dynamic> data = await _apiClient.get('generos');

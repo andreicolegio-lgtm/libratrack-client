@@ -23,8 +23,8 @@ class AdminService with ChangeNotifier {
       if (roleFilter != null && roleFilter.isNotEmpty) {
         endpoint += '&role=$roleFilter';
       }
-      final data = await _apiClient.get(endpoint);
-      return PaginatedResponse.fromJson(data, PerfilUsuario.fromJson);
+      final Map<String, dynamic> responseRaw = await _apiClient.get(endpoint);
+      return PaginatedResponse.fromJson(responseRaw, PerfilUsuario.fromJson);
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -39,7 +39,7 @@ class AdminService with ChangeNotifier {
         'esModerador': esModerador,
         'esAdministrador': esAdministrador,
       };
-      final data = await _apiClient.put(
+      final dynamic data = await _apiClient.put(
           'admin/usuarios/${userId.toString()}/roles', body);
       return PerfilUsuario.fromJson(data);
     } on ApiException {
@@ -51,7 +51,7 @@ class AdminService with ChangeNotifier {
 
   Future<Elemento> crearElementoOficial(Map<String, dynamic> body) async {
     try {
-      final data = await _apiClient.post('admin/elementos', body);
+      final dynamic data = await _apiClient.post('admin/elementos', body);
       return Elemento.fromJson(data);
     } on ApiException {
       rethrow;
@@ -63,7 +63,7 @@ class AdminService with ChangeNotifier {
   Future<Elemento> updateElemento(
       int elementoId, Map<String, dynamic> body) async {
     try {
-      final data = await _apiClient.put(
+      final dynamic data = await _apiClient.put(
           'admin/elementos/${elementoId.toString()}', body);
       return Elemento.fromJson(data);
     } on ApiException {
@@ -80,7 +80,7 @@ class AdminService with ChangeNotifier {
           ? 'admin/elementos/${elementoId.toString()}/oficializar'
           : 'admin/elementos/${elementoId.toString()}/comunitarizar';
 
-      final data = await _apiClient.put(endpoint, <String, dynamic>{});
+      final dynamic data = await _apiClient.put(endpoint, <String, dynamic>{});
       return Elemento.fromJson(data);
     } on ApiException {
       rethrow;

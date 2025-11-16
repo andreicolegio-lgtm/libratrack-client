@@ -77,7 +77,9 @@ class AuthService with ChangeNotifier {
       final data = await _apiClient.get('usuarios/me');
       _perfilUsuario = PerfilUsuario.fromJson(data);
       debugPrint('✅ Perfil cargado: ${_perfilUsuario?.username}');
-      if (shouldNotify) notifyListeners();
+      if (shouldNotify) {
+        notifyListeners();
+      }
     } on UnauthorizedException catch (e) {
       debugPrint('❌ UnauthorizedException en _loadUserProfile: ${e.message}');
       await logout(shouldNotify: shouldNotify);
@@ -160,7 +162,9 @@ class AuthService with ChangeNotifier {
     try {
       await _googleSignIn.signOut();
       await _apiClient.logout();
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error ignorado en logout: ${e.toString()}');
+    }
 
     _accessToken = null;
     _refreshToken = null;

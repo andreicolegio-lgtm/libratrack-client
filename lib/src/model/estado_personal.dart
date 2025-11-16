@@ -1,21 +1,21 @@
 enum EstadoPersonal {
-  PENDIENTE,
-  EN_PROGRESO,
-  TERMINADO,
-  ABANDONADO;
+  pendiente,
+  enProgreso,
+  terminado,
+  abandonado;
 
   static EstadoPersonal fromString(String apiValue) {
     switch (apiValue) {
       case 'PENDIENTE':
-        return EstadoPersonal.PENDIENTE;
+        return EstadoPersonal.pendiente;
       case 'EN_PROGRESO':
-        return EstadoPersonal.EN_PROGRESO;
+        return EstadoPersonal.enProgreso;
       case 'TERMINADO':
-        return EstadoPersonal.TERMINADO;
+        return EstadoPersonal.terminado;
       case 'ABANDONADO':
-        return EstadoPersonal.ABANDONADO;
+        return EstadoPersonal.abandonado;
       default:
-        return EstadoPersonal.PENDIENTE;
+        return EstadoPersonal.pendiente;
     }
   }
 
@@ -25,13 +25,13 @@ enum EstadoPersonal {
 
   String get displayName {
     switch (this) {
-      case EstadoPersonal.PENDIENTE:
+      case EstadoPersonal.pendiente:
         return 'Pendiente';
-      case EstadoPersonal.EN_PROGRESO:
+      case EstadoPersonal.enProgreso:
         return 'En Progreso';
-      case EstadoPersonal.TERMINADO:
+      case EstadoPersonal.terminado:
         return 'Terminado';
-      case EstadoPersonal.ABANDONADO:
+      case EstadoPersonal.abandonado:
         return 'Abandonado';
     }
   }

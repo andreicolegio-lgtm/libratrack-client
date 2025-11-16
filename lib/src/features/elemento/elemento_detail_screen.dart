@@ -117,7 +117,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     try {
       await _catalogService.addElemento(widget.elementoId);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isAdding = false;
         _isInCatalog = true;
@@ -125,13 +127,17 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       SnackBarHelper.showTopSnackBar(msgContext, '¡Añadido al catálogo!',
           isError: false);
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isAdding = false;
       });
       SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isAdding = false;
       });
@@ -147,7 +153,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     try {
       await _catalogService.removeElemento(widget.elementoId);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isDeleting = false;
         _isInCatalog = false;
@@ -156,13 +164,17 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           msgContext, 'Elemento quitado del catálogo',
           isError: false);
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isDeleting = false;
       });
       SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isDeleting = false;
       });
@@ -179,6 +191,12 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         return ResenaFormModal(elementoId: widget.elementoId);
       },
     );
+    if (resultado != null) {
+      setState(() {
+        _resenas.insert(0, resultado);
+        _haResenado = true;
+      });
+    }
     if (resultado != null) {
       setState(() {
         _resenas.insert(0, resultado);
@@ -205,13 +223,19 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       SnackBarHelper.showTopSnackBar(msgContext, successMessage,
           isError: false);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       _loadScreenData();
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
           isError: true);
     } finally {
@@ -224,7 +248,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
 
   Future<void> _goToEditarElemento(Elemento elemento) async {
-    if (_isAnyLoading()) return;
+    if (_isAnyLoading()) {
+      return;
+    }
     final bool? seHaActualizado = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -397,7 +423,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
 
   List<int> _parseEpisodiosPorTemporada(String? data) {
-    if (data == null || data.isEmpty) return <int>[];
+    if (data == null || data.isEmpty) {
+      return <int>[];
+    }
     try {
       return data
           .split(',')

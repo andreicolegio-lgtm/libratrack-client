@@ -61,13 +61,17 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
             _textoController.text.isEmpty ? null : _textoController.text,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       SnackBarHelper.showTopSnackBar(msgContext, '¡Reseña publicada!',
           isError: false);
       navContext.pop(nuevaResena);
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoading = false;
       });
@@ -77,7 +81,9 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
         isError: true,
       );
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _isLoading = false;
       });

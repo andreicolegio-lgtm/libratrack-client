@@ -19,7 +19,9 @@ class AdminElementoFormScreen extends StatefulWidget {
 
   const AdminElementoFormScreen({super.key, this.elemento});
 
-  bool get isEditMode => elemento != null;
+  bool get isEditMode {
+    return elemento != null;
+  }
 
   @override
   State<AdminElementoFormScreen> createState() =>
@@ -126,7 +128,9 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         });
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       SnackBarHelper.showTopSnackBar(
           ScaffoldMessenger.of(context), 'Error al seleccionar imagen: $e',
           isError: true);
@@ -134,7 +138,9 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   }
 
   Future<void> _handleUploadImage() async {
-    if (_pickedImage == null) return;
+    if (_pickedImage == null) {
+      return;
+    }
     setState(() {
       _isUploading = true;
     });
@@ -208,7 +214,9 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         await _adminService.crearElementoOficial(body);
       }
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       final String successMessage = widget.isEditMode
           ? '¡Elemento actualizado!'
@@ -525,7 +533,9 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
         final List<ElementoRelacion> elementosDisponibles =
             _allElementos.where((ElementoRelacion el) {
-          if (widget.elemento == null) return true;
+          if (widget.elemento == null) {
+            return true;
+          }
           return el.id != widget.elemento!.id;
         }).toList();
 
@@ -555,7 +565,9 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                       title: Text(el.titulo),
                       value: isSelected,
                       onChanged: (bool? selected) {
-                        if (selected == null) return;
+                        if (selected == null) {
+                          return;
+                        }
                         setState(() {
                           if (selected) {
                             _selectedSecuelaIds.add(el.id);

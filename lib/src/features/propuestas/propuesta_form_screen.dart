@@ -95,7 +95,9 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
 
       await propuestaService.crearPropuesta(body);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       SnackBarHelper.showTopSnackBar(msgContext,
           '¡Propuesta enviada con éxito! Gracias por tu contribución.',

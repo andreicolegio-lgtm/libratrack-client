@@ -36,7 +36,9 @@ class ApiClient {
           await http.get(uri, headers: await _getHeaders());
       return _handleResponse(response);
     } on UnauthorizedException {
-      if (isAuthEndpoint || _isRefreshing) rethrow;
+      if (isAuthEndpoint || _isRefreshing) {
+        rethrow;
+      }
       await _handleRefresh();
       final Uri uri = Uri.parse('$_baseUrl/$endpoint');
       final http.Response response =
@@ -47,7 +49,9 @@ class ApiClient {
     } on http.ClientException {
       throw ConnectionException('Error al contactar al servidor.');
     } catch (e) {
-      if (e is ApiException) rethrow;
+      if (e is ApiException) {
+        rethrow;
+      }
       throw ApiException('Error inesperado: ${e.toString()}');
     }
   }
@@ -63,7 +67,9 @@ class ApiClient {
       );
       return _handleResponse(response);
     } on UnauthorizedException {
-      if (isAuthEndpoint || _isRefreshing) rethrow;
+      if (isAuthEndpoint || _isRefreshing) {
+        rethrow;
+      }
       await _handleRefresh();
       final Uri uri = Uri.parse('$_baseUrl/$endpoint');
       final http.Response response = await http.post(
@@ -77,7 +83,9 @@ class ApiClient {
     } on http.ClientException {
       throw ConnectionException('Error al contactar al servidor.');
     } catch (e) {
-      if (e is ApiException) rethrow;
+      if (e is ApiException) {
+        rethrow;
+      }
       throw ApiException('Error inesperado: ${e.toString()}');
     }
   }
@@ -93,7 +101,9 @@ class ApiClient {
       );
       return _handleResponse(response);
     } on UnauthorizedException {
-      if (isAuthEndpoint || _isRefreshing) rethrow;
+      if (isAuthEndpoint || _isRefreshing) {
+        rethrow;
+      }
       await _handleRefresh();
       final Uri uri = Uri.parse('$_baseUrl/$endpoint');
       final http.Response response = await http.put(
@@ -107,7 +117,9 @@ class ApiClient {
     } on http.ClientException {
       throw ConnectionException('Error al contactar al servidor.');
     } catch (e) {
-      if (e is ApiException) rethrow;
+      if (e is ApiException) {
+        rethrow;
+      }
       throw ApiException('Error inesperado: ${e.toString()}');
     }
   }
@@ -119,7 +131,9 @@ class ApiClient {
           await http.delete(uri, headers: await _getHeaders());
       return _handleResponse(response);
     } on UnauthorizedException {
-      if (isAuthEndpoint || _isRefreshing) rethrow;
+      if (isAuthEndpoint || _isRefreshing) {
+        rethrow;
+      }
       await _handleRefresh();
       final Uri uri = Uri.parse('$_baseUrl/$endpoint');
       final http.Response response =
@@ -130,7 +144,9 @@ class ApiClient {
     } on http.ClientException {
       throw ConnectionException('Error al contactar al servidor.');
     } catch (e) {
-      if (e is ApiException) rethrow;
+      if (e is ApiException) {
+        rethrow;
+      }
       throw ApiException('Error inesperado: ${e.toString()}');
     }
   }
@@ -141,7 +157,9 @@ class ApiClient {
       final http.Response response = await _uploadAttempt(endpoint, file);
       return _handleResponse(response);
     } on UnauthorizedException {
-      if (isAuthEndpoint || _isRefreshing) rethrow;
+      if (isAuthEndpoint || _isRefreshing) {
+        rethrow;
+      }
       await _handleRefresh();
       final http.Response response = await _uploadAttempt(endpoint, file);
       return _handleResponse(response);
@@ -150,7 +168,9 @@ class ApiClient {
     } on http.ClientException {
       throw ConnectionException('Error al contactar al servidor.');
     } catch (e) {
-      if (e is ApiException) rethrow;
+      if (e is ApiException) {
+        rethrow;
+      }
       throw ApiException(
           'Error inesperado al subir el archivo: ${e.toString()}');
     }
@@ -223,7 +243,9 @@ class ApiClient {
           },
           body: json.encode(<String, String>{'refreshToken': refreshToken}),
         );
-      } catch (e) {}
+      } catch (e) {
+        // Error silenciado intencionalmente
+      }
     }
 
     await _storage.delete(key: _accessTokenKey);

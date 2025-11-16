@@ -1,14 +1,11 @@
-// lib/src/features/elemento/widgets/resena_card.dart
 import 'package:flutter/material.dart';
-import 'package:libratrack_client/src/model/resena.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import '../../../model/resena.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-/// Un widget 'Card' para mostrar una única Reseña (RF12).
-/// --- ¡ACTUALIZADO (Sprint 3)! ---
 class ResenaCard extends StatelessWidget {
   final Resena resena;
 
-  const ResenaCard({super.key, required this.resena});
+  const ResenaCard({required this.resena, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,25 +16,20 @@ class ResenaCard extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             Row(
-              children: [
-                // --- ¡AVATAR REEMPLAZADO! ---
+              children: <Widget>[
                 _buildAvatar(context, resena.autorFotoPerfilUrl),
                 const SizedBox(width: 12),
-                
-                // Autor
                 Text(
                   resena.usernameAutor,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const Spacer(),
-                // Estrellas
                 _buildStaticStars(resena.valoracion),
               ],
             ),
             const SizedBox(height: 12),
-            // Texto de la reseña (si existe)
             if (resena.textoResena != null && resena.textoResena!.isNotEmpty)
               Text(
                 resena.textoResena!,
@@ -48,12 +40,8 @@ class ResenaCard extends StatelessWidget {
       ),
     );
   }
-  
-  /// --- ¡NUEVO WIDGET HELPER! ---
-  /// Construye el avatar del usuario, mostrando la imagen
-  /// o un placeholder si no tiene.
+
   Widget _buildAvatar(BuildContext context, String? imageUrl) {
-    // Si tenemos una URL, usamos CachedNetworkImage
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return CircleAvatar(
         radius: 16,
@@ -61,8 +49,7 @@ class ResenaCard extends StatelessWidget {
         backgroundImage: CachedNetworkImageProvider(imageUrl),
       );
     }
-    
-    // Si no, mostramos el placeholder
+
     return CircleAvatar(
       radius: 16,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -70,11 +57,10 @@ class ResenaCard extends StatelessWidget {
     );
   }
 
-  /// Helper para mostrar las N estrellas estáticas
   Widget _buildStaticStars(int valoracion) {
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
+      children: List.generate(5, (int index) {
         return Icon(
           index < valoracion ? Icons.star : Icons.star_border,
           color: Colors.amber,

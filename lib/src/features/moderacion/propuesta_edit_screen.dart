@@ -1,23 +1,18 @@
-// lib/src/features/moderacion/propuesta_edit_screen.dart
-// (¡CORREGIDO!)
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart'; // <-- ¡NUEVA IMPORTACIÓN!
-import 'package:libratrack_client/src/core/utils/api_client.dart';
-import 'package:libratrack_client/src/core/services/moderacion_service.dart';
-import 'package:libratrack_client/src/model/propuesta.dart';
-import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
-import 'package:libratrack_client/src/core/utils/api_exceptions.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import 'package:provider/provider.dart';
+import '../../core/utils/api_client.dart';
+import '../../core/services/moderacion_service.dart';
+import '../../model/propuesta.dart';
+import '../../core/utils/snackbar_helper.dart';
+import '../../core/utils/api_exceptions.dart';
 
-/// Pantalla para que un Moderador EDITE y APRUEBE una propuesta (Petición d).
-/// --- ¡ACTUALIZADO (Sprint 3)! ---
 class PropuestaEditScreen extends StatefulWidget {
   final Propuesta propuesta;
 
-  const PropuestaEditScreen({super.key, required this.propuesta});
+  const PropuestaEditScreen({required this.propuesta, super.key});
 
   @override
   State<PropuestaEditScreen> createState() => _PropuestaEditScreenState();
@@ -25,17 +20,13 @@ class PropuestaEditScreen extends StatefulWidget {
 
 class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  
-  // --- ¡CORREGIDO (Error 1)! ---
-  // Se eliminan las instancias locales y se declaran 'late final'
+
   late final ModeracionService _moderacionService;
   late final ApiClient _apiClient;
-  // ---
 
-  bool _isLoading = false; // Para el botón de "Aprobar"
-  bool _isUploading = false; // Para el botón de "Subir Imagen"
+  bool _isLoading = false;
+  bool _isUploading = false;
 
-  // Controladores
   late TextEditingController _tituloController;
   late TextEditingController _descripcionController;
   late TextEditingController _tipoController;
@@ -45,25 +36,19 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
   late TextEditingController _totalCapitulosLibroController;
   late TextEditingController _totalPaginasLibroController;
 
-  String _tipoSeleccionado = "";
+  String _tipoSeleccionado = '';
 
-  // --- ¡NUEVO ESTADO PARA IMÁGENES! (Petición 6) ---
-  // --- ¡CORREGIDO (Error 2)! ---
-  // Se almacena el XFile original, no el File
-  XFile? _pickedImage; 
-  String? _uploadedImageUrl; // La URL de GCS devuelta por la API
+  XFile? _pickedImage;
+  String? _uploadedImageUrl;
 
   @override
   void initState() {
     super.initState();
-    
-    // --- ¡CORREGIDO (Error 1)! ---
-    // Obtenemos los servicios desde Provider
+
     _moderacionService = context.read<ModeracionService>();
     _apiClient = context.read<ApiClient>();
-    // ---
 
-    final p = widget.propuesta;
+    final Propuesta p = widget.propuesta;
     _tituloController = TextEditingController(text: p.tituloSugerido);
     _descripcionController =
         TextEditingController(text: p.descripcionSugerida ?? '');
@@ -83,7 +68,6 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
 
   @override
   void dispose() {
-    // ... (limpiamos todos los controllers) ...
     _tituloController.dispose();
     _descripcionController.dispose();
     _tipoController.removeListener(_actualizarCamposDinamicos);
@@ -102,55 +86,44 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     });
   }
 
-  /// --- ¡NUEVO MÉTODO! (Petición 6) ---
-  /// Abre la galería para seleccionar una imagen
   Future<void> _handlePickImage() async {
     final ImagePicker picker = ImagePicker();
     try {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         setState(() {
-          // --- ¡CORREGIDO (Error 2)! ---
-          _pickedImage = image; // Se guarda el XFile
-          _uploadedImageUrl = null; // Reseteamos la URL si se elige una nueva
+          _pickedImage = image;
+          _uploadedImageUrl = null;
         });
       }
     } catch (e) {
       if (!mounted) return;
-      SnackBarHelper.showTopSnackBar(ScaffoldMessenger.of(context),
-          'Error al seleccionar imagen: $e',
+      SnackBarHelper.showTopSnackBar(
+          ScaffoldMessenger.of(context), 'Error al seleccionar imagen: $e',
           isError: true);
     }
   }
 
-  /// --- ¡NUEVO MÉTODO! (Petición 6) ---
-  /// Sube la imagen seleccionada al endpoint /api/uploads
   Future<void> _handleUploadImage() async {
     if (_pickedImage == null) return;
 
     setState(() {
       _isUploading = true;
     });
-    final msgContext = ScaffoldMessenger.of(context);
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     try {
-      // --- ¡CORREGIDO (Errores 2 y 3)! ---
-      // 1. Se añade el endpoint 'uploads'
-      // 2. Se pasa el XFile '_pickedImage'
-      // 3. Se extrae la 'url' del Map devuelto
       final dynamic data = await _apiClient.upload('uploads', _pickedImage!);
       final String url = data['url'];
-      // ---
 
       if (mounted) {
         setState(() {
-          _uploadedImageUrl = url; // Guardamos la URL de GCS
+          _uploadedImageUrl = url;
           _isUploading = false;
         });
         SnackBarHelper.showTopSnackBar(msgContext, '¡Imagen subida!',
             isError: false);
       }
-    // --- ¡MEJORADO! ---
     } on ApiException catch (e) {
       if (mounted) {
         setState(() {
@@ -163,19 +136,17 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         setState(() {
           _isUploading = false;
         });
-        SnackBarHelper.showTopSnackBar(
-            msgContext, 'Error inesperado: $e', isError: true);
+        SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+            isError: true);
       }
     }
   }
 
-  /// Lógica para "Guardar y Aprobar" (RF15)
   Future<void> _handleAprobar() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // Validamos que se haya subido una imagen
     if (_uploadedImageUrl == null) {
       SnackBarHelper.showTopSnackBar(ScaffoldMessenger.of(context),
           'Por favor, sube una imagen de portada antes de aprobar.',
@@ -186,20 +157,16 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     setState(() {
       _isLoading = true;
     });
-    final msgContext = ScaffoldMessenger.of(context);
-    final navContext = Navigator.of(context);
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final NavigatorState navContext = Navigator.of(context);
 
     try {
-      // 1. Creamos el "Body" (que coincide con PropuestaUpdateDTO.java)
-      final Map<String, dynamic> body = {
+      final Map<String, dynamic> body = <String, dynamic>{
         'tituloSugerido': _tituloController.text,
         'descripcionSugerida': _descripcionController.text,
         'tipoSugerido': _tipoController.text,
         'generosSugeridos': _generosController.text,
-
-        // --- ¡NUEVO! Enviamos la URL de la imagen ---
         'urlImagen': _uploadedImageUrl,
-
         'episodiosPorTemporada': _episodiosPorTemporadaController.text.isEmpty
             ? null
             : _episodiosPorTemporadaController.text,
@@ -213,20 +180,13 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
             ? null
             : int.tryParse(_totalPaginasLibroController.text),
       };
-      body.removeWhere((key, value) => value == null);
+      body.removeWhere((String key, value) => value == null);
 
-      // 2. Llamamos al servicio de moderación
-      // --- ¡CORREGIDO (Error 4)! ---
-      // Se pasa el ID como String
       await _moderacionService.aprobarPropuesta(widget.propuesta.id, body);
-      // ---
 
       if (!mounted) return;
 
-      // 3. Cerramos la pantalla y devolvemos 'true'
       navContext.pop(true);
-      
-    // --- ¡MEJORADO! ---
     } on ApiException catch (e) {
       if (mounted) {
         setState(() {
@@ -234,7 +194,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         });
         SnackBarHelper.showTopSnackBar(
           msgContext,
-          'Error al aprobar: $e', // Usamos el mensaje limpio
+          'Error al aprobar: $e',
           isError: true,
         );
       }
@@ -267,32 +227,27 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                  'Propuesto por: ${widget.propuesta.proponenteUsername}',
+            children: <Widget>[
+              Text('Propuesto por: ${widget.propuesta.proponenteUsername}',
                   style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 24),
-
-              // --- ¡NUEVO WIDGET DE IMAGEN! (Petición 6) ---
               _buildImageUploader(),
               const SizedBox(height: 24),
-
-              // --- Campos Editables ---
               _buildInputField(
                 context,
                 controller: _tituloController,
                 labelText: 'Título',
-                validator: (value) =>
-                    (value == null || value.isEmpty) ? 'El título es obligatorio' : null,
+                validator: (String? value) => (value == null || value.isEmpty)
+                    ? 'El título es obligatorio'
+                    : null,
               ),
               const SizedBox(height: 16),
-              // ... (resto de campos: desc, tipo, generos)
               _buildInputField(
                 context,
                 controller: _descripcionController,
                 labelText: 'Descripción',
                 maxLines: 4,
-                validator: (value) => (value == null || value.isEmpty)
+                validator: (String? value) => (value == null || value.isEmpty)
                     ? 'La descripción es obligatoria'
                     : null,
               ),
@@ -301,20 +256,19 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                 context,
                 controller: _tipoController,
                 labelText: 'Tipo (Ej. Serie, Libro)',
-                validator: (value) =>
-                    (value == null || value.isEmpty) ? 'El tipo es obligatorio' : null,
+                validator: (String? value) => (value == null || value.isEmpty)
+                    ? 'El tipo es obligatorio'
+                    : null,
               ),
               const SizedBox(height: 16),
               _buildInputField(
                 context,
                 controller: _generosController,
                 labelText: 'Géneros (separados por coma)',
-                validator: (value) => (value == null || value.isEmpty)
+                validator: (String? value) => (value == null || value.isEmpty)
                     ? 'Los géneros son obligatorios'
                     : null,
               ),
-
-              // --- Campos de Progreso (Petición c y d) ---
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),
@@ -322,26 +276,26 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
               Text('Datos de Progreso (¡Obligatorio!)',
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
-
-              // ... (Lógica condicional de campos de progreso sin cambios) ...
               if (_tipoSeleccionado == 'serie')
                 _buildInputField(
                   context,
                   controller: _episodiosPorTemporadaController,
                   labelText: 'Episodios por Temporada',
                   hintText: 'Ej. 10,8,12 (para T1, T2, T3)',
-                  validator: (value) => (value == null || value.isEmpty)
+                  validator: (String? value) => (value == null || value.isEmpty)
                       ? 'Este campo es obligatorio para Series'
                       : null,
                 ),
-              if (_tipoSeleccionado == 'libro') ...[
+              if (_tipoSeleccionado == 'libro') ...<Widget>[
                 _buildInputField(
                   context,
                   controller: _totalCapitulosLibroController,
                   labelText: 'Total Capítulos (Libro)',
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) => (value == null || value.isEmpty)
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
+                  validator: (String? value) => (value == null || value.isEmpty)
                       ? 'Este campo es obligatorio para Libros'
                       : null,
                 ),
@@ -351,8 +305,10 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                   controller: _totalPaginasLibroController,
                   labelText: 'Total Páginas (Libro)',
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) => (value == null || value.isEmpty)
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
+                  validator: (String? value) => (value == null || value.isEmpty)
                       ? 'Este campo es obligatorio para Libros'
                       : null,
                 ),
@@ -365,8 +321,10 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                       ? 'Total Episodios (Anime)'
                       : 'Total Capítulos (Manga)',
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) => (value == null || value.isEmpty)
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
+                  validator: (String? value) => (value == null || value.isEmpty)
                       ? 'Este campo es obligatorio'
                       : null,
                 ),
@@ -376,7 +334,6 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                   'El tipo "${_tipoController.text}" no requiere datos de progreso.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-
               const SizedBox(height: 32.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -401,24 +358,16 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     );
   }
 
-  /// --- ¡NUEVO WIDGET! (Petición 6) ---
-  /// Muestra el selector/visor de imagen
   Widget _buildImageUploader() {
     Widget content;
     if (_pickedImage != null) {
-      // 1. Imagen seleccionada, lista para subir
-      // --- ¡CORREGIDO (Error 2)! ---
-      // Se usa File(_pickedImage!.path) para mostrar el XFile
       content = Image.file(File(_pickedImage!.path), fit: BoxFit.cover);
-      // ---
     } else if (_uploadedImageUrl != null) {
-      // 2. Imagen ya subida, mostrando la URL
       content = Image.network(_uploadedImageUrl!, fit: BoxFit.cover);
     } else {
-      // 3. Placeholder por defecto
       content = Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+        children: <Widget>[
           Icon(Icons.image_search, size: 48, color: Colors.grey[600]),
           const SizedBox(height: 8),
           Text('Sin portada', style: Theme.of(context).textTheme.bodyMedium),
@@ -428,8 +377,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Visor
+      children: <Widget>[
         Container(
           height: 200,
           width: double.infinity,
@@ -443,19 +391,14 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           ),
         ),
         const SizedBox(height: 16),
-
-        // Botones
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // Botón 1: Elegir de la Galería
+          children: <Widget>[
             TextButton.icon(
               icon: const Icon(Icons.photo_library),
               label: const Text('Galería'),
               onPressed: _isLoading || _isUploading ? null : _handlePickImage,
             ),
-
-            // Botón 2: Subir
             ElevatedButton.icon(
               icon: _isUploading
                   ? const SizedBox(
@@ -478,7 +421,6 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     );
   }
 
-  // ... (Widget _buildInputField (el mismo de propuesta_form_screen))
   Widget _buildInputField(
     BuildContext context, {
     required TextEditingController controller,
@@ -512,8 +454,8 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide:
-              BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+          borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),

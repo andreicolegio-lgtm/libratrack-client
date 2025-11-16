@@ -1,46 +1,39 @@
-// lib/src/features/search/search_screen.dart
-// (¡CORREGIDO!)
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // <-- ¡NUEVA IMPORTACIÓN!
-import 'package:libratrack_client/src/core/widgets/maybe_marquee.dart';
+import 'package:provider/provider.dart';
+import '../../core/widgets/maybe_marquee.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:libratrack_client/src/core/services/elemento_service.dart';
-import 'package:libratrack_client/src/core/services/tipo_service.dart';
-import 'package:libratrack_client/src/core/services/genero_service.dart';
-import 'package:libratrack_client/src/features/elemento/elemento_detail_screen.dart';
-import 'package:libratrack_client/src/features/propuestas/propuesta_form_screen.dart';
-import 'package:libratrack_client/src/model/elemento.dart';
-import 'package:libratrack_client/src/model/tipo.dart';
-import 'package:libratrack_client/src/model/genero.dart';
-import 'package:libratrack_client/src/model/paginated_response.dart';
-import 'package:libratrack_client/src/core/utils/api_exceptions.dart'; // <-- ¡NUEVA IMPORTACIÓN!
-import 'package:libratrack_client/src/core/services/auth_service.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import '../../core/services/elemento_service.dart';
+import '../../core/services/tipo_service.dart';
+import '../../core/services/genero_service.dart';
+import '../elemento/elemento_detail_screen.dart';
+import '../propuestas/propuesta_form_screen.dart';
+import '../../model/elemento.dart';
+import '../../model/tipo.dart';
+import '../../model/genero.dart';
+import '../../model/paginated_response.dart';
+import '../../core/utils/api_exceptions.dart';
+import '../../core/services/auth_service.dart';
 
 class SearchScreen extends StatefulWidget {
-  // ... (código sin cambios)
   const SearchScreen({super.key});
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  // --- ¡CORREGIDO (Errores 1, 2, 3)! ---
-  // Se eliminan las instancias locales y se declaran 'late final'
   late final ElementoService _elementoService;
   late final TipoService _tipoService;
   late final GeneroService _generoService;
-  late AuthService _authService; // Add AuthService dependency
-  // ---
-  
+  late AuthService _authService;
+
   final TextEditingController _searchController = TextEditingController();
-  List<Tipo> _tipos = [];
-  List<Genero> _generos = [];
+  List<Tipo> _tipos = <Tipo>[];
+  List<Genero> _generos = <Genero>[];
   String? _filtroTipoActivo;
   String? _filtroGeneroActivo;
   Future<void>? _filtrosFuture;
   final ScrollController _scrollController = ScrollController();
-  final List<Elemento> _elementos = [];
+  final List<Elemento> _elementos = <Elemento>[];
   int _currentPage = 0;
   bool _hasNextPage = true;
   bool _isLoadingFirstPage = true;
@@ -50,13 +43,10 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    // --- ¡CORREGIDO (Errores 1, 2, 3)! ---
-    // Obtenemos los servicios desde Provider
     _elementoService = context.read<ElementoService>();
     _tipoService = context.read<TipoService>();
     _generoService = context.read<GeneroService>();
-    _authService = context.read<AuthService>(); // Initialize AuthService
-    // ---
+    _authService = context.read<AuthService>();
 
     _filtrosFuture = _loadInitialData();
     _loadElementos(isFirstPage: true);
@@ -65,10 +55,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _loadInitialData() async {
     try {
-      final results = await Future.wait([
-        // --- ¡CORREGIDO (Error 4)! ---
+      final List<List<Object>> results =
+          await Future.wait(<Future<List<Object>>>[
         _tipoService.fetchTipos(),
-        // --- ¡CORREGIDO (Error 5)! ---
         _generoService.fetchGeneros(),
       ]);
       if (mounted) {
@@ -77,7 +66,6 @@ class _SearchScreenState extends State<SearchScreen> {
           _generos = results[1] as List<Genero>;
         });
       }
-    // --- ¡MEJORADO! ---
     } on ApiException catch (e) {
       debugPrint('Error al cargar datos de consulta: $e');
       if (mounted) {
@@ -124,22 +112,19 @@ class _SearchScreenState extends State<SearchScreen> {
         _loadingError = null;
       });
     } else {
-      if (_isLoadingMore) return; // <-- Añadido check para evitar duplicados
+      if (_isLoadingMore) return;
       setState(() {
         _isLoadingMore = true;
       });
     }
     try {
-      // --- ¡CORREGIDO (Error 6)! ---
-      // --- Este es el bloque CORREGIDO ---
       final PaginatedResponse<Elemento> respuesta =
           await _elementoService.searchElementos(
-        search: _searchController.text.isEmpty ? null : _searchController.text, // <-- CORREGIDO
-        tipo: _filtroTipoActivo,     // <-- CORREGIDO
-        genero: _filtroGeneroActivo, // <-- CORREGIDO
+        search: _searchController.text.isEmpty ? null : _searchController.text,
+        tipo: _filtroTipoActivo,
+        genero: _filtroGeneroActivo,
         page: _currentPage,
       );
-      // ---
 
       if (mounted) {
         setState(() {
@@ -151,7 +136,7 @@ class _SearchScreenState extends State<SearchScreen> {
         });
       }
     } on UnauthorizedException {
-      await _authService.logout(); // Handle unauthorized exception
+      await _authService.logout();
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/login');
       }
@@ -216,7 +201,7 @@ class _SearchScreenState extends State<SearchScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const PropuestaFormScreen(),
+              builder: (BuildContext context) => const PropuestaFormScreen(),
             ),
           ).then((_) => _reiniciarBusqueda());
         },
@@ -229,10 +214,10 @@ class _SearchScreenState extends State<SearchScreen> {
       controller: _scrollController,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           FutureBuilder<void>(
             future: _filtrosFuture,
-            builder: (context, snapshot) {
+            builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting &&
                   _tipos.isEmpty) {
                 return const Center(
@@ -241,16 +226,18 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: CircularProgressIndicator(),
                 ));
               }
-              // Si hay un error de filtros, lo mostramos aquí
               if (snapshot.hasError && _tipos.isEmpty) {
-                 return Center(
+                return Center(
                     child: Text('Error al cargar filtros: ${snapshot.error}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red)));
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: Colors.red)));
               }
-              
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                     child: Text('Explorar por Tipo',
@@ -258,7 +245,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   _buildFiltroChips(
                     context,
-                    data: _tipos.map((t) => t.nombre).toList(),
+                    data: _tipos.map((Tipo t) => t.nombre).toList(),
                     tipoFiltro: 'tipo',
                     filtroActivo: _filtroTipoActivo,
                   ),
@@ -269,7 +256,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   _buildFiltroChips(
                     context,
-                    data: _generos.map((g) => g.nombre).toList(),
+                    data: _generos.map((Genero g) => g.nombre).toList(),
                     tipoFiltro: 'genero',
                     filtroActivo: _filtroGeneroActivo,
                   ),
@@ -317,7 +304,7 @@ class _SearchScreenState extends State<SearchScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _elementos.length + 1,
-      itemBuilder: (context, index) {
+      itemBuilder: (BuildContext context, int index) {
         if (index == _elementos.length) {
           return _isLoadingMore
               ? const Center(
@@ -327,10 +314,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 ))
               : const SizedBox(height: 1);
         }
-        final elemento = _elementos[index];
+        final Elemento elemento = _elementos[index];
         return _buildElementoListTile(context, elemento);
       },
-      separatorBuilder: (context, index) => const Divider(height: 1),
+      separatorBuilder: (BuildContext context, int index) =>
+          const Divider(height: 1),
     );
   }
 
@@ -357,16 +345,15 @@ class _SearchScreenState extends State<SearchScreen> {
               )
             : null,
       ),
-      onSubmitted: (value) {
+      onSubmitted: (String value) {
         _reiniciarBusqueda();
       },
-      onChanged: (value) {
+      onChanged: (String value) {
         setState(() {});
       },
     );
   }
 
-  // --- ¡MÉTODO MODIFICADO! (Bugfix) ---
   Widget _buildElementoListTile(BuildContext context, Elemento elemento) {
     final Color iconColor =
         Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
@@ -378,15 +365,14 @@ class _SearchScreenState extends State<SearchScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
+              builder: (BuildContext context) =>
                   ElementoDetailScreen(elementoId: elemento.id),
             ),
           ).then((_) => _reiniciarBusqueda());
         },
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Imagen (Usando Caché)
+          children: <Widget>[
             Container(
               width: 120,
               height: 75,
@@ -396,27 +382,25 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(5.0),
-                // --- ¡LÍNEA CORREGIDA! ---
                 child: elemento.urlImagen != null &&
                         elemento.urlImagen!.isNotEmpty
                     ? CachedNetworkImage(
-                        imageUrl: elemento.urlImagen!, // <-- ¡NOMBRE CORREGIDO!
+                        imageUrl: elemento.urlImagen!,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) =>
+                        placeholder: (BuildContext context, String url) =>
                             Icon(Icons.downloading, color: iconColor),
-                        errorWidget: (context, url, error) =>
+                        errorWidget: (BuildContext context, String url,
+                                Object error) =>
                             Icon(Icons.image_not_supported, color: iconColor),
                       )
                     : Icon(Icons.movie_filter, color: iconColor, size: 30),
               ),
             ),
             const SizedBox(width: 12),
-
-            // 2. Título, Subtítulo y Tag (sin cambios)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   MaybeMarquee(
                     text: elemento.titulo,
                     style: Theme.of(context).textTheme.titleMedium ??
@@ -442,13 +426,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildEstadoChip(BuildContext context, String estado) {
-    final bool isOficial = estado == "OFICIAL";
-    final Color chipColor = isOficial
-        ? Theme.of(context).colorScheme.secondary
-        : Colors.grey[700]!;
+    final bool isOficial = estado == 'OFICIAL';
+    final Color chipColor =
+        isOficial ? Theme.of(context).colorScheme.secondary : Colors.grey[700]!;
     return Chip(
       label: Text(
-        isOficial ? "OFICIAL" : "COMUNITARIO",
+        isOficial ? 'OFICIAL' : 'COMUNITARIO',
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontSize: 10,
               color: Colors.white,
@@ -458,9 +441,8 @@ class _SearchScreenState extends State<SearchScreen> {
       backgroundColor: chipColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide.none,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       labelPadding: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
@@ -475,7 +457,7 @@ class _SearchScreenState extends State<SearchScreen> {
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
-        children: data.map((nombre) {
+        children: data.map((String nombre) {
           final bool isSelected = nombre == filtroActivo;
           return Padding(
             padding: const EdgeInsets.only(right: 8.0),

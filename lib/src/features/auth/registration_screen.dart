@@ -1,14 +1,10 @@
-// lib/src/features/auth/registration_screen.dart
-// (¡CORREGIDO!)
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:libratrack_client/src/core/services/auth_service.dart';
-// import 'package:libratrack_client/src/features/auth/login_screen.dart'; // <-- YA NO ES NECESARIO
-import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
-import 'package:libratrack_client/src/model/perfil_usuario.dart';
-import 'package:libratrack_client/src/core/l10n/app_localizations.dart';
-import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/utils/snackbar_helper.dart';
+import '../../model/perfil_usuario.dart';
+import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/api_exceptions.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -18,9 +14,9 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
-  final _usernameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -33,9 +29,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       _isLoading = true;
     });
 
-    final authService = context.read<AuthService>();
-    final navContext = Navigator.of(context);
-    final msgContext = ScaffoldMessenger.of(context);
+    final AuthService authService = context.read<AuthService>();
+    final NavigatorState navContext = Navigator.of(context);
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     try {
       final PerfilUsuario nuevoUsuario = await authService.register(
@@ -45,22 +41,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       if (!mounted) return;
 
-      // --- ¡CORREGIDO (ID: QA-062)! ---
-      // El setState de _isLoading se elimina de aquí,
-      // ya que vamos a navegar y destruir el widget.
-      // setState(() { _isLoading = false; }); // <-- ELIMINADO
-
-      SnackBarHelper.showTopSnackBar(
-          msgContext,
+      SnackBarHelper.showTopSnackBar(msgContext,
           '¡Registro exitoso! Bienvenido, ${nuevoUsuario.username}. Por favor, inicia sesión.',
           isError: false);
 
-      // Se reemplaza 'pushReplacement' por 'pop'.
-      // Esto cierra el modal de registro y revela la pantalla de Login
-      // que ya estaba en la pila, evitando el crash.
       navContext.pop();
-      // ---
-
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -69,11 +54,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       SnackBarHelper.showTopSnackBar(
         msgContext,
-        e.message, // Usamos el mensaje limpio
+        e.message,
         isError: true,
       );
     } catch (e) {
-      // Fallback para otros errores
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -97,8 +81,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // --- ¡NUEVO! Obtenemos las traducciones ---
-    final l10n = AppLocalizations.of(context)!;
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: Center(
@@ -111,7 +94,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 Text(
-                  l10n.appTitle, // <-- TRADUCIDO
+                  l10n.appTitle,
                   textAlign: TextAlign.center,
                   style: Theme.of(context)
                       .textTheme
@@ -122,14 +105,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 _buildInputField(
                   context,
                   controller: _usernameController,
-                  labelText: l10n.registerUsernameLabel, // <-- TRADUCIDO
-                  validator: (value) {
+                  labelText: l10n.registerUsernameLabel,
+                  validator: (String? value) {
                     if (value == null || value.trim().isEmpty) {
                       return l10n.registerUsernameRequired;
-                    } // <-- TRADUCIDO
+                    }
                     if (value.trim().length < 4) {
                       return l10n.registerUsernameLength;
-                    } // <-- TRADUCIDO
+                    }
                     return null;
                   },
                 ),
@@ -137,15 +120,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 _buildInputField(
                   context,
                   controller: _emailController,
-                  labelText: l10n.loginEmailLabel, // <-- TRADUCIDO
+                  labelText: l10n.loginEmailLabel,
                   keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
+                  validator: (String? value) {
                     if (value == null || value.isEmpty) {
                       return l10n.loginEmailRequired;
-                    } // <-- TRADUCIDO
+                    }
                     if (!value.contains('@') || !value.contains('.')) {
                       return l10n.loginEmailInvalid;
-                    } // <-- TRADUCIDO
+                    }
                     return null;
                   },
                 ),
@@ -153,15 +136,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 _buildInputField(
                   context,
                   controller: _passwordController,
-                  labelText: l10n.loginPasswordLabel, // <-- TRADUCIDO
+                  labelText: l10n.loginPasswordLabel,
                   isPassword: true,
-                  validator: (value) {
+                  validator: (String? value) {
                     if (value == null || value.isEmpty) {
                       return l10n.loginPasswordRequired;
-                    } // <-- TRADUCIDO
+                    }
                     if (value.length < 8) {
                       return l10n.registerPasswordLength;
-                    } // <-- TRADUCIDO
+                    }
                     return null;
                   },
                 ),
@@ -178,7 +161,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                          l10n.registerTitle, // <-- TRADUCIDO
+                          l10n.registerTitle,
                           style: const TextStyle(
                               fontSize: 18, color: Colors.white),
                         ),
@@ -191,7 +174,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           Navigator.of(context).pop();
                         },
                   child: Text(
-                    l10n.registerLoginPrompt, // <-- TRADUCIDO
+                    l10n.registerLoginPrompt,
                     style:
                         TextStyle(color: Theme.of(context).colorScheme.primary),
                   ),
@@ -204,7 +187,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  // ... (Widget _buildInputField sin cambios)
   Widget _buildInputField(
     BuildContext context, {
     required TextEditingController controller,
@@ -230,8 +212,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide:
-              BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+          borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),

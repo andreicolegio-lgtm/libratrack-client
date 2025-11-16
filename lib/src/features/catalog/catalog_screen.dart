@@ -1,14 +1,11 @@
-// Archivo: lib/src/features/catalog/catalog_screen.dart
-// (¡CORREGIDO!)
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:libratrack_client/src/core/services/catalog_service.dart';
-import 'package:libratrack_client/src/model/catalogo_entrada.dart';
-import 'package:libratrack_client/src/model/estado_personal.dart';
-import 'package:libratrack_client/src/features/catalog/widgets/catalog_entry_card.dart';
-import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
-import 'package:libratrack_client/src/core/services/auth_service.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import '../../core/services/catalog_service.dart';
+import '../../model/catalogo_entrada.dart';
+import '../../model/estado_personal.dart';
+import 'widgets/catalog_entry_card.dart';
+import '../../core/utils/api_exceptions.dart';
+import '../../core/services/auth_service.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -19,15 +16,14 @@ class CatalogScreen extends StatefulWidget {
 
 class _CatalogScreenState extends State<CatalogScreen>
     with SingleTickerProviderStateMixin {
-  
   late final CatalogService _catalogService;
-  late final AuthService _authService; // <-- ¡AÑADIDO!
+  late final AuthService _authService;
 
   bool _isLoading = true;
   String? _loadingError;
-  List<CatalogoEntrada> _catalogoCompleto = [];
+  List<CatalogoEntrada> _catalogoCompleto = <CatalogoEntrada>[];
 
-  final List<EstadoPersonal> _estados = [
+  final List<EstadoPersonal> _estados = <EstadoPersonal>[
     EstadoPersonal.EN_PROGRESO,
     EstadoPersonal.PENDIENTE,
     EstadoPersonal.TERMINADO,
@@ -38,40 +34,31 @@ class _CatalogScreenState extends State<CatalogScreen>
   void initState() {
     super.initState();
     _catalogService = context.read<CatalogService>();
-    _authService = context.read<AuthService>(); // <-- ¡AÑADIDO!
+    _authService = context.read<AuthService>();
     _loadCatalog();
   }
 
-  /// Método para cargar (o recargar) el catálogo (RF08)
   Future<void> _loadCatalog() async {
     try {
-      await _catalogService.fetchCatalog(); 
+      await _catalogService.fetchCatalog();
 
       if (mounted) {
         setState(() {
-          _catalogoCompleto = _catalogService.entradas; 
+          _catalogoCompleto = _catalogService.entradas;
           _isLoading = false;
         });
       }
-      
-    // --- ¡BLOQUE CATCH CORREGIDO (ID: QA-068)! ---
     } on ApiException catch (e) {
       if (mounted) {
-        // ¡ESTA ES LA LÓGICA CLAVE!
         if (e is UnauthorizedException) {
-          // Si el error es 401/403 (Token caducado),
-          // no mostramos un error, sino que cerramos sesión.
-          // El AuthWrapper nos redirigirá a Login.
           _authService.logout();
         } else {
-          // Para cualquier otra excepción (404, 500), SÍ mostramos el error.
           setState(() {
             _loadingError = e.message;
             _isLoading = false;
           });
         }
       }
-    // ---
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -88,17 +75,15 @@ class _CatalogScreenState extends State<CatalogScreen>
       length: _estados.length,
       child: Scaffold(
         appBar: AppBar(
-          // REFACTORIZADO: Usa tipografía titleLarge y centrado (Corrección 6)
-          title: Text('LibraTrack', style: Theme.of(context).textTheme.titleLarge),
+          title:
+              Text('LibraTrack', style: Theme.of(context).textTheme.titleLarge),
           centerTitle: true,
           bottom: TabBar(
-            // --- LÍNEAS CORREGIDAS (Corrección 8) ---
-            isScrollable: false,
             tabAlignment: TabAlignment.center,
-            // ---
-            tabs: _estados.map((estado) => Tab(text: estado.displayName)).toList(),
+            tabs: _estados
+                .map((EstadoPersonal estado) => Tab(text: estado.displayName))
+                .toList(),
             labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
-            // NUEVO: Indicador y color del texto del tab unificados con el tema
             indicatorColor: Theme.of(context).colorScheme.primary,
             labelColor: Theme.of(context).colorScheme.primary,
             unselectedLabelColor: Colors.grey[500],
@@ -120,24 +105,27 @@ class _CatalogScreenState extends State<CatalogScreen>
           child: Text(
             'Error: $_loadingError',
             textAlign: TextAlign.center,
-            style:
-                Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.red),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: Colors.red),
           ),
         ),
       );
     }
 
     return TabBarView(
-      children: _estados.map((estado) {
-        final filteredList = _catalogoCompleto
-            .where((item) => item.estadoPersonal == estado.apiValue)
+      children: _estados.map((EstadoPersonal estado) {
+        final List<CatalogoEntrada> filteredList = _catalogoCompleto
+            .where((CatalogoEntrada item) =>
+                item.estadoPersonal == estado.apiValue)
             .toList();
 
         if (filteredList.isEmpty) {
           return Center(
             child: Text(
               'No hay elementos en estado: ${estado.displayName}',
-              textAlign: TextAlign.center, // Alineación central
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           );
@@ -145,9 +133,8 @@ class _CatalogScreenState extends State<CatalogScreen>
 
         return ListView.builder(
           itemCount: filteredList.length,
-          itemBuilder: (context, index) {
-            final item = filteredList[index];
-            // La lógica de actualización está dentro de CatalogEntryCard
+          itemBuilder: (BuildContext context, int index) {
+            final CatalogoEntrada item = filteredList[index];
             return CatalogEntryCard(
               entrada: item,
               onUpdate: _loadCatalog,

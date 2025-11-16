@@ -1,14 +1,10 @@
-// lib/src/features/propuestas/propuesta_form_screen.dart
-// (¡CORREGIDO!)
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart'; // <-- ¡NUEVA IMPORTACIÓN!
-import 'package:libratrack_client/src/core/services/propuesta_service.dart';
-import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
-import 'package:libratrack_client/src/core/utils/api_exceptions.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import 'package:provider/provider.dart';
+import '../../core/services/propuesta_service.dart';
+import '../../core/utils/snackbar_helper.dart';
+import '../../core/utils/api_exceptions.dart';
 
-/// --- ¡ACTUALIZADO (Sprint 3 / Petición 12)! ---
 class PropuestaFormScreen extends StatefulWidget {
   const PropuestaFormScreen({super.key});
 
@@ -18,27 +14,24 @@ class PropuestaFormScreen extends StatefulWidget {
 
 class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  
-  // --- ¡CORREGIDO (Error 1)! ---
-  // Se elimina la instancia local. Se obtendrá de Provider.
-  // final PropuestaService _propuestaService = PropuestaService();
-  // ---
 
   bool _isLoading = false;
 
-  // Controladores para los campos
-  final _tituloController = TextEditingController();
-  final _descripcionController = TextEditingController();
-  final _tipoController = TextEditingController();
-  final _generosController = TextEditingController();
-  // final _imagenUrlController = TextEditingController(); // <-- ¡ELIMINADO!
+  final TextEditingController _tituloController = TextEditingController();
+  final TextEditingController _descripcionController = TextEditingController();
+  final TextEditingController _tipoController = TextEditingController();
+  final TextEditingController _generosController = TextEditingController();
 
-  final _episodiosPorTemporadaController = TextEditingController();
-  final _totalUnidadesController = TextEditingController();
-  final _totalCapitulosLibroController = TextEditingController();
-  final _totalPaginasLibroController = TextEditingController();
+  final TextEditingController _episodiosPorTemporadaController =
+      TextEditingController();
+  final TextEditingController _totalUnidadesController =
+      TextEditingController();
+  final TextEditingController _totalCapitulosLibroController =
+      TextEditingController();
+  final TextEditingController _totalPaginasLibroController =
+      TextEditingController();
 
-  String _tipoSeleccionado = "";
+  String _tipoSeleccionado = '';
 
   @override
   void initState() {
@@ -53,7 +46,6 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     _tipoController.removeListener(_actualizarCamposDinamicos);
     _tipoController.dispose();
     _generosController.dispose();
-    // _imagenUrlController.dispose(); // <-- ¡ELIMINADO!
     _episodiosPorTemporadaController.dispose();
     _totalUnidadesController.dispose();
     _totalCapitulosLibroController.dispose();
@@ -75,18 +67,13 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     setState(() {
       _isLoading = true;
     });
-    final msgContext = ScaffoldMessenger.of(context);
-    final navContext = Navigator.of(context);
-    
-    // --- ¡CORREGIDO (Error 1)! ---
-    // Obtenemos el servicio desde Provider
-    final propuestaService = context.read<PropuestaService>();
-    // ---
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final NavigatorState navContext = Navigator.of(context);
+
+    final PropuestaService propuestaService = context.read<PropuestaService>();
 
     try {
-      // --- ¡CORREGIDO (Error 2)! ---
-      // 1. Creamos el body Map que el servicio 'crearPropuesta' espera
-      final Map<String, dynamic> body = {
+      final Map<String, dynamic> body = <String, dynamic>{
         'tituloSugerido': _tituloController.text,
         'descripcionSugerida': _descripcionController.text,
         'tipoSugerido': _tipoController.text,
@@ -104,23 +91,17 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
             ? null
             : int.tryParse(_totalPaginasLibroController.text),
       };
-      // Eliminamos campos opcionales nulos
-      body.removeWhere((key, value) => value == null);
+      body.removeWhere((String key, value) => value == null);
 
-      // 2. Llamamos al método renombrado 'crearPropuesta' con el Map
       await propuestaService.crearPropuesta(body);
-      // ---
 
       if (!mounted) return;
 
-      SnackBarHelper.showTopSnackBar(
-          msgContext, '¡Propuesta enviada con éxito! Gracias por tu contribución.',
+      SnackBarHelper.showTopSnackBar(msgContext,
+          '¡Propuesta enviada con éxito! Gracias por tu contribución.',
           isError: false);
 
       navContext.pop();
-      
-    // --- ¡MEJORADO! ---
-    // Capturamos la excepción específica de la API
     } on ApiException catch (e) {
       if (mounted) {
         setState(() {
@@ -128,7 +109,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
         });
         SnackBarHelper.showTopSnackBar(
           msgContext,
-          'Error al enviar la propuesta: $e', // Usamos el mensaje limpio
+          'Error al enviar la propuesta: $e',
           isError: true,
         );
       }
@@ -162,13 +143,13 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // --- Campos Básicos ---
               _buildInputField(
                 context,
                 controller: _tituloController,
                 labelText: 'Título Sugerido',
-                validator: (value) =>
-                    (value == null || value.isEmpty) ? 'El título es obligatorio' : null,
+                validator: (String? value) => (value == null || value.isEmpty)
+                    ? 'El título es obligatorio'
+                    : null,
               ),
               const SizedBox(height: 16),
               _buildInputField(
@@ -176,7 +157,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 controller: _descripcionController,
                 labelText: 'Descripción Breve',
                 maxLines: 4,
-                validator: (value) => (value == null || value.isEmpty)
+                validator: (String? value) => (value == null || value.isEmpty)
                     ? 'La descripción es obligatoria'
                     : null,
               ),
@@ -185,22 +166,19 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 context,
                 controller: _tipoController,
                 labelText: 'Tipo (Ej. Serie, Libro, Anime)',
-                validator: (value) =>
-                    (value == null || value.isEmpty) ? 'El tipo es obligatorio' : null,
+                validator: (String? value) => (value == null || value.isEmpty)
+                    ? 'El tipo es obligatorio'
+                    : null,
               ),
               const SizedBox(height: 16),
               _buildInputField(
                 context,
                 controller: _generosController,
                 labelText: 'Géneros (separados por coma)',
-                validator: (value) => (value == null || value.isEmpty)
+                validator: (String? value) => (value == null || value.isEmpty)
                     ? 'Los géneros son obligatorios'
                     : null,
               ),
-
-              // --- CAMPO DE URL DE IMAGEN ELIMINADO (Petición 12) ---
-
-              // --- Campos de Progreso Dinámicos ---
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),
@@ -208,8 +186,6 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
               Text('Datos de Progreso (Opcional)',
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
-
-              // 1. Para Series
               if (_tipoSeleccionado == 'serie')
                 _buildInputField(
                   context,
@@ -217,15 +193,15 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                   labelText: 'Episodios por Temporada',
                   hintText: 'Ej. 10,8,12 (para T1, T2, T3)',
                 ),
-
-              // 2. Para Libros
-              if (_tipoSeleccionado == 'libro') ...[
+              if (_tipoSeleccionado == 'libro') ...<Widget>[
                 _buildInputField(
                   context,
                   controller: _totalCapitulosLibroController,
                   labelText: 'Total Capítulos (Libro)',
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
                 ),
                 const SizedBox(height: 16),
                 _buildInputField(
@@ -233,11 +209,11 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                   controller: _totalPaginasLibroController,
                   labelText: 'Total Páginas (Libro)',
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
                 ),
               ],
-
-              // 3. Para Anime o Manga
               if (_tipoSeleccionado == 'anime' || _tipoSeleccionado == 'manga')
                 _buildInputField(
                   context,
@@ -246,10 +222,10 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                       ? 'Total Episodios (Anime)'
                       : 'Total Capítulos (Manga)',
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
                 ),
-
-              // 4. Para Película o Videojuego
               if (_tipoSeleccionado != 'serie' &&
                   _tipoSeleccionado != 'libro' &&
                   _tipoSeleccionado != 'anime' &&
@@ -259,7 +235,6 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                   'El tipo "${_tipoController.text}" no requiere datos de progreso.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-
               const SizedBox(height: 32.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -284,7 +259,6 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     );
   }
 
-  // ... (Widget _buildInputField sin cambios)
   Widget _buildInputField(
     BuildContext context, {
     required TextEditingController controller,
@@ -318,8 +292,8 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide:
-              BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+          borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),

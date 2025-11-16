@@ -1,45 +1,31 @@
-// lib/src/features/elemento/widgets/resena_form_modal.dart
-// (¡CORREGIDO!)
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // <-- ¡NUEVA IMPORTACIÓN!
-import 'package:libratrack_client/src/core/services/resena_service.dart';
-import 'package:libratrack_client/src/model/resena.dart';
-import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
-import 'package:libratrack_client/src/core/utils/api_exceptions.dart'; // <-- ¡NUEVA IMPORTACIÓN!
+import 'package:provider/provider.dart';
+import '../../../core/services/resena_service.dart';
+import '../../../model/resena.dart';
+import '../../../core/utils/snackbar_helper.dart';
+import '../../../core/utils/api_exceptions.dart';
 
-/// Un 'Modal Bottom Sheet' para escribir una nueva reseña (RF12).
 class ResenaFormModal extends StatefulWidget {
   final int elementoId;
 
-  const ResenaFormModal({super.key, required this.elementoId});
+  const ResenaFormModal({required this.elementoId, super.key});
 
   @override
   State<ResenaFormModal> createState() => _ResenaFormModalState();
 }
 
 class _ResenaFormModalState extends State<ResenaFormModal> {
-  // --- Servicios y Estado ---
-  // --- ¡CORREGIDO (Error 1)! ---
-  // Se elimina la instancia local y se declara 'late final'
   late final ResenaService _resenaService;
-  // final ResenaService _resenaService = ResenaService();
-  // ---
   bool _isLoading = false;
 
-  // --- Formulario ---
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final _textoController = TextEditingController();
+  final TextEditingController _textoController = TextEditingController();
   int _valoracion = 0;
 
-  // --- ¡NUEVO! ---
   @override
   void initState() {
     super.initState();
-    // --- ¡CORREGIDO (Error 1)! ---
-    // Obtenemos el servicio desde Provider
     _resenaService = context.read<ResenaService>();
-    // ---
   }
 
   @override
@@ -48,18 +34,14 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
     super.dispose();
   }
 
-  /// Lógica para enviar la reseña (RF12)
   Future<void> _handleEnviarResena() async {
-    // 1. Validar el formulario
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    final msgContext = ScaffoldMessenger.of(context); // Guardamos el context
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
-    // Validar que se haya seleccionado una valoración
     if (_valoracion == 0) {
-      // Usa el helper
       SnackBarHelper.showTopSnackBar(
           msgContext, 'Por favor, selecciona una valoración (1-5 estrellas).',
           isError: true);
@@ -69,30 +51,21 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
     setState(() {
       _isLoading = true;
     });
-    final navContext = Navigator.of(context);
+    final NavigatorState navContext = Navigator.of(context);
 
     try {
-      // 2. Llamar al servicio
-      // --- ¡CORREGIDO (Error 2)! ---
-      // Se pasa el ID como String
       final Resena nuevaResena = await _resenaService.crearResena(
         elementoId: widget.elementoId,
         valoracion: _valoracion,
         textoResena:
             _textoController.text.isEmpty ? null : _textoController.text,
       );
-      // ---
 
-      // 3. (ÉXITO) Devolver la nueva reseña
       if (!mounted) return;
 
-      // Usa el helper
       SnackBarHelper.showTopSnackBar(msgContext, '¡Reseña publicada!',
           isError: false);
       navContext.pop(nuevaResena);
-      
-    // --- ¡MEJORADO! ---
-    // Se captura la excepción específica
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -100,24 +73,22 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
       });
       SnackBarHelper.showTopSnackBar(
         msgContext,
-        e.message, // Usamos el mensaje limpio
+        e.message,
         isError: true,
       );
     } catch (e) {
-      // 4. (ERROR)
       if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
-      // Usa el helper
       SnackBarHelper.showTopSnackBar(
-          msgContext, 'Error inesperado: ${e.toString()}', isError: true);
+          msgContext, 'Error inesperado: ${e.toString()}',
+          isError: true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Envolvemos en un Scaffold para que el SnackBar se muestre por encima del modal
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
@@ -132,19 +103,17 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+            children: <Widget>[
               Text(
                 'Escribir Reseña',
                 style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24.0),
-
-              // --- Selector de Estrellas (Valoración) ---
               Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: List.generate(5, (index) {
+                  children: List.generate(5, (int index) {
                     final int estrella = index + 1;
                     return IconButton(
                       icon: Icon(
@@ -164,15 +133,13 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
                 ),
               ),
               const SizedBox(height: 24.0),
-
-              // --- Campo de Texto (Opcional) ---
               _buildInputField(
                 context,
                 controller: _textoController,
                 labelText: 'Reseña (opcional)',
                 hintText: 'Escribe tu opinión...',
                 maxLines: 5,
-                validator: (value) {
+                validator: (String? value) {
                   if (value != null && value.length > 2000) {
                     return 'Máximo 2000 caracteres';
                   }
@@ -180,8 +147,6 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
                 },
               ),
               const SizedBox(height: 24.0),
-
-              // --- Botón de Enviar ---
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,
@@ -209,7 +174,6 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
     );
   }
 
-  // --- Helpers de UI ---
   Widget _buildInputField(
     BuildContext context, {
     required TextEditingController controller,
@@ -239,8 +203,8 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide:
-              BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+          borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),

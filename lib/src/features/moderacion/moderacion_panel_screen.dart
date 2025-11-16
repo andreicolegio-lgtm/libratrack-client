@@ -1,17 +1,11 @@
-// lib/src/features/moderacion/moderacion_panel_screen.dart
-// (¡CORREGIDO!)
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // <-- ¡NUEVA IMPORTACIÓN!
-import 'package:libratrack_client/src/core/services/moderacion_service.dart';
-import 'package:libratrack_client/src/model/propuesta.dart';
-import 'package:libratrack_client/src/model/estado_propuesta.dart';
-import 'package:libratrack_client/src/core/widgets/maybe_marquee.dart';
-// ¡NUEVA IMPORTACIÓN!
-import 'package:libratrack_client/src/features/moderacion/propuesta_edit_screen.dart';
-// ¡NUEVA IMPORTACIÓN!
-import 'package:libratrack_client/src/core/utils/api_exceptions.dart';
-
+import 'package:provider/provider.dart';
+import '../../core/services/moderacion_service.dart';
+import '../../model/propuesta.dart';
+import '../../model/estado_propuesta.dart';
+import '../../core/widgets/maybe_marquee.dart';
+import 'propuesta_edit_screen.dart';
+import '../../core/utils/api_exceptions.dart';
 
 class ModeracionPanelScreen extends StatefulWidget {
   const ModeracionPanelScreen({super.key});
@@ -22,7 +16,7 @@ class ModeracionPanelScreen extends StatefulWidget {
 
 class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
     with SingleTickerProviderStateMixin {
-  final List<EstadoPropuesta> _estados = [
+  final List<EstadoPropuesta> _estados = <EstadoPropuesta>[
     EstadoPropuesta.PENDIENTE,
     EstadoPropuesta.APROBADO,
     EstadoPropuesta.RECHAZADO,
@@ -39,17 +33,17 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
           backgroundColor: Theme.of(context).colorScheme.surface,
           centerTitle: true,
           bottom: TabBar(
-            isScrollable: false,
             tabAlignment: TabAlignment.center,
-            tabs:
-                _estados.map((estado) => Tab(text: estado.displayName)).toList(),
+            tabs: _estados
+                .map((EstadoPropuesta estado) => Tab(text: estado.displayName))
+                .toList(),
             indicatorColor: Theme.of(context).colorScheme.primary,
             labelColor: Theme.of(context).colorScheme.primary,
             unselectedLabelColor: Colors.grey[500],
           ),
         ),
         body: TabBarView(
-          children: _estados.map((estado) {
+          children: _estados.map((EstadoPropuesta estado) {
             return _PropuestasTab(
               estado: estado,
               key: ValueKey(estado.apiValue),
@@ -61,34 +55,25 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
   }
 }
 
-/// --- WIDGET INTERNO _PropuestasTab ---
 class _PropuestasTab extends StatefulWidget {
   final EstadoPropuesta estado;
-  const _PropuestasTab({super.key, required this.estado});
+  const _PropuestasTab({required this.estado, super.key});
   @override
   State<_PropuestasTab> createState() => _PropuestasTabState();
 }
 
 class _PropuestasTabState extends State<_PropuestasTab>
     with AutomaticKeepAliveClientMixin {
-  
-  // --- ¡CORREGIDO (Error 1)! ---
-  // Se elimina la instancia local y se declara 'late final'
   late final ModeracionService _moderacionService;
-  // final ModeracionService _moderacionService = ModeracionService();
-  // ---
 
   late Future<List<Propuesta>> _propuestasFuture;
-  List<Propuesta> _propuestas = [];
-  final Set<int> _processingItems = {};
+  List<Propuesta> _propuestas = <Propuesta>[];
+  final Set<int> _processingItems = <int>{};
 
   @override
   void initState() {
     super.initState();
-    // --- ¡CORREGIDO (Error 1)! ---
-    // Obtenemos el servicio desde Provider
     _moderacionService = context.read<ModeracionService>();
-    // ---
     _loadPropuestas();
   }
 
@@ -96,39 +81,32 @@ class _PropuestasTabState extends State<_PropuestasTab>
   bool get wantKeepAlive => true;
 
   Future<void> _loadPropuestas() async {
-    // --- ¡CORREGIDO (Error 2)! ---
-    // Se renombró el método
     _propuestasFuture =
         _moderacionService.fetchPropuestasPorEstado(widget.estado.apiValue);
-    // ---
     try {
       _propuestas = await _propuestasFuture;
       if (mounted) {
         setState(() {});
       }
     } on ApiException {
-      // El FutureBuilder maneja el error
-    } catch(e) {
-      // El FutureBuilder maneja el error
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
   }
 
-  // --- ¡MÉTODO MODIFICADO (Petición d)! ---
-  /// Lógica para navegar a la pantalla de Revisión/Edición
   Future<void> _handleRevisar(Propuesta propuesta) async {
-    // Navegamos a la nueva pantalla y ESPERAMOS un resultado
     final bool? seHaAprobado = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => PropuestaEditScreen(propuesta: propuesta),
+        builder: (BuildContext context) =>
+            PropuestaEditScreen(propuesta: propuesta),
       ),
     );
 
-    // Si la pantalla de edición nos devuelve 'true' (porque se aprobó)...
     if (seHaAprobado == true && mounted) {
-      // ...quitamos la propuesta de la lista de "Pendientes"
       setState(() {
-        _propuestas.removeWhere((p) => p.id == propuesta.id);
+        _propuestas.removeWhere((Propuesta p) => p.id == propuesta.id);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -138,7 +116,6 @@ class _PropuestasTabState extends State<_PropuestasTab>
     }
   }
 
-  /// Lógica para rechazar (Sigue igual)
   Future<void> _handleRechazar(int propuestaId) async {
     setState(() {
       _processingItems.add(propuestaId);
@@ -146,7 +123,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
     await Future.delayed(const Duration(seconds: 1));
     if (mounted) {
       setState(() {
-        _propuestas.removeWhere((p) => p.id == propuestaId);
+        _propuestas.removeWhere((Propuesta p) => p.id == propuestaId);
         _processingItems.remove(propuestaId);
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -163,7 +140,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
 
     return FutureBuilder<List<Propuesta>>(
       future: _propuestasFuture,
-      builder: (context, snapshot) {
+      builder: (BuildContext context, AsyncSnapshot<List<Propuesta>> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -172,8 +149,6 @@ class _PropuestasTabState extends State<_PropuestasTab>
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                // --- ¡MEJORADO! ---
-                // Se muestra el error limpio de ApiException
                 'Error al cargar:\n${snapshot.error.toString()}',
                 textAlign: TextAlign.center,
                 style: Theme.of(context)
@@ -194,8 +169,8 @@ class _PropuestasTabState extends State<_PropuestasTab>
         return ListView.builder(
           padding: const EdgeInsets.all(8.0),
           itemCount: _propuestas.length,
-          itemBuilder: (context, index) {
-            final propuesta = _propuestas[index];
+          itemBuilder: (BuildContext context, int index) {
+            final Propuesta propuesta = _propuestas[index];
             final bool isProcessing = _processingItems.contains(propuesta.id);
             return _buildPropuestaCard(context, propuesta, isProcessing);
           },
@@ -204,7 +179,6 @@ class _PropuestasTabState extends State<_PropuestasTab>
     );
   }
 
-  /// Construye la tarjeta para una Propuesta (Mockup 4)
   Widget _buildPropuestaCard(
       BuildContext context, Propuesta propuesta, bool isProcessing) {
     return Card(
@@ -214,10 +188,11 @@ class _PropuestasTabState extends State<_PropuestasTab>
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             MaybeMarquee(
               text: propuesta.tituloSugerido,
-              style: Theme.of(context).textTheme.titleLarge ?? const TextStyle(),
+              style:
+                  Theme.of(context).textTheme.titleLarge ?? const TextStyle(),
               height: 28,
             ),
             const SizedBox(height: 8),
@@ -235,21 +210,20 @@ class _PropuestasTabState extends State<_PropuestasTab>
               'Géneros: ${propuesta.generosSugeridos}',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-
-            // --- ¡BOTONES MODIFICADOS (Petición d)! ---
-            if (widget.estado == EstadoPropuesta.PENDIENTE) ...[
+            if (widget.estado == EstadoPropuesta.PENDIENTE) ...<Widget>[
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.0),
                 child: Divider(),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
-                children: [
+                children: <Widget>[
                   TextButton(
                     style:
                         TextButton.styleFrom(foregroundColor: Colors.red[300]),
-                    onPressed:
-                        isProcessing ? null : () => _handleRechazar(propuesta.id),
+                    onPressed: isProcessing
+                        ? null
+                        : () => _handleRechazar(propuesta.id),
                     child: const Text('Rechazar'),
                   ),
                   const SizedBox(width: 8),
@@ -258,7 +232,6 @@ class _PropuestasTabState extends State<_PropuestasTab>
                       backgroundColor: Colors.green[600],
                       foregroundColor: Colors.white,
                     ),
-                    // Llamamos a la nueva función de navegación
                     onPressed:
                         isProcessing ? null : () => _handleRevisar(propuesta),
                     child: isProcessing
@@ -268,7 +241,6 @@ class _PropuestasTabState extends State<_PropuestasTab>
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: Colors.white),
                           )
-                        // Cambiamos el texto del botón
                         : const Text('Revisar'),
                   ),
                 ],

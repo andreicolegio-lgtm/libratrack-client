@@ -1,3 +1,22 @@
 {
-    "java.configuration.updateBuildConfiguration": "automatic"
+    // Mantenemos tu configuración de Java que ya tenías
+    "java.configuration.updateBuildConfiguration": "automatic",
+
+    // --- Configuración de Dart y Flutter ---
+
+    // 1. Activa "Formatear al Guardar" para todos los archivos
+    "editor.formatOnSave": true,
+
+    // 2. Define explícitamente el formateador de Dart 
+    //    (asegura que use el formateador oficial)
+    "[dart]": {
+        "editor.defaultFormatter": "Dart-Code.dart-code",
+        "editor.formatOnSave": true
+    },
+
+    // 3. (Opcional pero recomendado) Arregla los 'imports' y otros 
+    //    problemas de linter automáticamente al guardar.
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    }
 }

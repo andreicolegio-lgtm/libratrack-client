@@ -1,20 +1,17 @@
-// lib/src/features/profile/profile_screen.dart
-// (¡CORREGIDO Y REFACTORIZADO!)
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
-import 'package:libratrack_client/src/core/utils/api_client.dart';
-import 'package:libratrack_client/src/core/services/auth_service.dart';
-import 'package:libratrack_client/src/core/services/user_service.dart';
-import 'package:libratrack_client/src/model/perfil_usuario.dart';
-import 'package:libratrack_client/src/features/moderacion/moderacion_panel_screen.dart';
-import 'package:libratrack_client/src/features/admin/admin_panel_screen.dart';
-import 'package:libratrack_client/src/core/utils/snackbar_helper.dart';
-import 'package:libratrack_client/src/features/settings/settings_screen.dart';
-import 'package:libratrack_client/src/core/l10n/app_localizations.dart';
-import 'package:libratrack_client/src/core/utils/api_exceptions.dart'; // <-- Importado
+import '../../core/utils/api_client.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/services/user_service.dart';
+import '../../model/perfil_usuario.dart';
+import '../moderacion/moderacion_panel_screen.dart';
+import '../admin/admin_panel_screen.dart';
+import '../../core/utils/snackbar_helper.dart';
+import '../settings/settings_screen.dart';
+import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/api_exceptions.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -34,15 +31,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoadingLogout = false;
   bool _isUploadingFoto = false;
 
-  late PerfilUsuario _perfil; 
+  late PerfilUsuario _perfil;
 
   final GlobalKey<FormState> _profileFormKey = GlobalKey<FormState>();
-  final _nombreController = TextEditingController();
-  final _emailController = TextEditingController();
-  String _originalUsername = "";
+  final TextEditingController _nombreController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  String _originalUsername = '';
   final GlobalKey<FormState> _passwordFormKey = GlobalKey<FormState>();
-  final _contrasenaActualController = TextEditingController();
-  final _nuevaContrasenaController = TextEditingController();
+  final TextEditingController _contrasenaActualController =
+      TextEditingController();
+  final TextEditingController _nuevaContrasenaController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -51,7 +50,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _userService = context.read<UserService>();
     _apiClient = context.read<ApiClient>();
 
-    // El perfil se carga síncronamente desde AuthService
     _perfil = _authService.perfilUsuario!;
     _nombreController.text = _perfil.username;
     _emailController.text = _perfil.email;
@@ -60,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _handlePickAndUploadFoto() async {
     if (_isAnyLoading()) return;
-    final msgContext = ScaffoldMessenger.of(context);
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image == null) return;
 
@@ -71,7 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final dynamic data = await _apiClient.upload('uploads', image);
       final String fotoUrl = data['url'];
-      
+
       final PerfilUsuario perfilActualizado =
           await _userService.updateFotoPerfil(fotoUrl);
 
@@ -79,34 +77,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _perfil = perfilActualizado;
         _isUploadingFoto = false;
-        
-        // --- ¡CORREGIDO (ID: QA-079)! ---
-        // Se elimina el TO DO y se llama al servicio
+
         _authService.updateLocalProfileData(perfilActualizado);
-        // ---
       });
-      SnackBarHelper.showTopSnackBar(
-          msgContext, '¡Foto de perfil actualizada!', isError: false);
-          
+      SnackBarHelper.showTopSnackBar(msgContext, '¡Foto de perfil actualizada!',
+          isError: false);
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() { _isUploadingFoto = false; });
+      setState(() {
+        _isUploadingFoto = false;
+      });
       if (e is UnauthorizedException) {
-        _authService.logout(); 
+        _authService.logout();
       } else {
         SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() { _isUploadingFoto = false; });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e', isError: true);
+      setState(() {
+        _isUploadingFoto = false;
+      });
+      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+          isError: true);
     }
   }
 
   Future<void> _handleUpdateProfile() async {
-    if (!_profileFormKey.currentState!.validate()) { return; }
+    if (!_profileFormKey.currentState!.validate()) {
+      return;
+    }
     final String nuevoUsername = _nombreController.text.trim();
-    final msgContext = ScaffoldMessenger.of(context);
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     if (nuevoUsername == _originalUsername) {
       SnackBarHelper.showTopSnackBar(
@@ -114,7 +115,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           isError: false);
       return;
     }
-    setState(() { _isLoadingUpdate = true; });
+    setState(() {
+      _isLoadingUpdate = true;
+    });
 
     try {
       final PerfilUsuario perfilActualizado =
@@ -126,19 +129,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _nombreController.text = perfilActualizado.username;
         _originalUsername = perfilActualizado.username;
         _isLoadingUpdate = false;
-        
-        // --- ¡CORREGIDO (ID: QA-079)! ---
-        // Se elimina el TO DO y se llama al servicio
+
         _authService.updateLocalProfileData(perfilActualizado);
-        // ---
       });
       SnackBarHelper.showTopSnackBar(
           msgContext, '¡Nombre de usuario actualizado!',
           isError: false);
-          
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() { _isLoadingUpdate = false; });
+      setState(() {
+        _isLoadingUpdate = false;
+      });
       if (e is UnauthorizedException) {
         _authService.logout();
       } else {
@@ -146,16 +147,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() { _isLoadingUpdate = false; });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e', isError: true);
+      setState(() {
+        _isLoadingUpdate = false;
+      });
+      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+          isError: true);
     }
   }
 
   Future<void> _handleChangePassword() async {
-    if (!_passwordFormKey.currentState!.validate()) { return; }
-    setState(() { _isLoadingPasswordChange = true; });
-    final msgContext = ScaffoldMessenger.of(context);
-    final focusScope = FocusScope.of(context);
+    if (!_passwordFormKey.currentState!.validate()) {
+      return;
+    }
+    setState(() {
+      _isLoadingPasswordChange = true;
+    });
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final FocusScopeNode focusScope = FocusScope.of(context);
 
     final String actual = _contrasenaActualController.text;
     final String nueva = _nuevaContrasenaController.text;
@@ -172,11 +180,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       SnackBarHelper.showTopSnackBar(
           msgContext, '¡Contraseña actualizada con éxito!',
           isError: false);
-          
-    // --- ¡BLOQUE CATCH CORREGIDO (ID: QA-078)! ---
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() { _isLoadingPasswordChange = false; });
+      setState(() {
+        _isLoadingPasswordChange = false;
+      });
       if (e is UnauthorizedException) {
         _authService.logout();
       } else {
@@ -184,37 +192,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() { _isLoadingPasswordChange = false; });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e', isError: true);
+      setState(() {
+        _isLoadingPasswordChange = false;
+      });
+      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+          isError: true);
     }
-    // ---
   }
 
   Future<void> _handleLogout() async {
-    setState(() { _isLoadingLogout = true; });
-    final msgContext = ScaffoldMessenger.of(context);
+    setState(() {
+      _isLoadingLogout = true;
+    });
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     try {
       await _authService.logout();
-      // La navegación es automática gracias al AuthWrapper
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() { _isLoadingLogout = false; });
-      SnackBarHelper.showTopSnackBar(
-          msgContext, 'Error al cerrar sesión: $e', isError: true);
+      setState(() {
+        _isLoadingLogout = false;
+      });
+      SnackBarHelper.showTopSnackBar(msgContext, 'Error al cerrar sesión: $e',
+          isError: true);
     } catch (e) {
       if (!mounted) return;
-      setState(() { _isLoadingLogout = false; });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e', isError: true);
+      setState(() {
+        _isLoadingLogout = false;
+      });
+      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+          isError: true);
     }
   }
-
-  // --- (Lógica de Navegación) ---
 
   void _goToModeracionPanel() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const ModeracionPanelScreen(),
+        builder: (BuildContext context) => const ModeracionPanelScreen(),
       ),
     );
   }
@@ -223,18 +237,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const AdminPanelScreen(),
+        builder: (BuildContext context) => const AdminPanelScreen(),
       ),
     );
   }
 
-  // --- ¡MÉTODO MODIFICADO! (Petición 10) ---
   void _goToSettings() {
-    // Ya no muestra un SnackBar, ahora navega
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const SettingsScreen(),
+        builder: (BuildContext context) => const SettingsScreen(),
       ),
     );
   }
@@ -250,63 +262,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // --- ¡NUEVO! Obtenemos las traducciones ---
-    final l10n = AppLocalizations.of(context)!;
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.appTitle,
-            style: Theme.of(context).textTheme.titleLarge), // <-- TRADUCIDO
+        title:
+            Text(l10n.appTitle, style: Theme.of(context).textTheme.titleLarge),
         centerTitle: true,
         automaticallyImplyLeading: false,
-        actions: [
+        actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: _goToSettings, // <-- Conectado
-            tooltip: l10n.settingsTitle, // <-- TRADUCIDO
+            onPressed: _goToSettings,
+            tooltip: l10n.settingsTitle,
           ),
         ],
       ),
-      // --- ¡REFACTORIZADO (Error 3)! ---
-      // Ya no se necesita el FutureBuilder, el body se construye directamente.
-      body: _buildBody(context, l10n), // <-- Pasamos l10n al body
+      body: _buildBody(context, l10n),
     );
   }
 
   Widget _buildBody(BuildContext context, AppLocalizations l10n) {
-    // <-- Recibe l10n
-    
-    // --- ¡REFACTORIZADO (Error 3)! ---
-    // Ya no hay estado de carga o error para la pantalla,
-    // el perfil se obtiene síncronamente de initState.
-    // if (_isScreenLoading) { ... } // <-- ELIMINADO
-    // if (_loadingError != null) { ... } // <-- ELIMINADO
-    // ---
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          // --- Widget de Avatar (Sin cambios) ---
           Center(
             child: Stack(
-              children: [
+              children: <Widget>[
                 CircleAvatar(
                   radius: 60,
                   backgroundColor: Theme.of(context).colorScheme.surface,
                   child: _isUploadingFoto
                       ? const CircularProgressIndicator()
-                      : (_perfil.fotoPerfilUrl != null) // <-- Se usa _perfil
+                      : (_perfil.fotoPerfilUrl != null)
                           ? ClipOval(
                               child: CachedNetworkImage(
                                 imageUrl: _perfil.fotoPerfilUrl!,
                                 width: 120,
                                 height: 120,
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) =>
-                                    const CircularProgressIndicator(),
-                                errorWidget: (context, url, error) =>
+                                placeholder:
+                                    (BuildContext context, String url) =>
+                                        const CircularProgressIndicator(),
+                                errorWidget: (BuildContext context, String url,
+                                        Object error) =>
                                     const Icon(Icons.person, size: 60),
                               ),
                             )
@@ -333,8 +334,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap:
-                          _isAnyLoading() ? null : _handlePickAndUploadFoto,
+                      onTap: _isAnyLoading() ? null : _handlePickAndUploadFoto,
                       customBorder: const CircleBorder(),
                     ),
                   ),
@@ -343,28 +343,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 32.0),
-
-          // --- Formulario de Perfil (Username) ---
           Text(l10n.profileUserData,
-              style: Theme.of(context).textTheme.titleLarge), // <-- TRADUCIDO
+              style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 16.0),
           Form(
             key: _profileFormKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+              children: <Widget>[
                 _buildInputField(
                   context,
                   controller: _nombreController,
-                  labelText: l10n.registerUsernameLabel, // <-- TRADUCIDO
+                  labelText: l10n.registerUsernameLabel,
                   enabled: !_isAnyLoading(),
-                  validator: (value) {
+                  validator: (String? value) {
                     if (value == null || value.trim().isEmpty) {
                       return l10n.registerUsernameRequired;
-                    } // <-- TRADUCIDO
+                    }
                     if (value.trim().length < 4) {
                       return l10n.registerUsernameLength;
-                    } // <-- TRADUCIDO
+                    }
                     return null;
                   },
                 ),
@@ -372,7 +370,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildInputField(
                   context,
                   controller: _emailController,
-                  labelText: l10n.loginEmailLabel, // <-- TRADUCIDO
+                  labelText: l10n.loginEmailLabel,
                   enabled: false,
                 ),
                 const SizedBox(height: 24.0),
@@ -385,7 +383,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: _isLoadingUpdate
                       ? _buildSmallSpinner()
                       : Text(
-                          l10n.profileSaveButton, // <-- TRADUCIDO
+                          l10n.profileSaveButton,
                           style: Theme.of(context)
                               .textTheme
                               .titleMedium
@@ -395,14 +393,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-
-          // --- Divisor y Formulario de Contraseña ---
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24.0),
             child: Divider(),
           ),
           Text(
-            l10n.profileChangePassword, // <-- TRADUCIDO
+            l10n.profileChangePassword,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16.0),
@@ -410,25 +406,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
             key: _passwordFormKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+              children: <Widget>[
                 _buildInputField(context,
                     controller: _contrasenaActualController,
                     labelText: l10n.profileCurrentPassword,
                     enabled: !_isAnyLoading(),
-                    isPassword: true,
-                    validator: (value) {
+                    isPassword: true, validator: (String? value) {
                   if (value == null || value.isEmpty) {
                     return l10n.loginPasswordRequired;
                   }
                   return null;
-                }), // <-- TRADUCIDO
+                }),
                 const SizedBox(height: 16.0),
                 _buildInputField(context,
                     controller: _nuevaContrasenaController,
                     labelText: l10n.profileNewPassword,
                     enabled: !_isAnyLoading(),
-                    isPassword: true,
-                    validator: (value) {
+                    isPassword: true, validator: (String? value) {
                   if (value == null || value.isEmpty) {
                     return l10n.loginPasswordRequired;
                   }
@@ -436,7 +430,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     return l10n.registerPasswordLength;
                   }
                   return null;
-                }), // <-- TRADUCIDO
+                }),
                 const SizedBox(height: 24.0),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -447,16 +441,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: _isLoadingPasswordChange
                       ? _buildSmallSpinner()
                       : Text(
-                          l10n.profileChangePassword, // <-- TRADUCIDO
+                          l10n.profileChangePassword,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                 ),
               ],
             ),
           ),
-
-          // --- Lógica de Botones de Rol ---
-          if (_perfil.esModerador) ...[ // <-- Se usa _perfil
+          if (_perfil.esModerador) ...<Widget>[
             const SizedBox(height: 32.0),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -466,14 +458,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               onPressed: _isAnyLoading() ? null : _goToModeracionPanel,
               child: Text(
-                l10n.profileModPanelButton, // <-- TRADUCIDO
+                l10n.profileModPanelButton,
                 style:
                     const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],
-
-          if (_perfil.esAdministrador) ...[ // <-- Se usa _perfil
+          if (_perfil.esAdministrador) ...<Widget>[
             const SizedBox(height: 16.0),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -483,16 +474,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               onPressed: _isAnyLoading() ? null : _goToAdminPanel,
               child: Text(
-                l10n.profileAdminPanelButton, // <-- TRADUCIDO
+                l10n.profileAdminPanelButton,
                 style:
                     const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],
-
           const SizedBox(height: 16.0),
-
-          // --- Botón Cerrar Sesión (RF02) ---
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[700],
@@ -502,7 +490,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: _isLoadingLogout
                 ? _buildSmallSpinner()
                 : Text(
-                    l10n.profileLogoutButton, // <-- TRADUCIDO
+                    l10n.profileLogoutButton,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -513,8 +501,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
-  // --- Helpers de UI (sin cambios) ---
 
   bool _isAnyLoading() {
     return _isLoadingUpdate ||
@@ -558,13 +544,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide:
-              BorderSide(color: Theme.of(context).colorScheme.surface),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide:
-              BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+          borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),

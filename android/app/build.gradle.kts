@@ -1,7 +1,6 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -38,10 +37,6 @@ flutter {
     source = "../.."
 }
 
-// --- ¡BLOQUE AÑADIDO! ---
-// Añadimos las dependencias nativas de Android
 dependencies {
-    // Añade la librería de compatibilidad de AndroidX (AppCompat)
-    // que proporciona los temas 'Theme.AppCompat.*'
     implementation("androidx.appcompat:appcompat:1.6.1")
 }

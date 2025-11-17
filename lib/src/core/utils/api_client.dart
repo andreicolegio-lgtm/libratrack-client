@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_exceptions.dart';
+
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 const String _accessTokenKey = 'jwt_access_token';
@@ -48,7 +50,10 @@ class ApiClient {
       throw ConnectionException('Error de conexión. Revisa tu red.');
     } on http.ClientException {
       throw ConnectionException('Error al contactar al servidor.');
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('ApiClient.get error: $e');
+      debugPrint('Error type: ${e.runtimeType}');
+      debugPrint('Stacktrace: $stack');
       if (e is ApiException) {
         rethrow;
       }
@@ -94,11 +99,17 @@ class ApiClient {
       {bool isAuthEndpoint = false}) async {
     try {
       final Uri uri = Uri.parse('$_baseUrl/$endpoint');
+      final headers = await _getHeaders();
+      debugPrint('[ApiClient.put] PUT $uri');
+      debugPrint('[ApiClient.put] Headers: $headers');
+      debugPrint('[ApiClient.put] Body: $body');
       final http.Response response = await http.put(
         uri,
-        headers: await _getHeaders(),
+        headers: headers,
         body: json.encode(body),
       );
+      debugPrint('[ApiClient.put] Response status: ${response.statusCode}');
+      debugPrint('[ApiClient.put] Response body: ${response.body}');
       return _handleResponse(response);
     } on UnauthorizedException {
       if (isAuthEndpoint || _isRefreshing) {

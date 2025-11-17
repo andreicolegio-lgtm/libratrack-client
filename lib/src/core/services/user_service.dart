@@ -38,11 +38,15 @@ class UserService with ChangeNotifier {
       final Map<String, String> body = <String, String>{
         'username': nuevoUsername
       };
+      debugPrint('[UserService.updateUsername] PUT /usuarios/me body: $body');
       final data = await _apiClient.put('usuarios/me', body);
+      debugPrint('[UserService.updateUsername] Response: $data');
       return PerfilUsuario.fromJson(data);
-    } on ApiException {
+    } on ApiException catch (e) {
+      debugPrint('[UserService.updateUsername] ApiException: ${e.message}');
       rethrow;
     } catch (e) {
+      debugPrint('[UserService.updateUsername] Unexpected error: $e');
       throw ApiException('Error al actualizar el usuario: ${e.toString()}');
     }
   }

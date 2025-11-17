@@ -15,6 +15,7 @@ import '../../model/elemento_relacion.dart';
 import 'widgets/resena_form_modal.dart';
 import 'widgets/resena_card.dart';
 import '../../core/utils/snackbar_helper.dart';
+import '../../core/utils/error_translator.dart';
 import '../../core/services/admin_service.dart';
 import '../admin/admin_elemento_form.dart';
 import '../../core/utils/api_exceptions.dart';
@@ -133,7 +134,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       setState(() {
         _isAdding = false;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+      SnackBarHelper.showTopSnackBar(
+          msgContext, ErrorTranslator.translate(context, e.message),
+          isError: true);
     } catch (e) {
       if (!mounted) {
         return;
@@ -170,7 +173,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       setState(() {
         _isDeleting = false;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+      SnackBarHelper.showTopSnackBar(
+          msgContext, ErrorTranslator.translate(context, e.message),
+          isError: true);
     } catch (e) {
       if (!mounted) {
         return;
@@ -231,7 +236,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       if (!mounted) {
         return;
       }
-      SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+      SnackBarHelper.showTopSnackBar(
+          msgContext, ErrorTranslator.translate(context, e.message),
+          isError: true);
     } catch (e) {
       if (!mounted) {
         return;

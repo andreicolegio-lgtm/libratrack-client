@@ -139,4 +139,50 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsLanguageEnglish => 'Inglés';
+
+  @override
+  String get errorEmailAlreadyRegistered => 'El email ya está registrado.';
+
+  @override
+  String get errorUsernameAlreadyExists => 'El nombre de usuario ya existe.';
+
+  @override
+  String get errorPasswordIncorrect => 'La contraseña actual es incorrecta.';
+
+  @override
+  String get errorAlreadyReviewed => 'Ya has reseñado este elemento.';
+
+  @override
+  String get errorInvalidRatingRange => 'La valoración debe estar entre 1 y 5.';
+
+  @override
+  String get errorProposalAlreadyHandled =>
+      'Esta propuesta ya ha sido gestionada.';
+
+  @override
+  String get errorTypeEmpty => 'El Tipo sugerido no puede estar vacío.';
+
+  @override
+  String get errorGenresEmpty =>
+      'Los Géneros sugeridos no pueden estar vacíos.';
+
+  @override
+  String get errorGenreInvalid =>
+      'Se debe proporcionar al menos un género válido.';
+
+  @override
+  String get errorFileEmpty => 'El archivo está vacío.';
+
+  @override
+  String get errorAlreadyInCatalog => 'Este elemento ya está en tu catálogo.';
+
+  @override
+  String get errorValidation => 'Error de validación.';
+
+  @override
+  String get errorIllegalArgument => 'Argumento no válido.';
+
+  @override
+  String get errorInternalServerError =>
+      'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.';
 }

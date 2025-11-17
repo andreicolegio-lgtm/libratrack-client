@@ -55,7 +55,9 @@ class SettingsScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
               onChanged: (String? newLanguageCode) {
                 Locale? newLocale;
-                if (newLanguageCode == 'en') {
+                if (newLanguageCode == null) {
+                  newLocale = null;
+                } else if (newLanguageCode == 'en') {
                   newLocale = const Locale('en');
                 } else if (newLanguageCode == 'es') {
                   newLocale = const Locale('es');

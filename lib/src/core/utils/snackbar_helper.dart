@@ -5,6 +5,7 @@ class SnackBarHelper {
     ScaffoldMessengerState msgContext,
     String message, {
     required bool isError,
+    bool isNeutral = false,
   }) {
     msgContext.hideCurrentSnackBar();
 
@@ -14,7 +15,11 @@ class SnackBarHelper {
         style:
             const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
-      backgroundColor: isError ? Colors.red[700] : Colors.green[600],
+      backgroundColor: isError
+          ? Colors.red[700]
+          : isNeutral
+              ? Colors.grey[800]
+              : Colors.green[600],
       behavior: SnackBarBehavior.fixed,
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       duration: const Duration(seconds: 3),

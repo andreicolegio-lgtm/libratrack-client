@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/services/admin_service.dart';
 import '../../model/perfil_usuario.dart';
 import '../../core/utils/snackbar_helper.dart';
+import '../../core/utils/error_translator.dart';
 import 'admin_elemento_form.dart';
 import '../../model/paginated_response.dart';
 import 'dart:async';
@@ -111,7 +112,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     } on ApiException catch (e) {
       if (mounted) {
         setState(() {
-          _loadingError = e.message;
+          _loadingError = ErrorTranslator.translate(context, e.message);
           _isLoadingFirstPage = false;
           _isLoadingMore = false;
         });

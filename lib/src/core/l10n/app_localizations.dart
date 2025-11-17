@@ -355,6 +355,90 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Inglés'**
   String get settingsLanguageEnglish;
+
+  /// Error: El email ya está registrado.
+  ///
+  /// In es, this message translates to:
+  /// **'El email ya está registrado.'**
+  String get errorEmailAlreadyRegistered;
+
+  /// Error: El nombre de usuario ya existe.
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre de usuario ya existe.'**
+  String get errorUsernameAlreadyExists;
+
+  /// Error: La contraseña actual es incorrecta.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña actual es incorrecta.'**
+  String get errorPasswordIncorrect;
+
+  /// Error: Ya has reseñado este elemento.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya has reseñado este elemento.'**
+  String get errorAlreadyReviewed;
+
+  /// Error: La valoración debe estar entre 1 y 5.
+  ///
+  /// In es, this message translates to:
+  /// **'La valoración debe estar entre 1 y 5.'**
+  String get errorInvalidRatingRange;
+
+  /// Error: Propuesta ya gestionada.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta propuesta ya ha sido gestionada.'**
+  String get errorProposalAlreadyHandled;
+
+  /// Error: Tipo vacío.
+  ///
+  /// In es, this message translates to:
+  /// **'El Tipo sugerido no puede estar vacío.'**
+  String get errorTypeEmpty;
+
+  /// Error: Géneros vacíos.
+  ///
+  /// In es, this message translates to:
+  /// **'Los Géneros sugeridos no pueden estar vacíos.'**
+  String get errorGenresEmpty;
+
+  /// Error: Género inválido.
+  ///
+  /// In es, this message translates to:
+  /// **'Se debe proporcionar al menos un género válido.'**
+  String get errorGenreInvalid;
+
+  /// Error: Archivo vacío.
+  ///
+  /// In es, this message translates to:
+  /// **'El archivo está vacío.'**
+  String get errorFileEmpty;
+
+  /// Error: Ya está en el catálogo.
+  ///
+  /// In es, this message translates to:
+  /// **'Este elemento ya está en tu catálogo.'**
+  String get errorAlreadyInCatalog;
+
+  /// Error: Error de validación.
+  ///
+  /// In es, this message translates to:
+  /// **'Error de validación.'**
+  String get errorValidation;
+
+  /// Error: Argumento no válido.
+  ///
+  /// In es, this message translates to:
+  /// **'Argumento no válido.'**
+  String get errorIllegalArgument;
+
+  /// Error: Error interno del servidor.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.'**
+  String get errorInternalServerError;
 }
 
 class _AppLocalizationsDelegate

@@ -59,6 +59,9 @@ class SettingsService with ChangeNotifier {
       return;
     }
 
+    debugPrint('[SettingsService] Locale updated to: '
+        '${newLocale?.languageCode ?? 'system default'}');
+
     _locale = newLocale;
     notifyListeners();
 

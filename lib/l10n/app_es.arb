@@ -1,53 +1,93 @@
 {
     "@@locale": "es",
     "appTitle": "LibraTrack",
-    "@appTitle": { "description": "El título principal de la aplicación" },
-
+    "@appTitle": {
+        "description": "El título principal de la aplicación"
+    },
     "loginButton": "Iniciar Sesión",
-    "@loginButton": { "description": "Texto del botón en la pantalla de login" },
+    "@loginButton": {
+        "description": "Texto del botón en la pantalla de login"
+    },
     "loginEmailLabel": "Email",
-    "@loginEmailLabel": { "description": "Etiqueta para el campo de texto de email" },
+    "@loginEmailLabel": {
+        "description": "Etiqueta para el campo de texto de email"
+    },
     "loginPasswordLabel": "Contraseña",
-    "@loginPasswordLabel": { "description": "Etiqueta para el campo de texto de contraseña" },
+    "@loginPasswordLabel": {
+        "description": "Etiqueta para el campo de texto de contraseña"
+    },
     "loginEmailRequired": "El email es obligatorio.",
-    "@loginEmailRequired": { "description": "Error de validación para email vacío" },
+    "@loginEmailRequired": {
+        "description": "Error de validación para email vacío"
+    },
     "loginEmailInvalid": "Introduce un email válido.",
-    "@loginEmailInvalid": { "description": "Error de validación para email con formato incorrecto" },
+    "@loginEmailInvalid": {
+        "description": "Error de validación para email con formato incorrecto"
+    },
     "loginPasswordRequired": "La contraseña es obligatoria.",
-    "@loginPasswordRequired": { "description": "Error de validación para contraseña vacía" },
+    "@loginPasswordRequired": {
+        "description": "Error de validación para contraseña vacía"
+    },
     "loginRegisterPrompt": "¿No tienes cuenta? Regístrate",
-    "@loginRegisterPrompt": { "description": "Texto del botón para ir a la pantalla de registro" },
-
+    "@loginRegisterPrompt": {
+        "description": "Texto del botón para ir a la pantalla de registro"
+    },
     "registerTitle": "Registrarse",
-    "@registerTitle": { "description": "Texto del botón en la pantalla de registro" },
+    "@registerTitle": {
+        "description": "Texto del botón en la pantalla de registro"
+    },
     "registerUsernameLabel": "Nombre de Usuario",
-    "@registerUsernameLabel": { "description": "Etiqueta para el campo de texto de nombre de usuario" },
+    "@registerUsernameLabel": {
+        "description": "Etiqueta para el campo de texto de nombre de usuario"
+    },
     "registerUsernameRequired": "El nombre de usuario es obligatorio.",
-    "@registerUsernameRequired": { "description": "Error de validación para nombre de usuario vacío" },
+    "@registerUsernameRequired": {
+        "description": "Error de validación para nombre de usuario vacío"
+    },
     "registerUsernameLength": "Debe tener al menos 4 caracteres.",
-    "@registerUsernameLength": { "description": "Error de validación para nombre de usuario corto" },
+    "@registerUsernameLength": {
+        "description": "Error de validación para nombre de usuario corto"
+    },
     "registerPasswordLength": "Debe tener al menos 8 caracteres.",
-    "@registerPasswordLength": { "description": "Error de validación para contraseña corta" },
+    "@registerPasswordLength": {
+        "description": "Error de validación para contraseña corta"
+    },
     "registerLoginPrompt": "¿Ya tienes cuenta? Inicia sesión",
-    "@registerLoginPrompt": { "description": "Texto del botón para volver a la pantalla de login" },
-
+    "@registerLoginPrompt": {
+        "description": "Texto del botón para volver a la pantalla de login"
+    },
     "bottomNavCatalog": "Catálogo",
-    "@bottomNavCatalog": { "description": "Texto para la barra de navegación - Catálogo" },
+    "@bottomNavCatalog": {
+        "description": "Texto para la barra de navegación - Catálogo"
+    },
     "bottomNavSearch": "Buscar",
-    "@bottomNavSearch": { "description": "Texto para la barra de navegación - Buscar" },
+    "@bottomNavSearch": {
+        "description": "Texto para la barra de navegación - Buscar"
+    },
     "bottomNavProfile": "Perfil",
-    "@bottomNavProfile": { "description": "Texto para la barra de navegación - Perfil" },
-
+    "@bottomNavProfile": {
+        "description": "Texto para la barra de navegación - Perfil"
+    },
     "catalogTitle": "Mi Catálogo",
-    "@catalogTitle": { "description": "Título de la pantalla de Catálogo" },
+    "@catalogTitle": {
+        "description": "Título de la pantalla de Catálogo"
+    },
     "catalogInProgress": "En Progreso",
-    "@catalogInProgress": { "description": "Pestaña del catálogo - En Progreso" },
+    "@catalogInProgress": {
+        "description": "Pestaña del catálogo - En Progreso"
+    },
     "catalogPending": "Pendiente",
-    "@catalogPending": { "description": "Pestaña del catálogo - Pendiente" },
+    "@catalogPending": {
+        "description": "Pestaña del catálogo - Pendiente"
+    },
     "catalogFinished": "Terminado",
-    "@catalogFinished": { "description": "Pestaña del catálogo - Terminado" },
+    "@catalogFinished": {
+        "description": "Pestaña del catálogo - Terminado"
+    },
     "catalogDropped": "Abandonado",
-    "@catalogDropped": { "description": "Pestaña del catálogo - Abandonado" },
+    "@catalogDropped": {
+        "description": "Pestaña del catálogo - Abandonado"
+    },
     "catalogEmptyState": "No hay elementos en estado: {estado}",
     "@catalogEmptyState": {
         "description": "Texto que aparece si una pestaña del catálogo está vacía",
@@ -58,47 +98,140 @@
             }
         }
     },
-
     "searchExploreType": "Explorar por Tipo",
-    "@searchExploreType": { "description": "Subtítulo en la pantalla de búsqueda" },
+    "@searchExploreType": {
+        "description": "Subtítulo en la pantalla de búsqueda"
+    },
     "searchExploreGenre": "Explorar por Género",
-    "@searchExploreGenre": { "description": "Subtítulo en la pantalla de búsqueda" },
+    "@searchExploreGenre": {
+        "description": "Subtítulo en la pantalla de búsqueda"
+    },
     "searchFieldHint": "Buscar por título...",
-    "@searchFieldHint": { "description": "Texto de ayuda en la barra de búsqueda" },
+    "@searchFieldHint": {
+        "description": "Texto de ayuda en la barra de búsqueda"
+    },
     "searchEmptyState": "No se encontraron elementos con el filtro aplicado.",
-    "@searchEmptyState": { "description": "Texto si la búsqueda no devuelve resultados" },
+    "@searchEmptyState": {
+        "description": "Texto si la búsqueda no devuelve resultados"
+    },
     "searchProposeButton": "Proponer Elemento",
-    "@searchProposeButton": { "description": "Texto del botón flotante para proponer un elemento" },
-
+    "@searchProposeButton": {
+        "description": "Texto del botón flotante para proponer un elemento"
+    },
     "profileUserData": "Datos de Usuario",
-    "@profileUserData": { "description": "Subtítulo para la sección de datos de usuario" },
+    "@profileUserData": {
+        "description": "Subtítulo para la sección de datos de usuario"
+    },
     "profileSaveButton": "Guardar Cambios",
-    "@profileSaveButton": { "description": "Texto del botón para guardar cambios del perfil" },
+    "@profileSaveButton": {
+        "description": "Texto del botón para guardar cambios del perfil"
+    },
     "profileChangePassword": "Cambiar Contraseña",
-    "@profileChangePassword": { "description": "Subtítulo para la sección de cambio de contraseña" },
+    "@profileChangePassword": {
+        "description": "Subtítulo para la sección de cambio de contraseña"
+    },
     "profileCurrentPassword": "Contraseña actual",
-    "@profileCurrentPassword": { "description": "Etiqueta para el campo de contraseña actual" },
+    "@profileCurrentPassword": {
+        "description": "Etiqueta para el campo de contraseña actual"
+    },
     "profileNewPassword": "Nueva contraseña",
-    "@profileNewPassword": { "description": "Etiqueta para el campo de nueva contraseña" },
+    "@profileNewPassword": {
+        "description": "Etiqueta para el campo de nueva contraseña"
+    },
     "profileModPanelButton": "Panel de Moderación",
-    "@profileModPanelButton": { "description": "Texto del botón para ir al panel de moderación" },
+    "@profileModPanelButton": {
+        "description": "Texto del botón para ir al panel de moderación"
+    },
     "profileAdminPanelButton": "Panel de Administrador",
-    "@profileAdminPanelButton": { "description": "Texto del botón para ir al panel de administrador" },
+    "@profileAdminPanelButton": {
+        "description": "Texto del botón para ir al panel de administrador"
+    },
     "profileLogoutButton": "Cerrar Sesión",
-    "@profileLogoutButton": { "description": "Texto del botón para cerrar sesión" },
-
+    "@profileLogoutButton": {
+        "description": "Texto del botón para cerrar sesión"
+    },
     "settingsTitle": "Ajustes",
-    "@settingsTitle": { "description": "Título de la pantalla de Ajustes" },
+    "@settingsTitle": {
+        "description": "Título de la pantalla de Ajustes"
+    },
     "settingsDarkMode": "Modo Oscuro",
-    "@settingsDarkMode": { "description": "Etiqueta para el interruptor de modo oscuro" },
+    "@settingsDarkMode": {
+        "description": "Etiqueta para el interruptor de modo oscuro"
+    },
     "settingsDarkModeOn": "Activado",
-    "@settingsDarkModeOn": { "description": "Subtítulo del interruptor de modo oscuro (Activado)" },
+    "@settingsDarkModeOn": {
+        "description": "Subtítulo del interruptor de modo oscuro (Activado)"
+    },
     "settingsDarkModeOff": "Desactivado",
-    "@settingsDarkModeOff": { "description": "Subtítulo del interruptor de modo oscuro (Desactivado)" },
+    "@settingsDarkModeOff": {
+        "description": "Subtítulo del interruptor de modo oscuro (Desactivado)"
+    },
     "settingsLanguage": "Idioma",
-    "@settingsLanguage": { "description": "Etiqueta para la selección de idioma" },
+    "@settingsLanguage": {
+        "description": "Etiqueta para la selección de idioma"
+    },
     "settingsLanguageSpanish": "Español",
-    "@settingsLanguageSpanish": { "description": "Opción de idioma Español" },
+    "@settingsLanguageSpanish": {
+        "description": "Opción de idioma Español"
+    },
     "settingsLanguageEnglish": "Inglés",
-    "@settingsLanguageEnglish": { "description": "Opción de idioma Inglés" }
+    "@settingsLanguageEnglish": {
+        "description": "Opción de idioma Inglés"
+    },
+    "errorEmailAlreadyRegistered": "El email ya está registrado.",
+    "@errorEmailAlreadyRegistered": {
+        "description": "Error: El email ya está registrado."
+    },
+    "errorUsernameAlreadyExists": "El nombre de usuario ya existe.",
+    "@errorUsernameAlreadyExists": {
+        "description": "Error: El nombre de usuario ya existe."
+    },
+    "errorPasswordIncorrect": "La contraseña actual es incorrecta.",
+    "@errorPasswordIncorrect": {
+        "description": "Error: La contraseña actual es incorrecta."
+    },
+    "errorAlreadyReviewed": "Ya has reseñado este elemento.",
+    "@errorAlreadyReviewed": {
+        "description": "Error: Ya has reseñado este elemento."
+    },
+    "errorInvalidRatingRange": "La valoración debe estar entre 1 y 5.",
+    "@errorInvalidRatingRange": {
+        "description": "Error: La valoración debe estar entre 1 y 5."
+    },
+    "errorProposalAlreadyHandled": "Esta propuesta ya ha sido gestionada.",
+    "@errorProposalAlreadyHandled": {
+        "description": "Error: Propuesta ya gestionada."
+    },
+    "errorTypeEmpty": "El Tipo sugerido no puede estar vacío.",
+    "@errorTypeEmpty": {
+        "description": "Error: Tipo vacío."
+    },
+    "errorGenresEmpty": "Los Géneros sugeridos no pueden estar vacíos.",
+    "@errorGenresEmpty": {
+        "description": "Error: Géneros vacíos."
+    },
+    "errorGenreInvalid": "Se debe proporcionar al menos un género válido.",
+    "@errorGenreInvalid": {
+        "description": "Error: Género inválido."
+    },
+    "errorFileEmpty": "El archivo está vacío.",
+    "@errorFileEmpty": {
+        "description": "Error: Archivo vacío."
+    },
+    "errorAlreadyInCatalog": "Este elemento ya está en tu catálogo.",
+    "@errorAlreadyInCatalog": {
+        "description": "Error: Ya está en el catálogo."
+    },
+    "errorValidation": "Error de validación.",
+    "@errorValidation": {
+        "description": "Error: Error de validación."
+    },
+    "errorIllegalArgument": "Argumento no válido.",
+    "@errorIllegalArgument": {
+        "description": "Error: Argumento no válido."
+    },
+    "errorInternalServerError": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
+    "@errorInternalServerError": {
+        "description": "Error: Error interno del servidor."
+    }
 }

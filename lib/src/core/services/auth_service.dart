@@ -1,15 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
 import '../utils/api_client.dart';
 import '../utils/api_exceptions.dart';
 import '../../model/perfil_usuario.dart';
+
+class GoogleSignInCanceledException implements Exception {
+  const GoogleSignInCanceledException();
+  @override
+  String toString() => 'GoogleSignInCanceledException';
+}
 
 const String _accessTokenKey = 'jwt_access_token';
 const String _refreshTokenKey = 'jwt_refresh_token';
 
 class AuthService with ChangeNotifier {
+  Future<void> logout({bool shouldNotify = true}) async {
+    _accessToken = null;
+    _refreshToken = null;
+    _perfilUsuario = null;
+    await _secureStorage.delete(key: _accessTokenKey);
+    await _secureStorage.delete(key: _refreshTokenKey);
+    if (shouldNotify) {
+      notifyListeners();
+    }
+  }
+
   final ApiClient _apiClient;
   final FlutterSecureStorage _secureStorage;
 
@@ -31,21 +47,17 @@ class AuthService with ChangeNotifier {
 
   Future<void> _initialize() async {
     try {
-      await _initializeGoogleSignIn();
+      _googleSignIn = GoogleSignIn.instance;
+      await _googleSignIn.initialize(
+        serverClientId:
+            '1078651925823-g53s0f6i4on4ugdc0t7pfg11vpu86rdp.apps.googleusercontent.com',
+      );
       await _tryAutoLogin();
     } catch (e) {
       debugPrint('❌ Error durante inicialización: $e');
       _isLoading = false;
       notifyListeners();
     }
-  }
-
-  Future<void> _initializeGoogleSignIn() async {
-    _googleSignIn = GoogleSignIn.instance;
-    await _googleSignIn.initialize(
-      serverClientId:
-          '1078651925823-g53s0f6i4on4ugdc0t7pfg11vpu86rdp.apps.googleusercontent.com',
-    );
   }
 
   Future<void> _tryAutoLogin() async {
@@ -115,12 +127,13 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future<void> signInWithGoogle() async {
+  Future<void> signInWithGoogle(BuildContext? context) async {
     try {
-      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
-      debugPrint('✅ Google Sign-In exitoso: ${googleUser.email}');
+      final user = await _googleSignIn.authenticate();
+      // If GoogleSignIn.authenticate throws, cancellation is handled by the catch block below.
+      debugPrint('✅ Google Sign-In exitoso: ${user.email}');
 
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      final googleAuth = user.authentication;
       final String? idToken = googleAuth.idToken;
       debugPrint(
           '🔑 ID Token obtenido: ${idToken?.substring(0, 20) ?? "null"}...');
@@ -148,30 +161,17 @@ class AuthService with ChangeNotifier {
       await _loadUserProfile(shouldNotify: false);
 
       notifyListeners();
-    } on ApiException catch (e) {
-      debugPrint('❌ ApiException: ${e.message}');
+    } on GoogleSignInCanceledException {
       rethrow;
-    } catch (e) {
+    } on Exception catch (e) {
+      final message = e.toString().toLowerCase();
+      if (message.contains('canceled') || message.contains('cancelled')) {
+        debugPrint('ℹ️ Google Sign-In cancelado por el usuario');
+        throw const GoogleSignInCanceledException();
+      }
       debugPrint('❌ Error inesperado: $e');
       throw ApiException(
           'Error inesperado durante el inicio de sesión con Google: ${e.toString()}');
-    }
-  }
-
-  Future<void> logout({bool shouldNotify = true}) async {
-    try {
-      await _googleSignIn.signOut();
-      await _apiClient.logout();
-    } catch (e) {
-      debugPrint('Error ignorado en logout: ${e.toString()}');
-    }
-
-    _accessToken = null;
-    _refreshToken = null;
-    _perfilUsuario = null;
-
-    if (shouldNotify) {
-      notifyListeners();
     }
   }
 

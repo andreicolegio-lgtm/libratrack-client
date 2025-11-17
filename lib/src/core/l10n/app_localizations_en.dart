@@ -139,4 +139,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLanguageEnglish => 'English';
+
+  @override
+  String get errorEmailAlreadyRegistered => 'Email is already registered.';
+
+  @override
+  String get errorUsernameAlreadyExists => 'Username already exists.';
+
+  @override
+  String get errorPasswordIncorrect => 'Incorrect password.';
+
+  @override
+  String get errorAlreadyReviewed => 'You have already reviewed this item.';
+
+  @override
+  String get errorInvalidRatingRange => 'Rating must be between 1 and 5.';
+
+  @override
+  String get errorProposalAlreadyHandled =>
+      'This proposal has already been handled.';
+
+  @override
+  String get errorTypeEmpty => 'Type cannot be empty.';
+
+  @override
+  String get errorGenresEmpty => 'Genres cannot be empty.';
+
+  @override
+  String get errorGenreInvalid => 'At least one valid genre must be provided.';
+
+  @override
+  String get errorFileEmpty => 'File is empty.';
+
+  @override
+  String get errorAlreadyInCatalog => 'This item is already in your catalog.';
+
+  @override
+  String get errorValidation => 'Validation error.';
+
+  @override
+  String get errorIllegalArgument => 'Illegal argument.';
+
+  @override
+  String get errorInternalServerError =>
+      'An unexpected error occurred. Please try again later.';
 }

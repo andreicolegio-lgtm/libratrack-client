@@ -7,6 +7,7 @@ import '../../core/utils/api_client.dart';
 import '../../core/services/moderacion_service.dart';
 import '../../model/propuesta.dart';
 import '../../core/utils/snackbar_helper.dart';
+import '../../core/utils/error_translator.dart';
 import '../../core/utils/api_exceptions.dart';
 
 class PropuestaEditScreen extends StatefulWidget {
@@ -133,7 +134,9 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         setState(() {
           _isUploading = false;
         });
-        SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+        SnackBarHelper.showTopSnackBar(
+            msgContext, ErrorTranslator.translate(context, e.message),
+            isError: true);
       }
     } catch (e) {
       if (mounted) {

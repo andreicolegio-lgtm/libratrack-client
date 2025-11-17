@@ -1,3 +1,4 @@
+import '../../core/utils/error_translator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/catalog_service.dart';
@@ -54,7 +55,7 @@ class _CatalogScreenState extends State<CatalogScreen>
           _authService.logout();
         } else {
           setState(() {
-            _loadingError = e.message;
+            _loadingError = ErrorTranslator.translate(context, e.message);
             _isLoading = false;
           });
         }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/services/auth_service.dart';
 import 'registration_screen.dart';
 import '../../core/utils/snackbar_helper.dart';
+import '../../core/utils/error_translator.dart';
 import '../../core/utils/api_exceptions.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -48,7 +49,9 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _isLoading = false;
         });
-        SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+        SnackBarHelper.showTopSnackBar(
+            msgContext, ErrorTranslator.translate(context, e.message),
+            isError: true);
       }
     } catch (e) {
       if (mounted) {
@@ -71,22 +74,30 @@ class _LoginScreenState extends State<LoginScreen> {
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     try {
-      await authService.signInWithGoogle();
+      await authService.signInWithGoogle(context);
+    } on GoogleSignInCanceledException {
+      if (mounted) {
+        SnackBarHelper.showTopSnackBar(
+            msgContext, 'Inicio de sesión cancelado.',
+            isError: false, isNeutral: true);
+      }
     } on ApiException catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+        SnackBarHelper.showTopSnackBar(
+            msgContext, ErrorTranslator.translate(context, e.message),
+            isError: true);
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
         SnackBarHelper.showTopSnackBar(
             msgContext, 'Error inesperado: ${e.toString()}',
             isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }

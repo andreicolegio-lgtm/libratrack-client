@@ -9,6 +9,7 @@ import '../../model/perfil_usuario.dart';
 import '../moderacion/moderacion_panel_screen.dart';
 import '../admin/admin_panel_screen.dart';
 import '../../core/utils/snackbar_helper.dart';
+import '../../core/utils/error_translator.dart';
 import '../settings/settings_screen.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/api_exceptions.dart';
@@ -98,7 +99,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (e is UnauthorizedException) {
         _authService.logout();
       } else {
-        SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+        SnackBarHelper.showTopSnackBar(
+            msgContext, ErrorTranslator.translate(context, e.message),
+            isError: true);
       }
     } catch (e) {
       if (!mounted) {
@@ -157,7 +160,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (e is UnauthorizedException) {
         _authService.logout();
       } else {
-        SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+        SnackBarHelper.showTopSnackBar(
+            msgContext, ErrorTranslator.translate(context, e.message),
+            isError: true);
       }
     } catch (e) {
       if (!mounted) {
@@ -208,7 +213,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (e is UnauthorizedException) {
         _authService.logout();
       } else {
-        SnackBarHelper.showTopSnackBar(msgContext, e.message, isError: true);
+        SnackBarHelper.showTopSnackBar(
+            msgContext, ErrorTranslator.translate(context, e.message),
+            isError: true);
       }
     } catch (e) {
       if (!mounted) {
@@ -236,7 +243,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isLoadingLogout = false;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error al cerrar sesión: $e',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, ErrorTranslator.translate(context, e.message),
           isError: true);
     } catch (e) {
       if (!mounted) {

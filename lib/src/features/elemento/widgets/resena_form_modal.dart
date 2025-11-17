@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/services/resena_service.dart';
 import '../../../model/resena.dart';
 import '../../../core/utils/snackbar_helper.dart';
+import '../../../core/utils/error_translator.dart';
 import '../../../core/utils/api_exceptions.dart';
 
 class ResenaFormModal extends StatefulWidget {
@@ -77,7 +78,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
       });
       SnackBarHelper.showTopSnackBar(
         msgContext,
-        e.message,
+        ErrorTranslator.translate(context, e.message),
         isError: true,
       );
     } catch (e) {

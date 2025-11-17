@@ -1,53 +1,93 @@
 {
     "@@locale": "en",
     "appTitle": "LibraTrack",
-    "@appTitle": { "description": "The main title of the application" },
-
+    "@appTitle": {
+        "description": "The main title of the application"
+    },
     "loginButton": "Sign In",
-    "@loginButton": { "description": "Text for the button on the login screen" },
+    "@loginButton": {
+        "description": "Text for the button on the login screen"
+    },
     "loginEmailLabel": "Email",
-    "@loginEmailLabel": { "description": "Label for the email text field" },
+    "@loginEmailLabel": {
+        "description": "Label for the email text field"
+    },
     "loginPasswordLabel": "Password",
-    "@loginPasswordLabel": { "description": "Label for the password text field" },
+    "@loginPasswordLabel": {
+        "description": "Label for the password text field"
+    },
     "loginEmailRequired": "Email is required.",
-    "@loginEmailRequired": { "description": "Validation error for empty email" },
+    "@loginEmailRequired": {
+        "description": "Validation error for empty email"
+    },
     "loginEmailInvalid": "Please enter a valid email.",
-    "@loginEmailInvalid": { "description": "Validation error for incorrect email format" },
+    "@loginEmailInvalid": {
+        "description": "Validation error for incorrect email format"
+    },
     "loginPasswordRequired": "Password is required.",
-    "@loginPasswordRequired": { "description": "Validation error for empty password" },
+    "@loginPasswordRequired": {
+        "description": "Validation error for empty password"
+    },
     "loginRegisterPrompt": "Don't have an account? Register",
-    "@loginRegisterPrompt": { "description": "Text for the button to navigate to registration" },
-
+    "@loginRegisterPrompt": {
+        "description": "Text for the button to navigate to registration"
+    },
     "registerTitle": "Register",
-    "@registerTitle": { "description": "Text for the button on the registration screen" },
+    "@registerTitle": {
+        "description": "Text for the button on the registration screen"
+    },
     "registerUsernameLabel": "Username",
-    "@registerUsernameLabel": { "description": "Label for the username text field" },
+    "@registerUsernameLabel": {
+        "description": "Label for the username text field"
+    },
     "registerUsernameRequired": "Username is required.",
-    "@registerUsernameRequired": { "description": "Validation error for empty username" },
+    "@registerUsernameRequired": {
+        "description": "Validation error for empty username"
+    },
     "registerUsernameLength": "Must be at least 4 characters.",
-    "@registerUsernameLength": { "description": "Validation error for short username" },
+    "@registerUsernameLength": {
+        "description": "Validation error for short username"
+    },
     "registerPasswordLength": "Must be at least 8 characters.",
-    "@registerPasswordLength": { "description": "Validation error for short password" },
+    "@registerPasswordLength": {
+        "description": "Validation error for short password"
+    },
     "registerLoginPrompt": "Already have an account? Sign In",
-    "@registerLoginPrompt": { "description": "Text for the button to go back to login" },
-
+    "@registerLoginPrompt": {
+        "description": "Text for the button to go back to login"
+    },
     "bottomNavCatalog": "Catalog",
-    "@bottomNavCatalog": { "description": "Text for the navigation bar - Catalog" },
+    "@bottomNavCatalog": {
+        "description": "Text for the navigation bar - Catalog"
+    },
     "bottomNavSearch": "Search",
-    "@bottomNavSearch": { "description": "Text for the navigation bar - Search" },
+    "@bottomNavSearch": {
+        "description": "Text for the navigation bar - Search"
+    },
     "bottomNavProfile": "Profile",
-    "@bottomNavProfile": { "description": "Text for the navigation bar - Profile" },
-
+    "@bottomNavProfile": {
+        "description": "Text for the navigation bar - Profile"
+    },
     "catalogTitle": "My Catalog",
-    "@catalogTitle": { "description": "Title for the Catalog screen" },
+    "@catalogTitle": {
+        "description": "Title for the Catalog screen"
+    },
     "catalogInProgress": "In Progress",
-    "@catalogInProgress": { "description": "Catalog tab - In Progress" },
+    "@catalogInProgress": {
+        "description": "Catalog tab - In Progress"
+    },
     "catalogPending": "Pending",
-    "@catalogPending": { "description": "Catalog tab - Pending" },
+    "@catalogPending": {
+        "description": "Catalog tab - Pending"
+    },
     "catalogFinished": "Finished",
-    "@catalogFinished": { "description": "Catalog tab - Finished" },
+    "@catalogFinished": {
+        "description": "Catalog tab - Finished"
+    },
     "catalogDropped": "Dropped",
-    "@catalogDropped": { "description": "Catalog tab - Dropped" },
+    "@catalogDropped": {
+        "description": "Catalog tab - Dropped"
+    },
     "catalogEmptyState": "No items found in state: {estado}",
     "@catalogEmptyState": {
         "description": "Text shown if a catalog tab is empty",
@@ -58,47 +98,140 @@
             }
         }
     },
-
     "searchExploreType": "Explore by Type",
-    "@searchExploreType": { "description": "Subtitle on the search screen" },
+    "@searchExploreType": {
+        "description": "Subtitle on the search screen"
+    },
     "searchExploreGenre": "Explore by Genre",
-    "@searchExploreGenre": { "description": "Subtitle on the search screen" },
+    "@searchExploreGenre": {
+        "description": "Subtitle on the search screen"
+    },
     "searchFieldHint": "Search by title...",
-    "@searchFieldHint": { "description": "Hint text in the search bar" },
+    "@searchFieldHint": {
+        "description": "Hint text in the search bar"
+    },
     "searchEmptyState": "No elements were found with the applied filter.",
-    "@searchEmptyState": { "description": "Text if search returns no results" },
+    "@searchEmptyState": {
+        "description": "Text if search returns no results"
+    },
     "searchProposeButton": "Propose Element",
-    "@searchProposeButton": { "description": "Floating action button text to propose an element" },
-
+    "@searchProposeButton": {
+        "description": "Floating action button text to propose an element"
+    },
     "profileUserData": "User Data",
-    "@profileUserData": { "description": "Subtitle for the user data section" },
+    "@profileUserData": {
+        "description": "Subtitle for the user data section"
+    },
     "profileSaveButton": "Save Changes",
-    "@profileSaveButton": { "description": "Text for the save profile changes button" },
+    "@profileSaveButton": {
+        "description": "Text for the save profile changes button"
+    },
     "profileChangePassword": "Change Password",
-    "@profileChangePassword": { "description": "Subtitle for the change password section" },
+    "@profileChangePassword": {
+        "description": "Subtitle for the change password section"
+    },
     "profileCurrentPassword": "Current Password",
-    "@profileCurrentPassword": { "description": "Label for the current password field" },
+    "@profileCurrentPassword": {
+        "description": "Label for the current password field"
+    },
     "profileNewPassword": "New Password",
-    "@profileNewPassword": { "description": "Label for the new password field" },
+    "@profileNewPassword": {
+        "description": "Label for the new password field"
+    },
     "profileModPanelButton": "Moderation Panel",
-    "@profileModPanelButton": { "description": "Text for the moderation panel button" },
+    "@profileModPanelButton": {
+        "description": "Text for the moderation panel button"
+    },
     "profileAdminPanelButton": "Admin Panel",
-    "@profileAdminPanelButton": { "description": "Text for the admin panel button" },
+    "@profileAdminPanelButton": {
+        "description": "Text for the admin panel button"
+    },
     "profileLogoutButton": "Log Out",
-    "@profileLogoutButton": { "description": "Text for the log out button" },
-
+    "@profileLogoutButton": {
+        "description": "Text for the log out button"
+    },
     "settingsTitle": "Settings",
-    "@settingsTitle": { "description": "Title for the Settings screen" },
+    "@settingsTitle": {
+        "description": "Title for the Settings screen"
+    },
     "settingsDarkMode": "Dark Mode",
-    "@settingsDarkMode": { "description": "Label for the dark mode toggle" },
+    "@settingsDarkMode": {
+        "description": "Label for the dark mode toggle"
+    },
     "settingsDarkModeOn": "Enabled",
-    "@settingsDarkModeOn": { "description": "Subtitle for dark mode toggle (On)" },
+    "@settingsDarkModeOn": {
+        "description": "Subtitle for dark mode toggle (On)"
+    },
     "settingsDarkModeOff": "Disabled",
-    "@settingsDarkModeOff": { "description": "Subtitle for dark mode toggle (Off)" },
+    "@settingsDarkModeOff": {
+        "description": "Subtitle for dark mode toggle (Off)"
+    },
     "settingsLanguage": "Language",
-    "@settingsLanguage": { "description": "Label for the language selection" },
+    "@settingsLanguage": {
+        "description": "Label for the language selection"
+    },
     "settingsLanguageSpanish": "Spanish",
-    "@settingsLanguageSpanish": { "description": "Language option Spanish" },
+    "@settingsLanguageSpanish": {
+        "description": "Language option Spanish"
+    },
     "settingsLanguageEnglish": "English",
-    "@settingsLanguageEnglish": { "description": "Language option English" }
+    "@settingsLanguageEnglish": {
+        "description": "Language option English"
+    },
+    "errorEmailAlreadyRegistered": "Email is already registered.",
+    "@errorEmailAlreadyRegistered": {
+        "description": "Error: Email is already registered."
+    },
+    "errorUsernameAlreadyExists": "Username already exists.",
+    "@errorUsernameAlreadyExists": {
+        "description": "Error: Username already exists."
+    },
+    "errorPasswordIncorrect": "Incorrect password.",
+    "@errorPasswordIncorrect": {
+        "description": "Error: Incorrect password."
+    },
+    "errorAlreadyReviewed": "You have already reviewed this item.",
+    "@errorAlreadyReviewed": {
+        "description": "Error: Already reviewed."
+    },
+    "errorInvalidRatingRange": "Rating must be between 1 and 5.",
+    "@errorInvalidRatingRange": {
+        "description": "Error: Invalid rating range."
+    },
+    "errorProposalAlreadyHandled": "This proposal has already been handled.",
+    "@errorProposalAlreadyHandled": {
+        "description": "Error: Proposal already handled."
+    },
+    "errorTypeEmpty": "Type cannot be empty.",
+    "@errorTypeEmpty": {
+        "description": "Error: Type is empty."
+    },
+    "errorGenresEmpty": "Genres cannot be empty.",
+    "@errorGenresEmpty": {
+        "description": "Error: Genres are empty."
+    },
+    "errorGenreInvalid": "At least one valid genre must be provided.",
+    "@errorGenreInvalid": {
+        "description": "Error: Invalid genre."
+    },
+    "errorFileEmpty": "File is empty.",
+    "@errorFileEmpty": {
+        "description": "Error: File is empty."
+    },
+    "errorAlreadyInCatalog": "This item is already in your catalog.",
+    "@errorAlreadyInCatalog": {
+        "description": "Error: Already in catalog."
+    },
+    "errorValidation": "Validation error.",
+    "@errorValidation": {
+        "description": "Error: Validation error."
+    },
+    "errorIllegalArgument": "Illegal argument.",
+    "@errorIllegalArgument": {
+        "description": "Error: Illegal argument."
+    },
+    "errorInternalServerError": "An unexpected error occurred. Please try again later.",
+    "@errorInternalServerError": {
+        "description": "Error: Internal server error."
+    }
 }

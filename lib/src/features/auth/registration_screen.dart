@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/utils/snackbar_helper.dart';
+import '../../core/utils/error_translator.dart';
 import '../../model/perfil_usuario.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/api_exceptions.dart';
@@ -58,7 +59,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       SnackBarHelper.showTopSnackBar(
         msgContext,
-        e.message,
+        ErrorTranslator.translate(context, e.message),
         isError: true,
       );
     } catch (e) {

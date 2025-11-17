@@ -1,3 +1,4 @@
+import '../../core/utils/error_translator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/widgets/maybe_marquee.dart';
@@ -70,7 +71,7 @@ class _SearchScreenState extends State<SearchScreen> {
       debugPrint('Error al cargar datos de consulta: $e');
       if (mounted) {
         setState(() {
-          _loadingError = 'Error al cargar filtros: ${e.message}';
+          _loadingError = ErrorTranslator.translate(context, e.message);
         });
       }
     } catch (e) {
@@ -145,7 +146,7 @@ class _SearchScreenState extends State<SearchScreen> {
     } on ApiException catch (e) {
       if (mounted) {
         setState(() {
-          _loadingError = e.message;
+          _loadingError = ErrorTranslator.translate(context, e.message);
           _isLoadingFirstPage = false;
           _isLoadingMore = false;
         });

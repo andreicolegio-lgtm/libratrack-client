@@ -10,14 +10,6 @@ class ErrorTranslator {
     }
 
     switch (errorKey) {
-      case var k when k.startsWith('USER_NOT_FOUND_BY_ID:'):
-        final userId =
-            errorKey.split(':').length > 1 ? errorKey.split(':')[1] : '';
-        return loc.userNotFoundById(userId);
-      case var k when k.startsWith('USER_NOT_FOUND_BY_USERNAME:'):
-        final username =
-            errorKey.split(':').length > 1 ? errorKey.split(':')[1] : '';
-        return loc.userNotFoundByUsername(username);
       case 'E_INVALID_CREDENTIALS':
         return loc.errorInvalidCredentials;
       case 'E_ACCESS_DENIED':
@@ -26,6 +18,20 @@ class ErrorTranslator {
         return loc.errorTokenExpired;
       case 'E_TOKEN_INVALID':
         return loc.errorTokenInvalid;
+      case 'E_GOOGLE_TOKEN_INVALID':
+        return loc.errorGoogleTokenInvalid;
+      case 'E_GOOGLE_TOKEN_ERROR':
+        return loc.errorGoogleTokenError;
+      case 'E_REFRESH_TOKEN_REQUIRED':
+        return loc.errorRefreshTokenRequired;
+      case 'E_REFRESH_TOKEN_NOT_FOUND':
+        return loc.errorRefreshTokenNotFound;
+      case 'E_REFRESH_TOKEN_EXPIRED':
+        return loc.errorRefreshTokenExpired;
+      case 'PROPOSAL_NOT_FOUND':
+        return loc.errorProposalNotFound;
+      case 'NOT_IN_CATALOG':
+        return loc.errorNotInCatalog;
       case 'EMAIL_ALREADY_REGISTERED':
         return loc.errorEmailAlreadyRegistered;
       case 'USERNAME_ALREADY_EXISTS':
@@ -59,13 +65,7 @@ class ErrorTranslator {
 
       case 'RESOURCE_NOT_FOUND':
       case 'ELEMENT_NOT_FOUND':
-        return loc.elementDetailNoElement;
-      case 'ELEMENT_RELOAD_ERROR':
-        return loc.elementReloadError;
-      case 'ADMIN_NOT_FOUND':
-        return loc.adminNotFound;
       case 'INVALID_USER_TOKEN':
-      case 'INVALID_FILE_NAME':
       case 'FILE_SAVE_ERROR':
         return loc.errorInternalServerError;
 

@@ -759,34 +759,18 @@
     },
     "reviewCardNoText": "Este usuario no ha escrito un texto.",
     "@reviewCardNoText": {},
-    "elementNotFound": "Elemento no encontrado.",
-    "@elementNotFound": {
-        "description": "Mensaje de error cuando no se encuentra un elemento."
-    },
-    "elementReloadError": "Error al recargar el elemento actualizado.",
-    "@elementReloadError": {
-        "description": "Mensaje de error cuando falla la recarga de un elemento actualizado."
-    },
-    "adminNotFound": "Admin no encontrado",
-    "@adminNotFound": {
-        "description": "Mensaje de error cuando no se encuentra un usuario administrador"
-    },
-    "userNotFoundById": "Usuario no encontrado con id: {userId}",
-    "@userNotFoundById": {
-        "description": "Mensaje de error cuando no se encuentra un usuario por id.",
-        "placeholders": {
-            "userId": {
-                "type": "String"
-            }
-        }
-    },
-    "userNotFoundByUsername": "Usuario no encontrado con username: {username}",
-    "@userNotFoundByUsername": {
-        "description": "Mensaje de error cuando no se encuentra un usuario por nombre de usuario.",
-        "placeholders": {
-            "username": {
-                "type": "String"
-            }
-        }
-    }
+    "errorGoogleTokenInvalid": "Token de Google inválido.",
+    "@errorGoogleTokenInvalid": {},
+    "errorGoogleTokenError": "Error al verificar el token de Google.",
+    "@errorGoogleTokenError": {},
+    "errorRefreshTokenRequired": "Se requiere un token de refresco.",
+    "@errorRefreshTokenRequired": {},
+    "errorRefreshTokenNotFound": "Token de refresco no encontrado.",
+    "@errorRefreshTokenNotFound": {},
+    "errorRefreshTokenExpired": "Tu sesión ha caducado. Por favor, inicia sesión de nuevo.",
+    "@errorRefreshTokenExpired": {},
+    "errorProposalNotFound": "Propuesta no encontrada.",
+    "@errorProposalNotFound": {},
+    "errorNotInCatalog": "Este elemento no está en tu catálogo.",
+    "@errorNotInCatalog": {}
 }

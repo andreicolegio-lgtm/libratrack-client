@@ -730,21 +730,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reviewCardNoText => 'This user did not write a review.';
 
   @override
-  String get elementNotFound => 'Element not found.';
+  String get errorGoogleTokenInvalid => 'Invalid Google Token.';
 
   @override
-  String get elementReloadError => 'Error reloading the updated element.';
+  String get errorGoogleTokenError => 'Error verifying Google Token.';
 
   @override
-  String get adminNotFound => 'Admin not found';
+  String get errorRefreshTokenRequired => 'Refresh token is required.';
 
   @override
-  String userNotFoundById(String userId) {
-    return 'User not found with id: $userId';
-  }
+  String get errorRefreshTokenNotFound => 'Refresh token not found.';
 
   @override
-  String userNotFoundByUsername(String username) {
-    return 'User not found with username: $username';
-  }
+  String get errorRefreshTokenExpired =>
+      'Your session has expired. Please log in again.';
+
+  @override
+  String get errorProposalNotFound => 'Proposal not found.';
+
+  @override
+  String get errorNotInCatalog => 'This item is not in your catalog.';
 }

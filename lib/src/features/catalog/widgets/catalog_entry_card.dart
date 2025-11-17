@@ -30,6 +30,8 @@ class CatalogEntryCard extends StatefulWidget {
 class _CatalogEntryCardState extends State<CatalogEntryCard> {
   late final CatalogService _catalogService;
 
+  final TextEditingController _temporadaController = TextEditingController();
+  final TextEditingController _unidadController = TextEditingController();
   final TextEditingController _capituloController = TextEditingController();
   final TextEditingController _paginaController = TextEditingController();
 
@@ -59,19 +61,23 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     _episodiosPorTemporada =
         _parseEpisodiosPorTemporada(_entrada.elementoEpisodiosPorTemporada);
 
+    _temporadaController.text = (_entrada.temporadaActual ?? 1).toString();
+    _unidadController.text = (_entrada.unidadActual ?? 0).toString();
     _capituloController.text = (_entrada.capituloActual ?? 0).toString();
     _paginaController.text = (_entrada.paginaActual ?? 0).toString();
   }
 
   @override
   void dispose() {
+    _temporadaController.dispose();
+    _unidadController.dispose();
     _capituloController.dispose();
     _paginaController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleUpdateEstado(String nuevoEstado) async {
-    if (nuevoEstado == _entrada.estadoPersonal) {
+  Future<void> _handleUpdateEstado(EstadoPersonal nuevoEstado) async {
+    if (nuevoEstado.apiValue == _entrada.estadoPersonal) {
       return;
     }
 
@@ -84,7 +90,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     try {
       await _catalogService.updateEstado(
         _entrada.elementoId,
-        nuevoEstado,
+        nuevoEstado.apiValue,
       );
 
       if (mounted) {
@@ -95,43 +101,30 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       }
     } on ApiException catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
         SnackBarHelper.showTopSnackBar(
             msgContext, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
         SnackBarHelper.showTopSnackBar(
             msgContext, l10n.errorUpdating(e.toString()),
             isError: true);
       }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  Future<void> _handleUpdateProgreso({
-    int? temporada,
-    int? unidad,
-    int? capitulo,
-    int? pagina,
-    bool esGuardadoManual = false,
-  }) async {
+  Future<void> _handleSaveProgress() async {
     if (_isLoading) {
       return;
     }
-
-    if (esGuardadoManual) {
-      FocusScope.of(context).unfocus();
-      if (capitulo == _entrada.capituloActual &&
-          pagina == _entrada.paginaActual) {
-        return;
-      }
-    }
+    FocusScope.of(context).unfocus();
 
     setState(() {
       _isLoading = true;
@@ -139,83 +132,79 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
-    String? estadoFinal;
-    bool autoTerminado = false;
+    final Map<String, dynamic> body = <String, dynamic>{};
     final String tipo = _entrada.elementoTipoNombre.toLowerCase();
 
-    final int totalEpsAnime = _entrada.elementoTotalUnidades ?? 0;
-    final int totalPagLibro = _entrada.elementoTotalPaginasLibro ?? 0;
+    bool autoTerminado = false;
+    final int totalUnidades = _entrada.elementoTotalUnidades ?? 0;
+    final int totalPaginas = _entrada.elementoTotalPaginasLibro ?? 0;
     final int totalTemps = _episodiosPorTemporada.length;
 
-    if (tipo == 'serie' &&
-        temporada != null &&
-        unidad != null &&
-        totalTemps > 0) {
-      if (temporada == totalTemps &&
-          unidad == _episodiosPorTemporada[totalTemps - 1]) {
+    if (tipo == 'serie') {
+      final int temp = int.tryParse(_temporadaController.text) ?? 1;
+      final int unid = int.tryParse(_unidadController.text) ?? 0;
+      body['temporadaActual'] = temp;
+      body['unidadActual'] = unid;
+
+      if (totalTemps > 0 &&
+          temp == totalTemps &&
+          unid == _episodiosPorTemporada[totalTemps - 1]) {
         autoTerminado = true;
       }
-    } else if (tipo == 'libro' && pagina != null && totalPagLibro > 0) {
-      if (pagina == totalPagLibro) {
+    } else if (tipo == 'libro') {
+      final int cap = int.tryParse(_capituloController.text) ?? 0;
+      final int pag = int.tryParse(_paginaController.text) ?? 0;
+      body['capituloActual'] = cap;
+      body['paginaActual'] = pag;
+
+      if (totalPaginas > 0 && pag == totalPaginas) {
         autoTerminado = true;
       }
-    } else if ((tipo == 'anime' || tipo == 'manga') &&
-        unidad != null &&
-        totalEpsAnime > 0) {
-      if (unidad == totalEpsAnime) {
+    } else if (tipo == 'anime' || tipo == 'manga') {
+      final int unid = int.tryParse(_unidadController.text) ?? 0;
+      body['unidadActual'] = unid;
+
+      if (totalUnidades > 0 && unid == totalUnidades) {
         autoTerminado = true;
       }
     }
 
     if (autoTerminado &&
         _entrada.estadoPersonal != EstadoPersonal.terminado.apiValue) {
-      estadoFinal = EstadoPersonal.terminado.apiValue;
+      body['estadoPersonal'] = EstadoPersonal.terminado.apiValue;
+    } else if (_entrada.estadoPersonal == EstadoPersonal.pendiente.apiValue) {
+      body['estadoPersonal'] = EstadoPersonal.enProgreso.apiValue;
     }
 
     try {
-      final Map<String, dynamic> body = <String, dynamic>{
-        'estadoPersonal': estadoFinal,
-        'temporadaActual': temporada,
-        'unidadActual': unidad,
-        'capituloActual': capitulo,
-        'paginaActual': pagina,
-      };
-      body.removeWhere((String key, value) => value == null);
-
       await _catalogService.updateProgreso(
         _entrada.elementoId,
         body,
       );
 
       if (mounted) {
-        if (estadoFinal != null) {
-          widget.onUpdate();
-        } else {
-          widget.onUpdate();
-        }
-        if (esGuardadoManual) {
-          SnackBarHelper.showTopSnackBar(
-              msgContext, l10n.snackbarCatalogProgressSaved,
-              isError: false);
-        }
+        widget.onUpdate();
+        SnackBarHelper.showTopSnackBar(
+            msgContext, l10n.snackbarCatalogProgressSaved,
+            isError: false);
       }
     } on ApiException catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
         SnackBarHelper.showTopSnackBar(
             msgContext, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
         SnackBarHelper.showTopSnackBar(
             msgContext, l10n.errorUpdating(e.toString()),
             isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -240,7 +229,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
 
         int currentEps = 0;
         int tempActual = (_entrada.temporadaActual ?? 1)
-            .clamp(1, _episodiosPorTemporada.length);
+            .clamp(1, max(1, _episodiosPorTemporada.length));
 
         for (int i = 0; i < tempActual - 1; i++) {
           currentEps += _episodiosPorTemporada[i];
@@ -294,8 +283,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
         tipo == 'manga';
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Theme.of(context).colorScheme.surface,
+      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: InkWell(
         onTap: isEditable
             ? () {
@@ -308,289 +297,223 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
                 ).then((_) => widget.onUpdate());
               }
             : null,
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              _buildImageContainer(fadedIconColor),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    MaybeMarquee(
-                      text: _entrada.elementoTitulo,
-                      style: Theme.of(context).textTheme.titleMedium ??
-                          const TextStyle(),
-                    ),
-                    if (mostrarProgresoUI) ...<Widget>[
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value: _progresoValue,
-                        backgroundColor: Colors.grey[700],
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(height: 4),
-                      _buildProgresoUI(context, isEditable, l10n),
-                    ] else ...<Widget>[
-                      const SizedBox(height: 16),
-                    ],
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: _buildEstadoDropdown(context, isEditable, l10n),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        child: Column(
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _buildImageContainer(fadedIconColor),
+                _buildInfo(context, Theme.of(context)),
+              ],
+            ),
+            if (mostrarProgresoUI) _buildProgressSection(context, l10n, tipo),
+            _buildActionButtons(context, l10n, isEditable),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildImageContainer(Color fadedIconColor) {
-    final String? imageUrl = _entrada.elementoUrlImagen;
-    final bool isValidUrl = imageUrl != null && imageUrl.isNotEmpty;
     return Container(
-      width: 70,
-      height: 100,
+      width: 100,
+      height: 150,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8.0),
-        color: Theme.of(context).colorScheme.surface,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8.0),
-        child: isValidUrl
-            ? CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                placeholder: (BuildContext context, String url) => Center(
-                    child: Icon(Icons.downloading, color: fadedIconColor)),
-                errorWidget: (BuildContext context, String url, Object error) =>
-                    Icon(Icons.broken_image, color: fadedIconColor),
-              )
-            : Icon(Icons.image, size: 40, color: fadedIconColor),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest),
+      child: (_entrada.elementoUrlImagen != null &&
+              _entrada.elementoUrlImagen!.isNotEmpty)
+          ? CachedNetworkImage(
+              imageUrl: _entrada.elementoUrlImagen!,
+              fit: BoxFit.cover,
+              placeholder: (BuildContext context, String url) =>
+                  Icon(Icons.downloading, color: fadedIconColor),
+              errorWidget: (BuildContext context, String url, Object error) =>
+                  Icon(Icons.image_not_supported,
+                      color: fadedIconColor, size: 40),
+            )
+          : Icon(Icons.image_not_supported, color: fadedIconColor, size: 40),
+    );
+  }
+
+  Widget _buildInfo(BuildContext context, ThemeData theme) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            MaybeMarquee(
+              text: _entrada.elementoTitulo,
+              style: theme.textTheme.titleMedium ?? const TextStyle(),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _entrada.elementoTipoNombre,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.primary),
+            ),
+            const SizedBox(height: 8),
+            _buildProgressBar(context),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildProgresoUI(
-      BuildContext context, bool isEditable, AppLocalizations l10n) {
+  Widget _buildProgressBar(BuildContext context) {
+    double progress = _progresoValue;
+    String progressText = '';
+
     final String tipo = _entrada.elementoTipoNombre.toLowerCase();
+    final int? totalPaginas = _entrada.elementoTotalPaginasLibro;
+    final int? totalUnidades = _entrada.elementoTotalUnidades;
+    final int pagActual = _entrada.paginaActual ?? 0;
+    final int unidadActual = _entrada.unidadActual ?? 0;
 
-    if (tipo == 'serie') {
-      return _buildProgresoSerie(context, isEditable, l10n);
+    if (tipo == 'libro' && totalPaginas != null && totalPaginas > 0) {
+      progressText = '$pagActual / $totalPaginas';
+    } else if ((tipo == 'anime' || tipo == 'manga') &&
+        totalUnidades != null &&
+        totalUnidades > 0) {
+      progressText = '$unidadActual / $totalUnidades';
+    } else if (tipo == 'serie') {
+      progressText =
+          'T${_entrada.temporadaActual ?? 1} / E${_entrada.unidadActual ?? 0}';
     }
-    if (tipo == 'libro') {
-      return _buildProgresoLibro(context, isEditable, l10n);
-    }
-    if (tipo == 'anime' || tipo == 'manga') {
-      return _buildProgresoUnidad(context, isEditable, l10n, tipo);
-    }
 
-    return const SizedBox(height: 36);
-  }
-
-  Widget _buildProgresoSerie(
-      BuildContext context, bool isEditable, AppLocalizations l10n) {
-    final int tempActual = (_entrada.temporadaActual ?? 1)
-        .clamp(1, max(1, _episodiosPorTemporada.length));
-    final int epTotalTempActual =
-        (tempActual - 1 < _episodiosPorTemporada.length)
-            ? _episodiosPorTemporada[tempActual - 1]
-            : 0;
-    final int epActual =
-        (_entrada.unidadActual ?? 0).clamp(0, max(0, epTotalTempActual));
-
-    final List<int> temporadas =
-        List.generate(_episodiosPorTemporada.length, (int i) => i + 1);
-    final List<int> episodios =
-        List.generate(epTotalTempActual + 1, (int i) => i);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Expanded(
-          child: DropdownButtonFormField<int>(
-            initialValue: tempActual,
-            items: temporadas
-                .map((int t) => DropdownMenuItem(
-                    value: t, child: Text(l10n.catalogCardSeriesSeason(t))))
-                .toList(),
-            onChanged: isEditable
-                ? (int? val) {
-                    if (val == null || val == _entrada.temporadaActual) {
-                      return;
-                    }
-                    _handleUpdateProgreso(temporada: val, unidad: 0);
-                  }
-                : null,
-            decoration: const InputDecoration.collapsed(hintText: ''),
-            style: Theme.of(context).textTheme.bodyMedium,
-            dropdownColor: Theme.of(context).colorScheme.surface,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: DropdownButtonFormField<int>(
-            initialValue: epActual,
-            items: episodios
-                .map((int e) => DropdownMenuItem(
-                    value: e, child: Text(l10n.catalogCardSeriesEpisode(e))))
-                .toList(),
-            onChanged: isEditable
-                ? (int? val) {
-                    if (val == null || val == _entrada.unidadActual) {
-                      return;
-                    }
-                    _handleUpdateProgreso(temporada: tempActual, unidad: val);
-                  }
-                : null,
-            decoration: const InputDecoration.collapsed(hintText: ''),
-            style: Theme.of(context).textTheme.bodyMedium,
-            dropdownColor: Theme.of(context).colorScheme.surface,
-          ),
+        if (progressText.isNotEmpty)
+          Text(progressText, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 4),
+        LinearProgressIndicator(
+          value: progress,
+          backgroundColor: Theme.of(context)
+              .colorScheme
+              .surfaceContainerHighest
+              .withAlpha(77),
+          color: Theme.of(context).colorScheme.primary,
         ),
       ],
     );
   }
 
-  Widget _buildProgresoLibro(
-      BuildContext context, bool isEditable, AppLocalizations l10n) {
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: TextField(
-            controller: _capituloController,
-            enabled: isEditable,
-            keyboardType: TextInputType.number,
-            inputFormatters: <TextInputFormatter>[
-              FilteringTextInputFormatter.digitsOnly
-            ],
-            style: Theme.of(context).textTheme.bodyMedium,
-            decoration: InputDecoration(
-              labelText: l10n.catalogCardBookChapter,
-              hintText: l10n.catalogCardBookChapterTotal(
-                  _entrada.elementoTotalCapitulosLibro ?? 0),
-              isDense: true,
+  Widget _buildProgressSection(
+      BuildContext context, AppLocalizations l10n, String tipo) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        children: <Widget>[
+          if (tipo == 'serie')
+            Expanded(
+              child: _buildTextField(
+                  _temporadaController, l10n.catalogCardSeriesSeason(1),
+                  enabled: !_isLoading),
             ),
-            onSubmitted: (_) => _handleUpdateProgresoLibro(),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: TextField(
-            controller: _paginaController,
-            enabled: isEditable,
-            keyboardType: TextInputType.number,
-            inputFormatters: <TextInputFormatter>[
-              FilteringTextInputFormatter.digitsOnly
-            ],
-            style: Theme.of(context).textTheme.bodyMedium,
-            decoration: InputDecoration(
-              labelText: l10n.catalogCardBookPage,
-              hintText: l10n.catalogCardBookPageTotal(
-                  _entrada.elementoTotalPaginasLibro ?? 0),
-              isDense: true,
+          if (tipo == 'serie') const SizedBox(width: 16),
+          if (tipo == 'serie' || tipo == 'anime' || tipo == 'manga')
+            Expanded(
+              child: _buildTextField(
+                  _unidadController,
+                  tipo == 'serie'
+                      ? l10n.catalogCardSeriesEpisode(1)
+                      : (tipo == 'anime'
+                          ? l10n.elementDetailAnimeEpisodes
+                          : l10n.elementDetailMangaChapters),
+                  enabled: !_isLoading),
             ),
-            onSubmitted: (_) => _handleUpdateProgresoLibro(),
-          ),
-        ),
-        if (isEditable)
-          IconButton(
-            icon:
-                Icon(Icons.save, color: Theme.of(context).colorScheme.primary),
-            onPressed: _handleUpdateProgresoLibro,
-            tooltip: l10n.catalogCardSaveChanges,
-          )
-      ],
+          if (tipo == 'libro')
+            Expanded(
+              child: _buildTextField(
+                  _capituloController, l10n.catalogCardBookChapter,
+                  enabled: !_isLoading),
+            ),
+          if (tipo == 'libro') const SizedBox(width: 16),
+          if (tipo == 'libro')
+            Expanded(
+              child: _buildTextField(
+                  _paginaController, l10n.catalogCardBookPage,
+                  enabled: !_isLoading),
+            ),
+          const SizedBox(width: 16),
+          _isLoading
+              ? const SizedBox(
+                  width: 24, height: 24, child: CircularProgressIndicator())
+              : IconButton(
+                  icon: Icon(Icons.save,
+                      color: Theme.of(context).colorScheme.primary),
+                  onPressed: _handleSaveProgress,
+                ),
+        ],
+      ),
     );
   }
 
-  Widget _buildProgresoUnidad(BuildContext context, bool isEditable,
-      AppLocalizations l10n, String tipo) {
-    final int uniActual = _entrada.unidadActual ?? 0;
-    final int uniTotal = _entrada.elementoTotalUnidades ?? 0;
-    final String label = (tipo == 'anime')
-        ? l10n.elementDetailAnimeEpisodes
-        : l10n.elementDetailMangaChapters;
-
-    return Row(
-      children: <Widget>[
-        Text(l10n.catalogCardUnitLabel(label),
-            style: Theme.of(context).textTheme.bodyMedium),
-        IconButton(
-          icon: const Icon(Icons.remove_circle_outline),
-          iconSize: 20,
-          color: isEditable && uniActual > 0 ? Colors.white : Colors.grey[700],
-          onPressed: (isEditable && uniActual > 0)
-              ? () => _handleUpdateProgreso(unidad: uniActual - 1)
-              : null,
-        ),
-        Text(l10n.catalogCardUnitProgress(uniActual, uniTotal),
-            style: Theme.of(context).textTheme.bodyLarge),
-        IconButton(
-          icon: const Icon(Icons.add_circle_outline),
-          iconSize: 20,
-          color: isEditable && uniActual < uniTotal
-              ? Colors.white
-              : Colors.grey[700],
-          onPressed: (isEditable && uniActual < uniTotal)
-              ? () => _handleUpdateProgreso(unidad: uniActual + 1)
-              : null,
-        ),
-        const Spacer(),
-        if (_isLoading)
-          const SizedBox(
-              height: 16,
-              width: 16,
-              child: CircularProgressIndicator(strokeWidth: 2))
+  Widget _buildTextField(TextEditingController controller, String label,
+      {bool enabled = true}) {
+    return TextField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType: TextInputType.number,
+      inputFormatters: <TextInputFormatter>[
+        FilteringTextInputFormatter.digitsOnly
       ],
+      decoration: InputDecoration(
+        labelText: label,
+        isDense: true,
+        border: const OutlineInputBorder(),
+      ),
+      textAlign: TextAlign.center,
     );
   }
 
-  void _handleUpdateProgresoLibro() {
-    final int cap =
-        int.tryParse(_capituloController.text) ?? _entrada.capituloActual ?? 0;
-    final int pag =
-        int.tryParse(_paginaController.text) ?? _entrada.paginaActual ?? 0;
-
-    if (cap == _entrada.capituloActual && pag == _entrada.paginaActual) {
-      FocusScope.of(context).unfocus();
-      return;
-    }
-
-    _handleUpdateProgreso(capitulo: cap, pagina: pag, esGuardadoManual: true);
+  Widget _buildActionButtons(
+      BuildContext context, AppLocalizations l10n, bool isEditable) {
+    return Container(
+      color:
+          Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(77),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          _buildStatusMenu(context, l10n, isEditable),
+        ],
+      ),
+    );
   }
 
-  Widget _buildEstadoDropdown(
-      BuildContext context, bool isEditable, AppLocalizations l10n) {
-    return DropdownButton<EstadoPersonal>(
-      value: EstadoPersonal.fromString(_entrada.estadoPersonal),
-      icon: Icon(Icons.arrow_drop_down,
-          color: Theme.of(context).colorScheme.primary),
-      underline: const SizedBox(),
-      style: Theme.of(context).textTheme.titleMedium,
-      dropdownColor: Theme.of(context).colorScheme.surface,
-      onChanged: isEditable
-          ? (EstadoPersonal? newValue) {
-              if (newValue != null) {
-                _handleUpdateEstado(newValue.apiValue);
-              }
-            }
-          : null,
-      items: EstadoPersonal.values.map((EstadoPersonal estado) {
-        return DropdownMenuItem(
-          value: estado,
-          child: Text(estado.displayName(context),
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Colors.white)),
-        );
-      }).toList(),
+  Widget _buildStatusMenu(
+      BuildContext context, AppLocalizations l10n, bool isEditable) {
+    return PopupMenuButton<EstadoPersonal>(
+      enabled: isEditable,
+      onSelected: _handleUpdateEstado,
+      itemBuilder: (BuildContext context) {
+        return EstadoPersonal.values
+            .map((EstadoPersonal e) => PopupMenuItem<EstadoPersonal>(
+                  value: e,
+                  child: Text(e.displayName(context)),
+                ))
+            .toList();
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: <Widget>[
+            Text(
+              EstadoPersonal.fromString(_entrada.estadoPersonal)
+                  .displayName(context),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            Icon(Icons.arrow_drop_down,
+                color: Theme.of(context).colorScheme.primary),
+          ],
+        ),
+      ),
     );
   }
 }

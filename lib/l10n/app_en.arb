@@ -759,34 +759,18 @@
     },
     "reviewCardNoText": "This user did not write a review.",
     "@reviewCardNoText": {},
-    "elementNotFound": "Element not found.",
-    "@elementNotFound": {
-        "description": "Error message when an element is not found."
-    },
-    "elementReloadError": "Error reloading the updated element.",
-    "@elementReloadError": {
-        "description": "Error message when reloading an updated element fails."
-    },
-    "adminNotFound": "Admin not found",
-    "@adminNotFound": {
-        "description": "Error message when an admin user is not found"
-    },
-    "userNotFoundById": "User not found with id: {userId}",
-    "@userNotFoundById": {
-        "description": "Error message when a user is not found by id.",
-        "placeholders": {
-            "userId": {
-                "type": "String"
-            }
-        }
-    },
-    "userNotFoundByUsername": "User not found with username: {username}",
-    "@userNotFoundByUsername": {
-        "description": "Error message when a user is not found by username.",
-        "placeholders": {
-            "username": {
-                "type": "String"
-            }
-        }
-    }
+    "errorGoogleTokenInvalid": "Invalid Google Token.",
+    "@errorGoogleTokenInvalid": {},
+    "errorGoogleTokenError": "Error verifying Google Token.",
+    "@errorGoogleTokenError": {},
+    "errorRefreshTokenRequired": "Refresh token is required.",
+    "@errorRefreshTokenRequired": {},
+    "errorRefreshTokenNotFound": "Refresh token not found.",
+    "@errorRefreshTokenNotFound": {},
+    "errorRefreshTokenExpired": "Your session has expired. Please log in again.",
+    "@errorRefreshTokenExpired": {},
+    "errorProposalNotFound": "Proposal not found.",
+    "@errorProposalNotFound": {},
+    "errorNotInCatalog": "This item is not in your catalog.",
+    "@errorNotInCatalog": {}
 }

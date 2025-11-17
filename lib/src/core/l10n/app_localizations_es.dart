@@ -745,21 +745,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get reviewCardNoText => 'Este usuario no ha escrito un texto.';
 
   @override
-  String get elementNotFound => 'Elemento no encontrado.';
+  String get errorGoogleTokenInvalid => 'Token de Google inválido.';
 
   @override
-  String get elementReloadError => 'Error al recargar el elemento actualizado.';
+  String get errorGoogleTokenError => 'Error al verificar el token de Google.';
 
   @override
-  String get adminNotFound => 'Admin no encontrado';
+  String get errorRefreshTokenRequired => 'Se requiere un token de refresco.';
 
   @override
-  String userNotFoundById(String userId) {
-    return 'Usuario no encontrado con id: $userId';
-  }
+  String get errorRefreshTokenNotFound => 'Token de refresco no encontrado.';
 
   @override
-  String userNotFoundByUsername(String username) {
-    return 'Usuario no encontrado con username: $username';
-  }
+  String get errorRefreshTokenExpired =>
+      'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.';
+
+  @override
+  String get errorProposalNotFound => 'Propuesta no encontrada.';
+
+  @override
+  String get errorNotInCatalog => 'Este elemento no está en tu catálogo.';
 }

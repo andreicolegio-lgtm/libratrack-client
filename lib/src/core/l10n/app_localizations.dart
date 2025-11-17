@@ -1394,35 +1394,47 @@ abstract class AppLocalizations {
   /// **'Este usuario no ha escrito un texto.'**
   String get reviewCardNoText;
 
-  /// Mensaje de error cuando no se encuentra un elemento.
+  /// No description provided for @errorGoogleTokenInvalid.
   ///
   /// In es, this message translates to:
-  /// **'Elemento no encontrado.'**
-  String get elementNotFound;
+  /// **'Token de Google inválido.'**
+  String get errorGoogleTokenInvalid;
 
-  /// Mensaje de error cuando falla la recarga de un elemento actualizado.
+  /// No description provided for @errorGoogleTokenError.
   ///
   /// In es, this message translates to:
-  /// **'Error al recargar el elemento actualizado.'**
-  String get elementReloadError;
+  /// **'Error al verificar el token de Google.'**
+  String get errorGoogleTokenError;
 
-  /// Mensaje de error cuando no se encuentra un usuario administrador
+  /// No description provided for @errorRefreshTokenRequired.
   ///
   /// In es, this message translates to:
-  /// **'Admin no encontrado'**
-  String get adminNotFound;
+  /// **'Se requiere un token de refresco.'**
+  String get errorRefreshTokenRequired;
 
-  /// Mensaje de error cuando no se encuentra un usuario por id.
+  /// No description provided for @errorRefreshTokenNotFound.
   ///
   /// In es, this message translates to:
-  /// **'Usuario no encontrado con id: {userId}'**
-  String userNotFoundById(String userId);
+  /// **'Token de refresco no encontrado.'**
+  String get errorRefreshTokenNotFound;
 
-  /// Mensaje de error cuando no se encuentra un usuario por nombre de usuario.
+  /// No description provided for @errorRefreshTokenExpired.
   ///
   /// In es, this message translates to:
-  /// **'Usuario no encontrado con username: {username}'**
-  String userNotFoundByUsername(String username);
+  /// **'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.'**
+  String get errorRefreshTokenExpired;
+
+  /// No description provided for @errorProposalNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Propuesta no encontrada.'**
+  String get errorProposalNotFound;
+
+  /// No description provided for @errorNotInCatalog.
+  ///
+  /// In es, this message translates to:
+  /// **'Este elemento no está en tu catálogo.'**
+  String get errorNotInCatalog;
 }
 
 class _AppLocalizationsDelegate

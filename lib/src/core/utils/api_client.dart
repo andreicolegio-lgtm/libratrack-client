@@ -271,22 +271,17 @@ class ApiClient {
       return json.decode(utf8.decode(response.bodyBytes));
     }
 
-    String errorMessage;
+    String errorKey = 'INTERNAL_SERVER_ERROR';
     dynamic errorData;
     try {
       if (response.body.isNotEmpty) {
         errorData = json.decode(utf8.decode(response.bodyBytes));
         if (errorData is Map<String, dynamic>) {
-          errorMessage =
-              errorData['message']?.toString() ?? 'Error desconocido.';
-        } else {
-          errorMessage = errorData.toString();
+          errorKey = errorData['error']?.toString() ?? 'INTERNAL_SERVER_ERROR';
         }
-      } else {
-        errorMessage = 'Error ${response.statusCode}: Sin detalles.';
       }
     } catch (e) {
-      errorMessage = utf8.decode(response.bodyBytes);
+      // fallback to default error key
     }
 
     switch (response.statusCode) {
@@ -296,17 +291,17 @@ class ApiClient {
             errorData.containsKey('errors')) {
           errors = errorData['errors'] as Map<String, dynamic>?;
         }
-        throw BadRequestException(errorMessage, errors);
+        throw BadRequestException(errorKey, errors);
       case 401:
       case 403:
-        throw UnauthorizedException(errorMessage);
+        throw UnauthorizedException(errorKey);
       case 404:
-        throw NotFoundException(errorMessage);
+        throw NotFoundException(errorKey);
       case 409:
-        throw ConflictException(errorMessage);
+        throw ConflictException(errorKey);
       case 500:
       default:
-        throw ServerException(errorMessage);
+        throw ServerException(errorKey);
     }
   }
 }

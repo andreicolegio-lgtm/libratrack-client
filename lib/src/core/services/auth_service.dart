@@ -130,7 +130,6 @@ class AuthService with ChangeNotifier {
   Future<void> signInWithGoogle(BuildContext? context) async {
     try {
       final user = await _googleSignIn.authenticate();
-      // If GoogleSignIn.authenticate throws, cancellation is handled by the catch block below.
       debugPrint('✅ Google Sign-In exitoso: ${user.email}');
 
       final googleAuth = user.authentication;

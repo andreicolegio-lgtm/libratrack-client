@@ -728,4 +728,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reviewCardNoText => 'This user did not write a review.';
+
+  @override
+  String get elementNotFound => 'Element not found.';
+
+  @override
+  String get elementReloadError => 'Error reloading the updated element.';
+
+  @override
+  String get adminNotFound => 'Admin not found';
+
+  @override
+  String userNotFoundById(String userId) {
+    return 'User not found with id: $userId';
+  }
+
+  @override
+  String userNotFoundByUsername(String username) {
+    return 'User not found with username: $username';
+  }
 }

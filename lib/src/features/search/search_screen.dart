@@ -15,6 +15,7 @@ import '../../model/paginated_response.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/l10n/app_localizations.dart';
+import 'dart:async';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -42,6 +43,9 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _isLoadingMore = false;
   String? _loadingError;
 
+  bool _isDataLoaded = false;
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
@@ -50,9 +54,18 @@ class _SearchScreenState extends State<SearchScreen> {
     _generoService = context.read<GeneroService>();
     _authService = context.read<AuthService>();
 
-    _filtrosFuture = _loadInitialData();
-    _loadElementos(isFirstPage: true);
     _scrollController.addListener(_onScroll);
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isDataLoaded) {
+      _filtrosFuture = _loadInitialData();
+      _loadElementos(isFirstPage: true);
+      _isDataLoaded = true;
+    }
   }
 
   Future<void> _loadInitialData() async {
@@ -89,6 +102,7 @@ class _SearchScreenState extends State<SearchScreen> {
     _searchController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -186,6 +200,15 @@ class _SearchScreenState extends State<SearchScreen> {
       }
     });
     _reiniciarBusqueda();
+  }
+
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) {
+      _debounce!.cancel();
+    }
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      _reiniciarBusqueda();
+    });
   }
 
   @override

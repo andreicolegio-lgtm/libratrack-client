@@ -39,17 +39,26 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   final Map<int, Map<String, bool>> _pendingChanges =
       <int, Map<String, bool>>{};
 
+  bool _isDataLoaded = false;
+
   @override
   void initState() {
     super.initState();
 
     _adminService = context.read<AdminService>();
 
-    _loadUsers(isFirstPage: true);
-
     _scrollController.addListener(_onScroll);
 
     _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isDataLoaded) {
+      _loadUsers(isFirstPage: true);
+      _isDataLoaded = true;
+    }
   }
 
   @override

@@ -55,7 +55,7 @@ class SettingsScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
               onChanged: (String? newLanguageCode) {
                 Locale? newLocale;
-                if (newLanguageCode == null) {
+                if (newLanguageCode == null || newLanguageCode == 'system') {
                   newLocale = null;
                 } else if (newLanguageCode == 'en') {
                   newLocale = const Locale('en');
@@ -66,6 +66,7 @@ class SettingsScreen extends StatelessWidget {
               },
               items: <DropdownMenuItem<String>>[
                 DropdownMenuItem(
+                  value: 'system',
                   child: Text(l10n.settingsSystemDefault),
                 ),
                 DropdownMenuItem(

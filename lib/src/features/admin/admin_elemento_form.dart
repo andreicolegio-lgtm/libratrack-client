@@ -35,6 +35,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   late final ApiClient _apiClient;
   late final ElementoService _elementoService;
 
+  final ScrollController _scrollController = ScrollController();
+
   bool _isLoading = false;
   bool _isUploading = false;
 
@@ -59,6 +61,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
   XFile? _pickedImage;
   String? _uploadedImageUrl;
+
+  bool _isDataLoaded = false;
 
   @override
   void initState() {
@@ -85,16 +89,23 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       _selectedSecuelaIds.addAll(e.secuelas.map((ElementoRelacion s) => s.id));
     }
 
-    _elementosFuture = _elementoService.getSimpleElementoList();
-    _elementosFuture.then((List<ElementoRelacion> lista) {
-      if (mounted) {
-        setState(() {
-          _allElementos = lista;
-        });
-      }
-    });
-
     _tipoController.addListener(_actualizarCamposDinamicos);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isDataLoaded) {
+      _elementosFuture = _elementoService.getSimpleElementoList();
+      _elementosFuture.then((List<ElementoRelacion> lista) {
+        if (mounted) {
+          setState(() {
+            _allElementos = lista;
+          });
+        }
+      });
+      _isDataLoaded = true;
+    }
   }
 
   @override
@@ -108,6 +119,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     _totalUnidadesController.dispose();
     _totalCapitulosLibroController.dispose();
     _totalPaginasLibroController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -588,7 +600,9 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               ),
               child: Scrollbar(
                 thumbVisibility: true,
+                controller: _scrollController,
                 child: ListView(
+                  controller: _scrollController,
                   children: elementosDisponibles.map((ElementoRelacion el) {
                     final bool isSelected = _selectedSecuelaIds.contains(el.id);
                     return CheckboxListTile(

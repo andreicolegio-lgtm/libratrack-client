@@ -1393,6 +1393,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Este usuario no ha escrito un texto.'**
   String get reviewCardNoText;
+
+  /// Mensaje de error cuando no se encuentra un elemento.
+  ///
+  /// In es, this message translates to:
+  /// **'Elemento no encontrado.'**
+  String get elementNotFound;
+
+  /// Mensaje de error cuando falla la recarga de un elemento actualizado.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al recargar el elemento actualizado.'**
+  String get elementReloadError;
+
+  /// Mensaje de error cuando no se encuentra un usuario administrador
+  ///
+  /// In es, this message translates to:
+  /// **'Admin no encontrado'**
+  String get adminNotFound;
+
+  /// Mensaje de error cuando no se encuentra un usuario por id.
+  ///
+  /// In es, this message translates to:
+  /// **'Usuario no encontrado con id: {userId}'**
+  String userNotFoundById(String userId);
+
+  /// Mensaje de error cuando no se encuentra un usuario por nombre de usuario.
+  ///
+  /// In es, this message translates to:
+  /// **'Usuario no encontrado con username: {username}'**
+  String userNotFoundByUsername(String username);
 }
 
 class _AppLocalizationsDelegate

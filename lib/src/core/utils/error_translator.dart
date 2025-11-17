@@ -10,6 +10,14 @@ class ErrorTranslator {
     }
 
     switch (errorKey) {
+      case var k when k.startsWith('USER_NOT_FOUND_BY_ID:'):
+        final userId =
+            errorKey.split(':').length > 1 ? errorKey.split(':')[1] : '';
+        return loc.userNotFoundById(userId);
+      case var k when k.startsWith('USER_NOT_FOUND_BY_USERNAME:'):
+        final username =
+            errorKey.split(':').length > 1 ? errorKey.split(':')[1] : '';
+        return loc.userNotFoundByUsername(username);
       case 'E_INVALID_CREDENTIALS':
         return loc.errorInvalidCredentials;
       case 'E_ACCESS_DENIED':
@@ -51,6 +59,11 @@ class ErrorTranslator {
 
       case 'RESOURCE_NOT_FOUND':
       case 'ELEMENT_NOT_FOUND':
+        return loc.elementDetailNoElement;
+      case 'ELEMENT_RELOAD_ERROR':
+        return loc.elementReloadError;
+      case 'ADMIN_NOT_FOUND':
+        return loc.adminNotFound;
       case 'INVALID_USER_TOKEN':
       case 'INVALID_FILE_NAME':
       case 'FILE_SAVE_ERROR':

@@ -32,16 +32,27 @@ class _CatalogScreenState extends State<CatalogScreen>
     EstadoPersonal.abandonado
   ];
 
+  bool _isDataLoaded = false;
+
   @override
   void initState() {
     super.initState();
     _catalogService = context.read<CatalogService>();
     _authService = context.read<AuthService>();
-    _loadCatalog();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isDataLoaded) {
+      _loadCatalog();
+      _isDataLoaded = true;
+    }
   }
 
   Future<void> _loadCatalog() async {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
+
     try {
       await _catalogService.fetchCatalog();
 

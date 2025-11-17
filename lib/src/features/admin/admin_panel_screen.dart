@@ -74,6 +74,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   }
 
   Future<void> _loadUsers({bool isFirstPage = false}) async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (isFirstPage) {
       setState(() {
         _isLoadingFirstPage = true;
@@ -121,7 +122,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _loadingError = e.toString();
+          _loadingError = l10n.errorLoadingUsers(e.toString());
           _isLoadingFirstPage = false;
           _isLoadingMore = false;
         });
@@ -168,6 +169,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         changes['admin'] ?? currentUser.esAdministrador;
 
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     try {
       final int editingUserId = userId;
@@ -182,7 +184,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         return;
       }
       SnackBarHelper.showTopSnackBar(
-          msgContext, 'Roles de ${currentUser.username} actualizados.',
+          msgContext, l10n.snackbarAdminRolesUpdated(currentUser.username),
           isError: false);
 
       setState(() {
@@ -204,14 +206,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         return;
       }
       SnackBarHelper.showTopSnackBar(
-          msgContext, 'Error al actualizar roles: $e',
+          msgContext, l10n.errorUpdatingRoles(e.toString()),
           isError: true);
     } catch (e) {
       if (!mounted) {
         return;
       }
       SnackBarHelper.showTopSnackBar(
-          msgContext, 'Error inesperado: ${e.toString()}',
+          msgContext, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }
@@ -237,24 +239,24 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           preferredSize: const Size.fromHeight(112.0),
           child: Column(
             children: <Widget>[
-              _buildSearchField(context),
-              _buildFilterChips(context),
+              _buildSearchField(context, l10n),
+              _buildFilterChips(context, l10n),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
-        label: const Text('Crear Elemento'),
+        label: Text(l10n.adminPanelCreateElement),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         onPressed: _goToCrearElemento,
       ),
-      body: _buildBody(context),
+      body: _buildBody(context, l10n),
     );
   }
 
-  Widget _buildSearchField(BuildContext context) {
+  Widget _buildSearchField(BuildContext context, AppLocalizations l10n) {
     final Color iconColor =
         Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
 
@@ -264,7 +266,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         controller: _searchController,
         style: Theme.of(context).textTheme.titleMedium,
         decoration: InputDecoration(
-          hintText: 'Buscar por nombre o email...',
+          hintText: l10n.adminPanelSearchHint,
           hintStyle: Theme.of(context).textTheme.labelLarge,
           filled: true,
           fillColor: Theme.of(context).colorScheme.surface,
@@ -289,26 +291,26 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     );
   }
 
-  Widget _buildFilterChips(BuildContext context) {
+  Widget _buildFilterChips(BuildContext context, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           FilterChip(
-            label: const Text('Todos'),
+            label: Text(l10n.adminPanelFilterAll),
             selected: _roleFilter == null,
             onSelected: (bool val) => _onFilterChanged(null),
           ),
           const SizedBox(width: 8),
           FilterChip(
-            label: const Text('Moderadores'),
+            label: Text(l10n.adminPanelFilterMods),
             selected: _roleFilter == 'MODERADOR',
             onSelected: (bool val) => _onFilterChanged('MODERADOR'),
           ),
           const SizedBox(width: 8),
           FilterChip(
-            label: const Text('Admins'),
+            label: Text(l10n.adminPanelFilterAdmins),
             selected: _roleFilter == 'ADMIN',
             onSelected: (bool val) => _onFilterChanged('ADMIN'),
           ),
@@ -317,17 +319,17 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     );
   }
 
-  Widget _buildBody(BuildContext context) {
+  Widget _buildBody(BuildContext context, AppLocalizations l10n) {
     if (_isLoadingFirstPage) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_loadingError != null) {
       return Center(
-          child: Text('Error: $_loadingError',
-              style: const TextStyle(color: Colors.red)));
+          child:
+              Text(_loadingError!, style: const TextStyle(color: Colors.red)));
     }
     if (_usuarios.isEmpty) {
-      return const Center(child: Text('No se encontraron usuarios.'));
+      return Center(child: Text(l10n.adminPanelNoUsersFound));
     }
 
     return ListView.builder(
@@ -369,13 +371,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             children: <Widget>[
               const Divider(height: 1),
               SwitchListTile.adaptive(
-                title: const Text('Moderador'),
+                title: Text(l10n.adminPanelRoleMod),
                 value: isMod,
                 onChanged: (bool val) => _onRoleChanged(user.id, 'mod', val),
                 activeTrackColor: Theme.of(context).colorScheme.primary,
               ),
               SwitchListTile.adaptive(
-                title: const Text('Administrador'),
+                title: Text(l10n.adminPanelRoleAdmin),
                 value: isAdmin,
                 onChanged: (bool val) => _onRoleChanged(user.id, 'admin', val),
                 activeTrackColor: Colors.purple[700],
@@ -386,7 +388,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   child: Padding(
                     padding: const EdgeInsets.only(right: 16.0, bottom: 8.0),
                     child: TextButton(
-                      child: const Text('Guardar Cambios'),
+                      child: Text(l10n.adminPanelSaveButton),
                       onPressed: () => _handleUpdateRoles(user.id, user),
                     ),
                   ),

@@ -90,6 +90,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
 
   Future<void> _handlePickImage() async {
     final ImagePicker picker = ImagePicker();
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
@@ -103,7 +104,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         return;
       }
       SnackBarHelper.showTopSnackBar(
-          ScaffoldMessenger.of(context), 'Error al seleccionar imagen: $e',
+          ScaffoldMessenger.of(context), l10n.errorImagePick(e.toString()),
           isError: true);
     }
   }
@@ -117,7 +118,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
       _isUploading = true;
     });
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
-
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       final dynamic data = await _apiClient.upload('uploads', _pickedImage!);
       final String url = data['url'];
@@ -127,7 +128,8 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           _uploadedImageUrl = url;
           _isUploading = false;
         });
-        SnackBarHelper.showTopSnackBar(msgContext, '¡Imagen subida!',
+        SnackBarHelper.showTopSnackBar(
+            msgContext, l10n.snackbarImageUploadSuccess,
             isError: false);
       }
     } on ApiException catch (e) {
@@ -144,20 +146,23 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         setState(() {
           _isUploading = false;
         });
-        SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+        SnackBarHelper.showTopSnackBar(
+            msgContext, l10n.errorImageUpload(e.toString()),
             isError: true);
       }
     }
   }
 
   Future<void> _handleAprobar() async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     if (_uploadedImageUrl == null) {
-      SnackBarHelper.showTopSnackBar(ScaffoldMessenger.of(context),
-          'Por favor, sube una imagen de portada antes de aprobar.',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, l10n.snackbarImageUploadRequiredApproval,
           isError: true);
       return;
     }
@@ -165,7 +170,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     setState(() {
       _isLoading = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+
     final NavigatorState navContext = Navigator.of(context);
 
     try {
@@ -204,7 +209,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         });
         SnackBarHelper.showTopSnackBar(
           msgContext,
-          'Error al aprobar: $e',
+          l10n.errorApproving(e.toString()),
           isError: true,
         );
       }
@@ -215,7 +220,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         });
         SnackBarHelper.showTopSnackBar(
           msgContext,
-          'Error inesperado: $e',
+          l10n.errorUnexpected(e.toString()),
           isError: true,
         );
       }
@@ -227,7 +232,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Revisar Propuesta',
+        title: Text(l10n.modEditTitle,
             style: Theme.of(context).textTheme.titleLarge),
         backgroundColor: Theme.of(context).colorScheme.surface,
         centerTitle: true,
@@ -239,16 +244,18 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Text('Propuesto por: ${widget.propuesta.proponenteUsername}',
+              Text(
+                  l10n.modPanelProposalFrom(
+                      widget.propuesta.proponenteUsername),
                   style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 24),
-              _buildImageUploader(),
+              _buildImageUploader(l10n),
               const SizedBox(height: 24),
               _buildInputField(
                 context,
                 l10n: l10n,
                 controller: _tituloController,
-                labelText: 'Título',
+                labelText: l10n.proposalFormTitleLabel,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationTitleRequired
                     : null,
@@ -258,7 +265,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                 context,
                 l10n: l10n,
                 controller: _descripcionController,
-                labelText: 'Descripción',
+                labelText: l10n.proposalFormDescLabel,
                 maxLines: 4,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationDescRequired
@@ -269,7 +276,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                 context,
                 l10n: l10n,
                 controller: _tipoController,
-                labelText: 'Tipo (Ej. Serie, Libro)',
+                labelText: l10n.proposalFormTypeLabel,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationTypeRequired
                     : null,
@@ -279,7 +286,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                 context,
                 l10n: l10n,
                 controller: _generosController,
-                labelText: 'Géneros (separados por coma)',
+                labelText: l10n.proposalFormGenresLabel,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationGenresRequired
                     : null,
@@ -288,7 +295,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),
               ),
-              Text('Datos de Progreso (¡Obligatorio!)',
+              Text(l10n.modEditProgressTitle,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               if (_tipoSeleccionado == 'serie')
@@ -296,10 +303,10 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                   context,
                   l10n: l10n,
                   controller: _episodiosPorTemporadaController,
-                  labelText: 'Episodios por Temporada',
-                  hintText: 'Ej. 10,8,12 (para T1, T2, T3)',
+                  labelText: l10n.proposalFormSeriesEpisodesLabel,
+                  hintText: l10n.proposalFormSeriesEpisodesHint,
                   validator: (String? value) => (value == null || value.isEmpty)
-                      ? 'Este campo es obligatorio para Series'
+                      ? l10n.modEditSeriesEpisodesRequired
                       : null,
                 ),
               if (_tipoSeleccionado == 'libro') ...<Widget>[
@@ -307,13 +314,13 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                   context,
                   l10n: l10n,
                   controller: _totalCapitulosLibroController,
-                  labelText: 'Total Capítulos (Libro)',
+                  labelText: l10n.proposalFormBookChaptersLabel,
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
                   ],
                   validator: (String? value) => (value == null || value.isEmpty)
-                      ? 'Este campo es obligatorio para Libros'
+                      ? l10n.modEditBookChaptersRequired
                       : null,
                 ),
                 const SizedBox(height: 16),
@@ -321,13 +328,13 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                   context,
                   l10n: l10n,
                   controller: _totalPaginasLibroController,
-                  labelText: 'Total Páginas (Libro)',
+                  labelText: l10n.proposalFormBookPagesLabel,
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
                   ],
                   validator: (String? value) => (value == null || value.isEmpty)
-                      ? 'Este campo es obligatorio para Libros'
+                      ? l10n.modEditBookPagesRequired
                       : null,
                 ),
               ],
@@ -337,20 +344,20 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                   l10n: l10n,
                   controller: _totalUnidadesController,
                   labelText: _tipoSeleccionado == 'anime'
-                      ? 'Total Episodios (Anime)'
-                      : 'Total Capítulos (Manga)',
+                      ? l10n.proposalFormAnimeEpisodesLabel
+                      : l10n.proposalFormMangaChaptersLabel,
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
                   ],
                   validator: (String? value) => (value == null || value.isEmpty)
-                      ? 'Este campo es obligatorio'
+                      ? l10n.modEditUnitRequired
                       : null,
                 ),
               if (_tipoSeleccionado == 'película' ||
                   _tipoSeleccionado == 'videojuego')
                 Text(
-                  'El tipo "${_tipoController.text}" no requiere datos de progreso.',
+                  l10n.proposalFormNoProgress(_tipoController.text),
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               const SizedBox(height: 32.0),
@@ -365,9 +372,10 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                 onPressed: _isLoading ? null : _handleAprobar,
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Guardar y Aprobar',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                    : Text(
+                        l10n.modEditSubmitButton,
+                        style:
+                            const TextStyle(fontSize: 18, color: Colors.white),
                       ),
               ),
             ],
@@ -377,7 +385,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     );
   }
 
-  Widget _buildImageUploader() {
+  Widget _buildImageUploader(AppLocalizations l10n) {
     Widget content;
     if (_pickedImage != null) {
       content = Image.file(File(_pickedImage!.path), fit: BoxFit.cover);
@@ -389,7 +397,8 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         children: <Widget>[
           Icon(Icons.image_search, size: 48, color: Colors.grey[600]),
           const SizedBox(height: 8),
-          Text('Sin portada', style: Theme.of(context).textTheme.bodyMedium),
+          Text(l10n.modEditImageTitle,
+              style: Theme.of(context).textTheme.bodyMedium),
         ],
       );
     }
@@ -415,7 +424,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           children: <Widget>[
             TextButton.icon(
               icon: const Icon(Icons.photo_library),
-              label: const Text('Galería'),
+              label: Text(l10n.adminFormImageGallery),
               onPressed: _isLoading || _isUploading ? null : _handlePickImage,
             ),
             ElevatedButton.icon(
@@ -425,7 +434,9 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.cloud_upload),
-              label: Text(_isUploading ? 'Subiendo...' : 'Subir'),
+              label: Text(_isUploading
+                  ? l10n.adminFormImageUploading
+                  : l10n.adminFormImageUpload),
               onPressed: _pickedImage == null || _isUploading || _isLoading
                   ? null
                   : _handleUploadImage,

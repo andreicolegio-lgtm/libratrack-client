@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../core/widgets/maybe_marquee.dart';
 import '../../../core/services/catalog_service.dart';
 import '../../../model/catalogo_entrada.dart';
@@ -10,6 +11,7 @@ import '../../../core/utils/snackbar_helper.dart';
 import '../../elemento/elemento_detail_screen.dart';
 import 'dart:math';
 import '../../../core/utils/api_exceptions.dart';
+import '../../../core/utils/error_translator.dart';
 
 class CatalogEntryCard extends StatefulWidget {
   final CatalogoEntrada entrada;
@@ -77,6 +79,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       _isLoading = true;
     });
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     try {
       await _catalogService.updateEstado(
@@ -86,7 +89,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
 
       if (mounted) {
         widget.onUpdate();
-        SnackBarHelper.showTopSnackBar(msgContext, 'Estado actualizado.',
+        SnackBarHelper.showTopSnackBar(
+            msgContext, l10n.snackbarCatalogStatusUpdated,
             isError: false);
       }
     } on ApiException catch (e) {
@@ -94,7 +98,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
         setState(() {
           _isLoading = false;
         });
-        SnackBarHelper.showTopSnackBar(msgContext, 'Error al actualizar: $e',
+        SnackBarHelper.showTopSnackBar(
+            msgContext, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
@@ -103,7 +108,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-            msgContext, 'Error inesperado: ${e.toString()}',
+            msgContext, l10n.errorUpdating(e.toString()),
             isError: true);
       }
     }
@@ -132,6 +137,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       _isLoading = true;
     });
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     String? estadoFinal;
     bool autoTerminado = false;
@@ -188,7 +194,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
           widget.onUpdate();
         }
         if (esGuardadoManual) {
-          SnackBarHelper.showTopSnackBar(msgContext, 'Progreso guardado.',
+          SnackBarHelper.showTopSnackBar(
+              msgContext, l10n.snackbarCatalogProgressSaved,
               isError: false);
         }
       }
@@ -197,7 +204,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
         setState(() {
           _isLoading = false;
         });
-        SnackBarHelper.showTopSnackBar(msgContext, 'Error al actualizar: $e',
+        SnackBarHelper.showTopSnackBar(
+            msgContext, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
@@ -206,7 +214,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-            msgContext, 'Error inesperado: ${e.toString()}',
+            msgContext, l10n.errorUpdating(e.toString()),
             isError: true);
       }
     }
@@ -277,6 +285,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     final bool isEditable = !_isLoading;
     final Color onSurfaceColor = Theme.of(context).colorScheme.onSurface;
     final Color fadedIconColor = onSurfaceColor.withAlpha(0x80);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     final String tipo = _entrada.elementoTipoNombre.toLowerCase();
     final bool mostrarProgresoUI = tipo == 'serie' ||
@@ -323,13 +332,13 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(height: 4),
-                      _buildProgresoUI(context, isEditable),
+                      _buildProgresoUI(context, isEditable, l10n),
                     ] else ...<Widget>[
                       const SizedBox(height: 16),
                     ],
                     Padding(
                       padding: const EdgeInsets.only(top: 4.0),
-                      child: _buildEstadoDropdown(context, isEditable),
+                      child: _buildEstadoDropdown(context, isEditable, l10n),
                     ),
                   ],
                 ),
@@ -367,23 +376,25 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     );
   }
 
-  Widget _buildProgresoUI(BuildContext context, bool isEditable) {
+  Widget _buildProgresoUI(
+      BuildContext context, bool isEditable, AppLocalizations l10n) {
     final String tipo = _entrada.elementoTipoNombre.toLowerCase();
 
     if (tipo == 'serie') {
-      return _buildProgresoSerie(context, isEditable);
+      return _buildProgresoSerie(context, isEditable, l10n);
     }
     if (tipo == 'libro') {
-      return _buildProgresoLibro(context, isEditable);
+      return _buildProgresoLibro(context, isEditable, l10n);
     }
     if (tipo == 'anime' || tipo == 'manga') {
-      return _buildProgresoUnidad(context, isEditable, tipo);
+      return _buildProgresoUnidad(context, isEditable, l10n, tipo);
     }
 
     return const SizedBox(height: 36);
   }
 
-  Widget _buildProgresoSerie(BuildContext context, bool isEditable) {
+  Widget _buildProgresoSerie(
+      BuildContext context, bool isEditable, AppLocalizations l10n) {
     final int tempActual = (_entrada.temporadaActual ?? 1)
         .clamp(1, max(1, _episodiosPorTemporada.length));
     final int epTotalTempActual =
@@ -405,7 +416,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
           child: DropdownButtonFormField<int>(
             initialValue: tempActual,
             items: temporadas
-                .map((int t) => DropdownMenuItem(value: t, child: Text('T$t')))
+                .map((int t) => DropdownMenuItem(
+                    value: t, child: Text(l10n.catalogCardSeriesSeason(t))))
                 .toList(),
             onChanged: isEditable
                 ? (int? val) {
@@ -425,8 +437,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
           child: DropdownButtonFormField<int>(
             initialValue: epActual,
             items: episodios
-                .map(
-                    (int e) => DropdownMenuItem(value: e, child: Text('Ep $e')))
+                .map((int e) => DropdownMenuItem(
+                    value: e, child: Text(l10n.catalogCardSeriesEpisode(e))))
                 .toList(),
             onChanged: isEditable
                 ? (int? val) {
@@ -445,7 +457,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     );
   }
 
-  Widget _buildProgresoLibro(BuildContext context, bool isEditable) {
+  Widget _buildProgresoLibro(
+      BuildContext context, bool isEditable, AppLocalizations l10n) {
     return Row(
       children: <Widget>[
         Expanded(
@@ -458,8 +471,9 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
             ],
             style: Theme.of(context).textTheme.bodyMedium,
             decoration: InputDecoration(
-              labelText: 'Capítulo',
-              hintText: 'Total: ${_entrada.elementoTotalCapitulosLibro ?? 0}',
+              labelText: l10n.catalogCardBookChapter,
+              hintText: l10n.catalogCardBookChapterTotal(
+                  _entrada.elementoTotalCapitulosLibro ?? 0),
               isDense: true,
             ),
             onSubmitted: (_) => _handleUpdateProgresoLibro(),
@@ -476,8 +490,9 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
             ],
             style: Theme.of(context).textTheme.bodyMedium,
             decoration: InputDecoration(
-              labelText: 'Página',
-              hintText: 'Total: ${_entrada.elementoTotalPaginasLibro ?? 0}',
+              labelText: l10n.catalogCardBookPage,
+              hintText: l10n.catalogCardBookPageTotal(
+                  _entrada.elementoTotalPaginasLibro ?? 0),
               isDense: true,
             ),
             onSubmitted: (_) => _handleUpdateProgresoLibro(),
@@ -488,21 +503,24 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
             icon:
                 Icon(Icons.save, color: Theme.of(context).colorScheme.primary),
             onPressed: _handleUpdateProgresoLibro,
-            tooltip: 'Guardar Progreso',
+            tooltip: l10n.catalogCardSaveChanges,
           )
       ],
     );
   }
 
-  Widget _buildProgresoUnidad(
-      BuildContext context, bool isEditable, String tipo) {
+  Widget _buildProgresoUnidad(BuildContext context, bool isEditable,
+      AppLocalizations l10n, String tipo) {
     final int uniActual = _entrada.unidadActual ?? 0;
     final int uniTotal = _entrada.elementoTotalUnidades ?? 0;
-    final String label = (tipo == 'anime') ? 'Episodio' : 'Capítulo';
+    final String label = (tipo == 'anime')
+        ? l10n.elementDetailAnimeEpisodes
+        : l10n.elementDetailMangaChapters;
 
     return Row(
       children: <Widget>[
-        Text('$label:', style: Theme.of(context).textTheme.bodyMedium),
+        Text(l10n.catalogCardUnitLabel(label),
+            style: Theme.of(context).textTheme.bodyMedium),
         IconButton(
           icon: const Icon(Icons.remove_circle_outline),
           iconSize: 20,
@@ -511,7 +529,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
               ? () => _handleUpdateProgreso(unidad: uniActual - 1)
               : null,
         ),
-        Text('$uniActual / $uniTotal',
+        Text(l10n.catalogCardUnitProgress(uniActual, uniTotal),
             style: Theme.of(context).textTheme.bodyLarge),
         IconButton(
           icon: const Icon(Icons.add_circle_outline),
@@ -547,7 +565,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     _handleUpdateProgreso(capitulo: cap, pagina: pag, esGuardadoManual: true);
   }
 
-  Widget _buildEstadoDropdown(BuildContext context, bool isEditable) {
+  Widget _buildEstadoDropdown(
+      BuildContext context, bool isEditable, AppLocalizations l10n) {
     return DropdownButton<EstadoPersonal>(
       value: EstadoPersonal.fromString(_entrada.estadoPersonal),
       icon: Icon(Icons.arrow_drop_down,
@@ -565,7 +584,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       items: EstadoPersonal.values.map((EstadoPersonal estado) {
         return DropdownMenuItem(
           value: estado,
-          child: Text(estado.displayName,
+          child: Text(estado.displayName(context),
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium

@@ -12,6 +12,7 @@ import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/services/elemento_service.dart';
 import '../../model/elemento_relacion.dart';
+import '../../core/utils/error_translator.dart';
 
 class AdminElementoFormScreen extends StatefulWidget {
   final Elemento? elemento;
@@ -118,6 +119,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
   Future<void> _handlePickImage() async {
     final ImagePicker picker = ImagePicker();
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
@@ -131,7 +133,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         return;
       }
       SnackBarHelper.showTopSnackBar(
-          ScaffoldMessenger.of(context), 'Error al seleccionar imagen: $e',
+          ScaffoldMessenger.of(context), l10n.errorImagePick(e.toString()),
           isError: true);
     }
   }
@@ -144,6 +146,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       _isUploading = true;
     });
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       final dynamic data = await _apiClient.upload('uploads', _pickedImage!);
       final String url = data['url'];
@@ -153,27 +156,41 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           _uploadedImageUrl = url;
           _isUploading = false;
         });
-        SnackBarHelper.showTopSnackBar(msgContext, '¡Imagen subida!',
+        SnackBarHelper.showTopSnackBar(
+            msgContext, l10n.snackbarImageUploadSuccess,
             isError: false);
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+        SnackBarHelper.showTopSnackBar(
+            msgContext, ErrorTranslator.translate(context, e.message),
+            isError: true);
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isUploading = false;
         });
-        SnackBarHelper.showTopSnackBar(msgContext, e.toString(), isError: true);
+        SnackBarHelper.showTopSnackBar(
+            msgContext, l10n.errorImageUpload(e.toString()),
+            isError: true);
       }
     }
   }
 
   Future<void> _handleGuardar() async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     if (_uploadedImageUrl == null) {
-      SnackBarHelper.showTopSnackBar(ScaffoldMessenger.of(context),
-          'Por favor, sube una imagen de portada.',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, l10n.snackbarImageUploadRequired,
           isError: true);
       return;
     }
@@ -181,7 +198,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     setState(() {
       _isLoading = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+
     final NavigatorState navContext = Navigator.of(context);
 
     try {
@@ -218,8 +235,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       }
 
       final String successMessage = widget.isEditMode
-          ? '¡Elemento actualizado!'
-          : '¡Elemento OFICIAL creado!';
+          ? l10n.snackbarAdminElementUpdated
+          : l10n.snackbarAdminElementCreated;
 
       SnackBarHelper.showTopSnackBar(msgContext, successMessage,
           isError: false);
@@ -231,7 +248,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         });
         SnackBarHelper.showTopSnackBar(
           msgContext,
-          'Error al guardar: $e',
+          l10n.errorSaving(e.toString()),
           isError: true,
         );
       }
@@ -242,7 +259,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         });
         SnackBarHelper.showTopSnackBar(
           msgContext,
-          'Error inesperado: ${e.toString()}',
+          l10n.errorUnexpected(e.toString()),
           isError: true,
         );
       }
@@ -251,11 +268,12 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String tituloPantalla =
-        widget.isEditMode ? 'Editar Elemento' : 'Crear Elemento Oficial';
-    final String botonGuardar =
-        widget.isEditMode ? 'Guardar Cambios' : 'Crear Elemento';
     final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final String tituloPantalla =
+        widget.isEditMode ? l10n.adminFormEditTitle : l10n.adminFormCreateTitle;
+    final String botonGuardar = widget.isEditMode
+        ? l10n.adminFormEditButton
+        : l10n.adminFormCreateButton;
 
     return Scaffold(
       appBar: AppBar(
@@ -271,13 +289,13 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _buildImageUploader(),
+              _buildImageUploader(l10n),
               const SizedBox(height: 24),
               _buildInputField(
                 context,
                 l10n: l10n,
                 controller: _tituloController,
-                labelText: 'Título',
+                labelText: l10n.adminFormTitleLabel,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationTitleRequired
                     : null,
@@ -287,7 +305,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                 context,
                 l10n: l10n,
                 controller: _descripcionController,
-                labelText: 'Descripción',
+                labelText: l10n.adminFormDescLabel,
                 maxLines: 4,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationDescRequired
@@ -298,7 +316,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                 context,
                 l10n: l10n,
                 controller: _tipoController,
-                labelText: 'Tipo (Ej. Serie, Libro)',
+                labelText: l10n.adminFormTypeLabel,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationTypeRequired
                     : null,
@@ -308,7 +326,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                 context,
                 l10n: l10n,
                 controller: _generosController,
-                labelText: 'Géneros (separados por coma)',
+                labelText: l10n.adminFormGenresLabel,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationGenresRequired
                     : null,
@@ -317,7 +335,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),
               ),
-              Text('Datos de Progreso (Opcional)',
+              Text(l10n.adminFormProgressTitle,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               if (_tipoSeleccionado == 'serie')
@@ -325,15 +343,15 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                   context,
                   l10n: l10n,
                   controller: _episodiosPorTemporadaController,
-                  labelText: 'Episodios por Temporada',
-                  hintText: 'Ej. 10,8,12 (para T1, T2, T3)',
+                  labelText: l10n.proposalFormSeriesEpisodesLabel,
+                  hintText: l10n.proposalFormSeriesEpisodesHint,
                 ),
               if (_tipoSeleccionado == 'libro') ...<Widget>[
                 _buildInputField(
                   context,
                   l10n: l10n,
                   controller: _totalCapitulosLibroController,
-                  labelText: 'Total Capítulos (Libro)',
+                  labelText: l10n.proposalFormBookChaptersLabel,
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
@@ -344,7 +362,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                   context,
                   l10n: l10n,
                   controller: _totalPaginasLibroController,
-                  labelText: 'Total Páginas (Libro)',
+                  labelText: l10n.proposalFormBookPagesLabel,
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
@@ -357,8 +375,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                   l10n: l10n,
                   controller: _totalUnidadesController,
                   labelText: _tipoSeleccionado == 'anime'
-                      ? 'Total Episodios (Anime)'
-                      : 'Total Capítulos (Manga)',
+                      ? l10n.proposalFormAnimeEpisodesLabel
+                      : l10n.proposalFormMangaChaptersLabel,
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
@@ -367,14 +385,14 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               if (_tipoSeleccionado == 'película' ||
                   _tipoSeleccionado == 'videojuego')
                 Text(
-                  'El tipo "${_tipoController.text}" no requiere datos de progreso.',
+                  l10n.proposalFormNoProgress(_tipoController.text),
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),
               ),
-              _buildSecuelasSelector(),
+              _buildSecuelasSelector(l10n),
               const SizedBox(height: 32.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -400,7 +418,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     );
   }
 
-  Widget _buildImageUploader() {
+  Widget _buildImageUploader(AppLocalizations l10n) {
     Widget content;
     if (_pickedImage != null) {
       content = Image.file(File(_pickedImage!.path), fit: BoxFit.cover);
@@ -419,7 +437,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         children: <Widget>[
           Icon(Icons.image_search, size: 48, color: Colors.grey[600]),
           const SizedBox(height: 8),
-          Text('Añadir portada', style: Theme.of(context).textTheme.bodyMedium),
+          Text(l10n.adminFormImageTitle,
+              style: Theme.of(context).textTheme.bodyMedium),
         ],
       );
     }
@@ -445,7 +464,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           children: <Widget>[
             TextButton.icon(
               icon: const Icon(Icons.photo_library),
-              label: const Text('Galería'),
+              label: Text(l10n.adminFormImageGallery),
               onPressed: _isLoading || _isUploading ? null : _handlePickImage,
             ),
             ElevatedButton.icon(
@@ -455,7 +474,9 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.cloud_upload),
-              label: Text(_isUploading ? 'Subiendo...' : 'Subir'),
+              label: Text(_isUploading
+                  ? l10n.adminFormImageUploading
+                  : l10n.adminFormImageUpload),
               onPressed: _pickedImage == null || _isUploading || _isLoading
                   ? null
                   : _handleUploadImage,
@@ -519,7 +540,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     );
   }
 
-  Widget _buildSecuelasSelector() {
+  Widget _buildSecuelasSelector(AppLocalizations l10n) {
     return FutureBuilder<List<ElementoRelacion>>(
       future: _elementosFuture,
       builder: (BuildContext context,
@@ -529,7 +550,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Secuelas (Opcional)',
+              Text(l10n.adminFormSequelsTitle,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               const Center(child: CircularProgressIndicator()),
@@ -537,7 +558,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           );
         }
         if (snapshot.hasError) {
-          return Text('Error al cargar elementos: ${snapshot.error}');
+          return Text(l10n.errorLoadingElements(snapshot.error.toString()));
         }
 
         final List<ElementoRelacion> elementosDisponibles =
@@ -551,9 +572,9 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text('Secuelas (Opcional)',
+            Text(l10n.adminFormSequelsTitle,
                 style: Theme.of(context).textTheme.titleLarge),
-            Text('Elementos que van DESPUÉS de este.',
+            Text(l10n.adminFormSequelsSubtitle,
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall

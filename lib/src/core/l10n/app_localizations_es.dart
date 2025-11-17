@@ -12,6 +12,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'LibraTrack';
 
   @override
+  String get loginTitle => 'Bienvenido a LibraTrack';
+
+  @override
+  String get loginSubtitle => 'Inicia sesión para continuar';
+
+  @override
   String get loginButton => 'Iniciar Sesión';
 
   @override
@@ -19,6 +25,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get loginPasswordLabel => 'Contraseña';
+
+  @override
+  String get loginOr => 'O';
+
+  @override
+  String get loginGoogle => 'Continuar con Google';
 
   @override
   String get loginRegisterPrompt => '¿No tienes cuenta? Regístrate';
@@ -121,6 +133,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsLanguageEnglish => 'Inglés';
+
+  @override
+  String get settingsSystemDefault => 'Sistema (Por defecto)';
 
   @override
   String get validationUsernameRequired =>
@@ -252,4 +267,480 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorInvalidCredentials => 'Email o contraseña incorrectos.';
+
+  @override
+  String errorUnexpected(String error) {
+    return 'Error inesperado: $error';
+  }
+
+  @override
+  String errorLoadingFilters(String error) {
+    return 'Error al cargar filtros: $error';
+  }
+
+  @override
+  String errorLoadingElement(String error) {
+    return 'Error al cargar el elemento:\n$error';
+  }
+
+  @override
+  String errorLoadingElements(String error) {
+    return 'Error al cargar elementos: $error';
+  }
+
+  @override
+  String errorLoadingReviews(String error) {
+    return 'Error al cargar las reseñas: $error';
+  }
+
+  @override
+  String errorLoadingProposals(String error) {
+    return 'Error al cargar:\n$error';
+  }
+
+  @override
+  String errorLoadingUsers(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String errorLoadingCatalog(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String errorImagePick(String error) {
+    return 'Error al seleccionar imagen: $error';
+  }
+
+  @override
+  String errorImageUpload(String error) {
+    return 'Error al subir imagen: $error';
+  }
+
+  @override
+  String errorSaving(String error) {
+    return 'Error al guardar: $error';
+  }
+
+  @override
+  String errorUpdating(String error) {
+    return 'Error al actualizar: $error';
+  }
+
+  @override
+  String errorApproving(String error) {
+    return 'Error al aprobar: $error';
+  }
+
+  @override
+  String errorUpdatingRoles(String error) {
+    return 'Error al actualizar roles: $error';
+  }
+
+  @override
+  String get snackbarCloseButton => 'CERRAR';
+
+  @override
+  String get snackbarLoginGoogleCancel => 'Inicio de sesión cancelado.';
+
+  @override
+  String get snackbarRegisterSuccess =>
+      '¡Registro exitoso! Por favor, inicia sesión.';
+
+  @override
+  String get snackbarReviewPublished => '¡Reseña publicada!';
+
+  @override
+  String get snackbarReviewRatingRequired =>
+      'Por favor, selecciona una valoración (1-5 estrellas).';
+
+  @override
+  String get snackbarProposalSent =>
+      '¡Propuesta enviada con éxito! Gracias por tu contribución.';
+
+  @override
+  String get snackbarProfilePhotoUpdated => '¡Foto de perfil actualizada!';
+
+  @override
+  String get snackbarProfileNoChanges => 'No has realizado ningún cambio.';
+
+  @override
+  String get snackbarProfileUsernameUpdated =>
+      '¡Nombre de usuario actualizado!';
+
+  @override
+  String get snackbarProfilePasswordUpdated =>
+      '¡Contraseña actualizada con éxito!';
+
+  @override
+  String get snackbarCatalogAdded => '¡Añadido al catálogo!';
+
+  @override
+  String get snackbarCatalogRemoved => 'Elemento quitado del catálogo';
+
+  @override
+  String get snackbarCatalogStatusUpdated => 'Estado actualizado.';
+
+  @override
+  String get snackbarCatalogProgressSaved => 'Progreso guardado.';
+
+  @override
+  String get snackbarImageUploadSuccess => '¡Imagen subida!';
+
+  @override
+  String get snackbarImageUploadRequired =>
+      'Por favor, sube una imagen de portada.';
+
+  @override
+  String get snackbarImageUploadRequiredApproval =>
+      'Por favor, sube una imagen de portada antes de aprobar.';
+
+  @override
+  String get snackbarModProposalApproved => '¡Propuesta aprobada!';
+
+  @override
+  String get snackbarModProposalRejected => 'Propuesta rechazada (simulado).';
+
+  @override
+  String snackbarAdminRolesUpdated(String username) {
+    return 'Roles de $username actualizados.';
+  }
+
+  @override
+  String get snackbarAdminElementUpdated => '¡Elemento actualizado!';
+
+  @override
+  String get snackbarAdminElementCreated => '¡Elemento OFICIAL creado!';
+
+  @override
+  String get snackbarAdminStatusCommunity =>
+      'Elemento marcado como COMUNITARIO.';
+
+  @override
+  String get snackbarAdminStatusOfficial => '¡Elemento marcado como OFICIAL!';
+
+  @override
+  String get reviewModalTitle => 'Escribir Reseña';
+
+  @override
+  String get reviewModalReviewLabel => 'Reseña (opcional)';
+
+  @override
+  String get reviewModalReviewHint => 'Escribe tu opinión...';
+
+  @override
+  String get reviewModalSubmitButton => 'Publicar Reseña';
+
+  @override
+  String get proposalFormTitle => 'Proponer Elemento';
+
+  @override
+  String get proposalFormTitleLabel => 'Título Sugerido';
+
+  @override
+  String get proposalFormDescLabel => 'Descripción Breve';
+
+  @override
+  String get proposalFormTypeLabel => 'Tipo (Ej. Serie, Libro, Anime)';
+
+  @override
+  String get proposalFormGenresLabel => 'Géneros (separados por coma)';
+
+  @override
+  String get proposalFormProgressTitle => 'Datos de Progreso (Opcional)';
+
+  @override
+  String get proposalFormSeriesEpisodesLabel => 'Episodios por Temporada';
+
+  @override
+  String get proposalFormSeriesEpisodesHint => 'Ej. 10,8,12 (para T1, T2, T3)';
+
+  @override
+  String get proposalFormBookChaptersLabel => 'Total Capítulos (Libro)';
+
+  @override
+  String get proposalFormBookPagesLabel => 'Total Páginas (Libro)';
+
+  @override
+  String get proposalFormAnimeEpisodesLabel => 'Total Episodios (Anime)';
+
+  @override
+  String get proposalFormMangaChaptersLabel => 'Total Capítulos (Manga)';
+
+  @override
+  String proposalFormNoProgress(String tipo) {
+    return 'El tipo \"$tipo\" no requiere datos de progreso.';
+  }
+
+  @override
+  String get proposalFormSubmitButton => 'Enviar Propuesta';
+
+  @override
+  String get elementDetailSynopsis => 'Sinopsis';
+
+  @override
+  String get elementDetailProgressDetails => 'Detalles del Progreso';
+
+  @override
+  String get elementDetailSeriesSeasons => 'Total Temporadas';
+
+  @override
+  String get elementDetailSeriesEpisodes => 'Episodios';
+
+  @override
+  String get elementDetailBookChapters => 'Total Capítulos';
+
+  @override
+  String get elementDetailBookPages => 'Total Páginas';
+
+  @override
+  String get elementDetailAnimeEpisodes => 'Total Episodios';
+
+  @override
+  String get elementDetailMangaChapters => 'Total Capítulos';
+
+  @override
+  String get elementDetailPrequels => 'Precuelas';
+
+  @override
+  String get elementDetailSequels => 'Secuelas';
+
+  @override
+  String elementDetailReviews(int count) {
+    return 'Reseñas ($count)';
+  }
+
+  @override
+  String get elementDetailAlreadyReviewed => 'Ya has reseñado';
+
+  @override
+  String get elementDetailWriteReview => 'Escribir Reseña';
+
+  @override
+  String get elementDetailNoReviews => 'Aún no hay reseñas para este elemento.';
+
+  @override
+  String get elementDetailAddButton => 'Añadir a Mi Catálogo';
+
+  @override
+  String get elementDetailAddingButton => 'Añadiendo...';
+
+  @override
+  String get elementDetailRemoveButton => 'Quitar del catálogo';
+
+  @override
+  String get elementDetailRemovingButton => 'Eliminando...';
+
+  @override
+  String get elementDetailAdminEdit => 'Editar';
+
+  @override
+  String get elementDetailAdminMakeCommunity => 'Comunitarizar';
+
+  @override
+  String get elementDetailAdminMakeOfficial => 'Oficializar';
+
+  @override
+  String get elementDetailAdminLoading => '...';
+
+  @override
+  String get elementDetailNoElement => 'Elemento no encontrado.';
+
+  @override
+  String get adminFormEditTitle => 'Editar Elemento';
+
+  @override
+  String get adminFormCreateTitle => 'Crear Elemento Oficial';
+
+  @override
+  String get adminFormEditButton => 'Guardar Cambios';
+
+  @override
+  String get adminFormCreateButton => 'Crear Elemento';
+
+  @override
+  String get adminFormImageTitle => 'Añadir portada';
+
+  @override
+  String get adminFormImageGallery => 'Galería';
+
+  @override
+  String get adminFormImageUpload => 'Subir';
+
+  @override
+  String get adminFormImageUploading => 'Subiendo...';
+
+  @override
+  String get adminFormTitleLabel => 'Título';
+
+  @override
+  String get adminFormDescLabel => 'Descripción';
+
+  @override
+  String get adminFormTypeLabel => 'Tipo (Ej. Serie, Libro)';
+
+  @override
+  String get adminFormGenresLabel => 'Géneros (separados por coma)';
+
+  @override
+  String get adminFormProgressTitle => 'Datos de Progreso (Opcional)';
+
+  @override
+  String get adminFormSequelsTitle => 'Secuelas (Opcional)';
+
+  @override
+  String get adminFormSequelsSubtitle => 'Elementos que van DESPUÉS de este.';
+
+  @override
+  String get adminPanelSearchHint => 'Buscar por nombre o email...';
+
+  @override
+  String get adminPanelFilterAll => 'Todos';
+
+  @override
+  String get adminPanelFilterMods => 'Moderadores';
+
+  @override
+  String get adminPanelFilterAdmins => 'Admins';
+
+  @override
+  String get adminPanelRoleMod => 'Moderador';
+
+  @override
+  String get adminPanelRoleAdmin => 'Administrador';
+
+  @override
+  String get adminPanelSaveButton => 'Guardar Cambios';
+
+  @override
+  String get adminPanelCreateElement => 'Crear Elemento';
+
+  @override
+  String get adminPanelNoUsersFound => 'No se encontraron usuarios.';
+
+  @override
+  String get modPanelTitle => 'Panel de Moderación';
+
+  @override
+  String modPanelProposalFrom(String username) {
+    return 'Propuesto por: $username';
+  }
+
+  @override
+  String modPanelProposalType(String type) {
+    return 'Tipo: $type';
+  }
+
+  @override
+  String modPanelProposalGenres(String genres) {
+    return 'Géneros: $genres';
+  }
+
+  @override
+  String get modPanelReject => 'Rechazar';
+
+  @override
+  String get modPanelReview => 'Revisar';
+
+  @override
+  String get modPanelNoPending =>
+      '¡Buen trabajo! No hay propuestas pendientes.';
+
+  @override
+  String modPanelNoOthers(String status) {
+    return 'No hay propuestas $status.';
+  }
+
+  @override
+  String get modPanelStatusPending => 'Pendientes';
+
+  @override
+  String get modPanelStatusApproved => 'Aprobadas';
+
+  @override
+  String get modPanelStatusRejected => 'Rechazadas';
+
+  @override
+  String get modEditTitle => 'Revisar Propuesta';
+
+  @override
+  String get modEditImageTitle => 'Sin portada';
+
+  @override
+  String get modEditProgressTitle => 'Datos de Progreso (¡Obligatorio!)';
+
+  @override
+  String get modEditSeriesEpisodesRequired =>
+      'Este campo es obligatorio para Series';
+
+  @override
+  String get modEditBookChaptersRequired =>
+      'Este campo es obligatorio para Libros';
+
+  @override
+  String get modEditBookPagesRequired =>
+      'Este campo es obligatorio para Libros';
+
+  @override
+  String get modEditUnitRequired => 'Este campo es obligatorio';
+
+  @override
+  String get modEditSubmitButton => 'Guardar y Aprobar';
+
+  @override
+  String get catalogCardState => 'Estado';
+
+  @override
+  String catalogCardSeriesSeason(int season) {
+    return 'T$season';
+  }
+
+  @override
+  String catalogCardSeriesEpisode(int episode) {
+    return 'Ep $episode';
+  }
+
+  @override
+  String get catalogCardBookChapter => 'Capítulo';
+
+  @override
+  String get catalogCardBookPage => 'Página';
+
+  @override
+  String catalogCardBookChapterTotal(int total) {
+    return 'Total: $total';
+  }
+
+  @override
+  String catalogCardBookPageTotal(int total) {
+    return 'Total: $total';
+  }
+
+  @override
+  String catalogCardUnitLabel(String label) {
+    return '$label:';
+  }
+
+  @override
+  String catalogCardUnitProgress(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String get catalogCardSaveChanges => 'Guardar Progreso';
+
+  @override
+  String get contentStatusOfficial => 'OFICIAL';
+
+  @override
+  String get contentStatusCommunity => 'COMUNITARIO';
+
+  @override
+  String reviewCardBy(String username) {
+    return 'Reseña de: $username';
+  }
+
+  @override
+  String get reviewCardNoText => 'Este usuario no ha escrito un texto.';
 }

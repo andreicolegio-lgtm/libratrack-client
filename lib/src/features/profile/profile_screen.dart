@@ -62,6 +62,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image == null) {
       return;
@@ -87,7 +89,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         _authService.updateLocalProfileData(perfilActualizado);
       });
-      SnackBarHelper.showTopSnackBar(msgContext, '¡Foto de perfil actualizada!',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, l10n.snackbarProfilePhotoUpdated,
           isError: false);
     } on ApiException catch (e) {
       if (!mounted) {
@@ -110,12 +113,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isUploadingFoto = false;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, l10n.errorImageUpload(e.toString()),
           isError: true);
     }
   }
 
   Future<void> _handleUpdateProfile() async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (!_profileFormKey.currentState!.validate()) {
       return;
     }
@@ -123,9 +128,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     if (nuevoUsername == _originalUsername) {
-      SnackBarHelper.showTopSnackBar(
-          msgContext, 'No has realizado ningún cambio.',
-          isError: false);
+      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarProfileNoChanges,
+          isError: false, isNeutral: true);
       return;
     }
     setState(() {
@@ -148,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _authService.updateLocalProfileData(perfilActualizado);
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, '¡Nombre de usuario actualizado!',
+          msgContext, l10n.snackbarProfileUsernameUpdated,
           isError: false);
     } on ApiException catch (e) {
       if (!mounted) {
@@ -171,12 +175,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isLoadingUpdate = false;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, l10n.errorUpdating(e.toString()),
           isError: true);
     }
   }
 
   Future<void> _handleChangePassword() async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (!_passwordFormKey.currentState!.validate()) {
       return;
     }
@@ -201,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
       focusScope.unfocus();
       SnackBarHelper.showTopSnackBar(
-          msgContext, '¡Contraseña actualizada con éxito!',
+          msgContext, l10n.snackbarProfilePasswordUpdated,
           isError: false);
     } on ApiException catch (e) {
       if (!mounted) {
@@ -224,7 +230,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isLoadingPasswordChange = false;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, l10n.errorUpdating(e.toString()),
           isError: true);
     }
   }
@@ -234,6 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _isLoadingLogout = true;
     });
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       await _authService.logout();
     } on ApiException catch (e) {
@@ -253,7 +261,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isLoadingLogout = false;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }

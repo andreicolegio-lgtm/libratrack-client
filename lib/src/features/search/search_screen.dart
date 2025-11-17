@@ -56,6 +56,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> _loadInitialData() async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       final List<List<Object>> results =
           await Future.wait(<Future<List<Object>>>[
@@ -69,17 +70,15 @@ class _SearchScreenState extends State<SearchScreen> {
         });
       }
     } on ApiException catch (e) {
-      debugPrint('Error al cargar datos de consulta: $e');
       if (mounted) {
         setState(() {
           _loadingError = ErrorTranslator.translate(context, e.message);
         });
       }
     } catch (e) {
-      debugPrint('Error al cargar datos de consulta: $e');
       if (mounted) {
         setState(() {
-          _loadingError = 'Error al cargar filtros: ${e.toString()}';
+          _loadingError = l10n.errorLoadingFilters(e.toString());
         });
       }
     }
@@ -105,6 +104,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> _loadElementos({bool isFirstPage = false}) async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (isFirstPage) {
       setState(() {
         _isLoadingFirstPage = true;
@@ -155,7 +155,7 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _loadingError = e.toString();
+          _loadingError = l10n.errorLoadingElements(e.toString());
           _isLoadingFirstPage = false;
           _isLoadingMore = false;
         });
@@ -234,7 +234,8 @@ class _SearchScreenState extends State<SearchScreen> {
               }
               if (snapshot.hasError && _tipos.isEmpty) {
                 return Center(
-                    child: Text('Error al cargar filtros: ${snapshot.error}',
+                    child: Text(
+                        l10n.errorLoadingFilters(snapshot.error.toString()),
                         style: Theme.of(context)
                             .textTheme
                             .bodyMedium
@@ -293,7 +294,7 @@ class _SearchScreenState extends State<SearchScreen> {
     }
     if (_loadingError != null) {
       return Center(
-          child: Text('Error en la búsqueda: $_loadingError',
+          child: Text(_loadingError!,
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
@@ -421,7 +422,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     maxLines: 1,
                   ),
                   const SizedBox(height: 8),
-                  _buildEstadoChip(context, elemento.estadoContenido),
+                  _buildEstadoChip(context, elemento),
                 ],
               ),
             ),
@@ -431,13 +432,13 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildEstadoChip(BuildContext context, String estado) {
-    final bool isOficial = estado == 'OFICIAL';
+  Widget _buildEstadoChip(BuildContext context, Elemento elemento) {
+    final bool isOficial = elemento.estadoContenido == 'OFICIAL';
     final Color chipColor =
         isOficial ? Theme.of(context).colorScheme.secondary : Colors.grey[700]!;
     return Chip(
       label: Text(
-        isOficial ? 'OFICIAL' : 'COMUNITARIO',
+        elemento.estadoContenidoDisplay(context),
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontSize: 10,
               color: Colors.white,

@@ -8,6 +8,7 @@ import '../../core/widgets/maybe_marquee.dart';
 import 'propuesta_edit_screen.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/utils/snackbar_helper.dart';
+import '../../core/utils/error_translator.dart';
 
 class ModeracionPanelScreen extends StatefulWidget {
   const ModeracionPanelScreen({super.key});
@@ -31,14 +32,15 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
       length: _estados.length,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.profileModPanelButton,
+          title: Text(l10n.modPanelTitle,
               style: Theme.of(context).textTheme.titleLarge),
           backgroundColor: Theme.of(context).colorScheme.surface,
           centerTitle: true,
           bottom: TabBar(
             tabAlignment: TabAlignment.center,
             tabs: _estados
-                .map((EstadoPropuesta estado) => Tab(text: estado.displayName))
+                .map((EstadoPropuesta estado) =>
+                    Tab(text: estado.displayName(context)))
                 .toList(),
             indicatorColor: Theme.of(context).colorScheme.primary,
             labelColor: Theme.of(context).colorScheme.primary,
@@ -99,6 +101,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
   }
 
   Future<void> _handleRevisar(Propuesta propuesta) async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     final bool? seHaAprobado = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -113,13 +116,14 @@ class _PropuestasTabState extends State<_PropuestasTab>
       });
       SnackBarHelper.showTopSnackBar(
         ScaffoldMessenger.of(context),
-        '¡Propuesta aprobada!',
+        l10n.snackbarModProposalApproved,
         isError: false,
       );
     }
   }
 
   Future<void> _handleRechazar(int propuestaId) async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     setState(() {
       _processingItems.add(propuestaId);
     });
@@ -131,7 +135,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
       });
       SnackBarHelper.showTopSnackBar(
         ScaffoldMessenger.of(context),
-        'Propuesta rechazada (simulado).',
+        l10n.snackbarModProposalRejected,
         isError: false,
         isNeutral: true,
       );
@@ -149,11 +153,19 @@ class _PropuestasTabState extends State<_PropuestasTab>
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
+          String errorMessage;
+          if (snapshot.error is ApiException) {
+            errorMessage = ErrorTranslator.translate(
+                context, (snapshot.error as ApiException).message);
+          } else {
+            errorMessage =
+                l10n.errorLoadingProposals(snapshot.error.toString());
+          }
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Error al cargar:\n${snapshot.error.toString()}',
+                errorMessage,
                 textAlign: TextAlign.center,
                 style: Theme.of(context)
                     .textTheme
@@ -166,8 +178,9 @@ class _PropuestasTabState extends State<_PropuestasTab>
         if (_propuestas.isEmpty) {
           return Center(
             child: Text(widget.estado == EstadoPropuesta.pendiente
-                ? '¡Buen trabajo! No hay propuestas pendientes.'
-                : 'No hay propuestas ${widget.estado.displayName.toLowerCase()}.'),
+                ? l10n.modPanelNoPending
+                : l10n.modPanelNoOthers(
+                    widget.estado.displayName(context).toLowerCase())),
           );
         }
         return ListView.builder(
@@ -201,17 +214,17 @@ class _PropuestasTabState extends State<_PropuestasTab>
             ),
             const SizedBox(height: 8),
             Text(
-              'Propuesto por: ${propuesta.proponenteUsername}',
+              l10n.modPanelProposalFrom(propuesta.proponenteUsername),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 4),
             Text(
-              'Tipo: ${propuesta.tipoSugerido}',
+              l10n.modPanelProposalType(propuesta.tipoSugerido),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 4),
             Text(
-              'Géneros: ${propuesta.generosSugeridos}',
+              l10n.modPanelProposalGenres(propuesta.generosSugeridos),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             if (widget.estado == EstadoPropuesta.pendiente) ...<Widget>[
@@ -228,7 +241,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
                     onPressed: isProcessing
                         ? null
                         : () => _handleRechazar(propuesta.id),
-                    child: const Text('Rechazar'),
+                    child: Text(l10n.modPanelReject),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
@@ -245,7 +258,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: Colors.white),
                           )
-                        : const Text('Revisar'),
+                        : Text(l10n.modPanelReview),
                   ),
                 ],
               ),

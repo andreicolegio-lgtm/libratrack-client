@@ -39,6 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final AuthService authService = context.read<AuthService>();
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     try {
       await authService.login(
@@ -60,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-            msgContext, 'Error inesperado: ${e.toString()}',
+            msgContext, l10n.errorUnexpected(e.toString()),
             isError: true);
       }
     }
@@ -73,13 +74,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final AuthService authService = context.read<AuthService>();
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     try {
       await authService.signInWithGoogle(context);
     } on GoogleSignInCanceledException {
       if (mounted) {
         SnackBarHelper.showTopSnackBar(
-            msgContext, 'Inicio de sesión cancelado.',
+            msgContext, l10n.snackbarLoginGoogleCancel,
             isError: false, isNeutral: true);
       }
     } on ApiException catch (e) {
@@ -91,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (mounted) {
         SnackBarHelper.showTopSnackBar(
-            msgContext, 'Error inesperado: ${e.toString()}',
+            msgContext, l10n.errorUnexpected(e.toString()),
             isError: true);
       }
     } finally {
@@ -129,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    l10n.appTitle,
+                    l10n.loginTitle,
                     style: textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -137,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Inicia sesión para continuar',
+                    l10n.loginSubtitle,
                     style: textTheme.titleMedium,
                     textAlign: TextAlign.center,
                   ),
@@ -204,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Expanded(child: Divider(color: Colors.grey[700])),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Text('O',
+                        child: Text(l10n.loginOr,
                             style: textTheme.bodyMedium
                                 ?.copyWith(color: Colors.grey[500])),
                       ),
@@ -214,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
                   OutlinedButton.icon(
                     icon: const Text('G'),
-                    label: const Text('Continuar con Google'),
+                    label: Text(l10n.loginGoogle),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       textStyle: const TextStyle(

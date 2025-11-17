@@ -48,6 +48,7 @@ class ErrorTranslator {
         return loc.errorInternalServerError;
       case 'FORBIDDEN':
         return loc.errorAccessDenied;
+
       case 'RESOURCE_NOT_FOUND':
       case 'ELEMENT_NOT_FOUND':
       case 'INVALID_USER_TOKEN':

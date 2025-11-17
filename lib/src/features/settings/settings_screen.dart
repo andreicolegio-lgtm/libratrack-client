@@ -65,8 +65,8 @@ class SettingsScreen extends StatelessWidget {
                 context.read<SettingsService>().updateLocale(newLocale);
               },
               items: <DropdownMenuItem<String>>[
-                const DropdownMenuItem(
-                  child: Text('Sistema (Por defecto)'),
+                DropdownMenuItem(
+                  child: Text(l10n.settingsSystemDefault),
                 ),
                 DropdownMenuItem(
                   value: 'es',

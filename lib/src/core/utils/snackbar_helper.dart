@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class SnackBarHelper {
   static void showTopSnackBar(
@@ -8,6 +9,9 @@ class SnackBarHelper {
     bool isNeutral = false,
   }) {
     msgContext.hideCurrentSnackBar();
+
+    final l10n = AppLocalizations.of(msgContext.context);
+    final String closeLabel = l10n?.snackbarCloseButton ?? 'CERRAR';
 
     final SnackBar snackBar = SnackBar(
       content: Text(
@@ -24,7 +28,7 @@ class SnackBarHelper {
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       duration: const Duration(seconds: 3),
       action: SnackBarAction(
-        label: 'CERRAR',
+        label: closeLabel,
         textColor: Colors.white,
         onPressed: () {
           msgContext.hideCurrentSnackBar();

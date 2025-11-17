@@ -46,7 +46,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
 
     if (_valoracion == 0) {
       SnackBarHelper.showTopSnackBar(
-          msgContext, 'Por favor, selecciona una valoración (1-5 estrellas).',
+          msgContext, l10n.snackbarReviewRatingRequired,
           isError: true);
       return;
     }
@@ -68,7 +68,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
         return;
       }
 
-      SnackBarHelper.showTopSnackBar(msgContext, '¡Reseña publicada!',
+      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarReviewPublished,
           isError: false);
       navContext.pop(nuevaResena);
     } on ApiException catch (e) {
@@ -91,7 +91,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
         _isLoading = false;
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, 'Error inesperado: ${e.toString()}',
+          msgContext, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }
@@ -115,7 +115,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Text(
-                'Escribir Reseña',
+                l10n.reviewModalTitle,
                 style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
@@ -147,8 +147,8 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
                 context,
                 l10n: l10n,
                 controller: _textoController,
-                labelText: 'Reseña (opcional)',
-                hintText: 'Escribe tu opinión...',
+                labelText: l10n.reviewModalReviewLabel,
+                hintText: l10n.reviewModalReviewHint,
                 maxLines: 5,
                 validator: (String? value) {
                   if (value != null && value.length > 2000) {
@@ -170,7 +170,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
                 child: _isLoading
                     ? _buildSmallSpinner()
                     : Text(
-                        'Publicar Reseña',
+                        l10n.reviewModalSubmitButton,
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium

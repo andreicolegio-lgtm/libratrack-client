@@ -5,6 +5,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/services/propuesta_service.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/api_exceptions.dart';
+import '../../core/utils/error_translator.dart';
 
 class PropuestaFormScreen extends StatefulWidget {
   const PropuestaFormScreen({super.key});
@@ -101,8 +102,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
         return;
       }
 
-      SnackBarHelper.showTopSnackBar(msgContext,
-          '¡Propuesta enviada con éxito! Gracias por tu contribución.',
+      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarProposalSent,
           isError: false);
 
       navContext.pop();
@@ -113,7 +113,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
         });
         SnackBarHelper.showTopSnackBar(
           msgContext,
-          'Error al enviar la propuesta: $e',
+          ErrorTranslator.translate(context, e.message),
           isError: true,
         );
       }
@@ -124,7 +124,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
         });
         SnackBarHelper.showTopSnackBar(
           msgContext,
-          'Error inesperado: ${e.toString()}',
+          l10n.errorUnexpected(e.toString()),
           isError: true,
         );
       }
@@ -136,7 +136,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.searchProposeButton,
+        title: Text(l10n.proposalFormTitle,
             style: Theme.of(context).textTheme.titleLarge),
         backgroundColor: Theme.of(context).colorScheme.surface,
         centerTitle: true,
@@ -152,7 +152,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 context,
                 l10n: l10n,
                 controller: _tituloController,
-                labelText: 'Título Sugerido',
+                labelText: l10n.proposalFormTitleLabel,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationTitleRequired
                     : null,
@@ -162,7 +162,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 context,
                 l10n: l10n,
                 controller: _descripcionController,
-                labelText: 'Descripción Breve',
+                labelText: l10n.proposalFormDescLabel,
                 maxLines: 4,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationDescRequired
@@ -173,7 +173,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 context,
                 l10n: l10n,
                 controller: _tipoController,
-                labelText: 'Tipo (Ej. Serie, Libro, Anime)',
+                labelText: l10n.proposalFormTypeLabel,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationTypeRequired
                     : null,
@@ -183,7 +183,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 context,
                 l10n: l10n,
                 controller: _generosController,
-                labelText: 'Géneros (separados por coma)',
+                labelText: l10n.proposalFormGenresLabel,
                 validator: (String? value) => (value == null || value.isEmpty)
                     ? l10n.validationGenresRequired
                     : null,
@@ -192,7 +192,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),
               ),
-              Text('Datos de Progreso (Opcional)',
+              Text(l10n.proposalFormProgressTitle,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               if (_tipoSeleccionado == 'serie')
@@ -200,15 +200,15 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                   context,
                   l10n: l10n,
                   controller: _episodiosPorTemporadaController,
-                  labelText: 'Episodios por Temporada',
-                  hintText: 'Ej. 10,8,12 (para T1, T2, T3)',
+                  labelText: l10n.proposalFormSeriesEpisodesLabel,
+                  hintText: l10n.proposalFormSeriesEpisodesHint,
                 ),
               if (_tipoSeleccionado == 'libro') ...<Widget>[
                 _buildInputField(
                   context,
                   l10n: l10n,
                   controller: _totalCapitulosLibroController,
-                  labelText: 'Total Capítulos (Libro)',
+                  labelText: l10n.proposalFormBookChaptersLabel,
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
@@ -219,7 +219,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                   context,
                   l10n: l10n,
                   controller: _totalPaginasLibroController,
-                  labelText: 'Total Páginas (Libro)',
+                  labelText: l10n.proposalFormBookPagesLabel,
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
@@ -232,8 +232,8 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                   l10n: l10n,
                   controller: _totalUnidadesController,
                   labelText: _tipoSeleccionado == 'anime'
-                      ? 'Total Episodios (Anime)'
-                      : 'Total Capítulos (Manga)',
+                      ? l10n.proposalFormAnimeEpisodesLabel
+                      : l10n.proposalFormMangaChaptersLabel,
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
@@ -245,7 +245,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                   _tipoSeleccionado != 'manga' &&
                   _tipoSeleccionado.isNotEmpty)
                 Text(
-                  'El tipo "${_tipoController.text}" no requiere datos de progreso.',
+                  l10n.proposalFormNoProgress(_tipoController.text),
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               const SizedBox(height: 32.0),
@@ -260,9 +260,10 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 onPressed: _isLoading ? null : _submitPropuesta,
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Enviar Propuesta',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                    : Text(
+                        l10n.proposalFormSubmitButton,
+                        style:
+                            const TextStyle(fontSize: 18, color: Colors.white),
                       ),
               ),
             ],

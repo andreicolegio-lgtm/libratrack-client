@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/error_translator.dart';
-import '../../model/perfil_usuario.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/api_exceptions.dart';
 
@@ -23,6 +22,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   Future<void> _handleRegister() async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -35,17 +35,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     try {
-      final PerfilUsuario nuevoUsuario = await authService.register(
-          _usernameController.text,
-          _emailController.text,
-          _passwordController.text);
+      await authService.register(
+        _usernameController.text,
+        _emailController.text,
+        _passwordController.text,
+      );
 
       if (!mounted) {
         return;
       }
 
-      SnackBarHelper.showTopSnackBar(msgContext,
-          '¡Registro exitoso! Bienvenido, ${nuevoUsuario.username}. Por favor, inicia sesión.',
+      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarRegisterSuccess,
           isError: false);
 
       navContext.pop();
@@ -72,7 +72,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       SnackBarHelper.showTopSnackBar(
         msgContext,
-        'Error inesperado: ${e.toString()}',
+        l10n.errorUnexpected(e.toString()),
         isError: true,
       );
     }
@@ -111,6 +111,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 64.0),
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _usernameController,
                   labelText: l10n.registerUsernameLabel,
                   validator: (String? value) {
@@ -126,6 +127,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 16.0),
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _emailController,
                   labelText: l10n.loginEmailLabel,
                   keyboardType: TextInputType.emailAddress,
@@ -142,6 +144,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 16.0),
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _passwordController,
                   labelText: l10n.loginPasswordLabel,
                   isPassword: true,
@@ -196,6 +199,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   Widget _buildInputField(
     BuildContext context, {
+    required AppLocalizations l10n,
     required TextEditingController controller,
     required String labelText,
     TextInputType keyboardType = TextInputType.text,

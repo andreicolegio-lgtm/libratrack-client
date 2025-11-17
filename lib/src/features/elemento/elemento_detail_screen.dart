@@ -115,6 +115,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       _isAdding = true;
     });
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       await _catalogService.addElemento(widget.elementoId);
       if (!mounted) {
@@ -124,7 +125,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         _isAdding = false;
         _isInCatalog = true;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, '¡Añadido al catálogo!',
+      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarCatalogAdded,
           isError: false);
     } on ApiException catch (e) {
       if (!mounted) {
@@ -143,7 +144,8 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       setState(() {
         _isAdding = false;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }
@@ -153,6 +155,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       _isDeleting = true;
     });
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       await _catalogService.removeElemento(widget.elementoId);
       if (!mounted) {
@@ -162,8 +165,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         _isDeleting = false;
         _isInCatalog = false;
       });
-      SnackBarHelper.showTopSnackBar(
-          msgContext, 'Elemento quitado del catálogo',
+      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarCatalogRemoved,
           isError: false);
     } on ApiException catch (e) {
       if (!mounted) {
@@ -182,7 +184,8 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       setState(() {
         _isDeleting = false;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }
@@ -201,12 +204,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         _haResenado = true;
       });
     }
-    if (resultado != null) {
-      setState(() {
-        _resenas.insert(0, resultado);
-        _haResenado = true;
-      });
-    }
   }
 
   Future<void> _handleToggleOficial(Elemento elemento) async {
@@ -215,6 +212,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       _isLoadingStatusChange = true;
     });
     final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       await _adminService.toggleElementoOficial(
         elemento.id,
@@ -222,8 +220,8 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       );
 
       final String successMessage = esOficial
-          ? 'Elemento marcado como COMUNITARIO.'
-          : '¡Elemento marcado como OFICIAL!';
+          ? l10n.snackbarAdminStatusCommunity
+          : l10n.snackbarAdminStatusOfficial;
       SnackBarHelper.showTopSnackBar(msgContext, successMessage,
           isError: false);
 
@@ -242,7 +240,8 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       if (!mounted) {
         return;
       }
-      SnackBarHelper.showTopSnackBar(msgContext, 'Error inesperado: $e',
+      SnackBarHelper.showTopSnackBar(
+          msgContext, l10n.errorUnexpected(e.toString()),
           isError: true);
     } finally {
       if (mounted) {
@@ -285,11 +284,19 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
+            String errorMessage;
+            if (snapshot.error is ApiException) {
+              errorMessage = ErrorTranslator.translate(
+                  context, (snapshot.error as ApiException).message);
+            } else {
+              errorMessage =
+                  l10n.errorLoadingElement(snapshot.error.toString());
+            }
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  'Error al cargar el elemento:\n${snapshot.error.toString()}',
+                  errorMessage,
                   textAlign: TextAlign.center,
                   style: Theme.of(context)
                       .textTheme
@@ -300,7 +307,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
             );
           }
           if (!snapshot.hasData) {
-            return const Center(child: Text('Elemento no encontrado.'));
+            return Center(child: Text(l10n.elementDetailNoElement));
           }
 
           final Elemento elemento = snapshot.data!['elemento'];
@@ -354,8 +361,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                       Positioned(
                         top: 40,
                         right: 16,
-                        child:
-                            _buildEstadoChip(context, elemento.estadoContenido),
+                        child: _buildEstadoChip(context, elemento),
                       ),
                     ],
                   ),
@@ -381,23 +387,23 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                                 ),
                           ),
                           const SizedBox(height: 24),
-                          _buildAdminButtons(context, perfil, elemento),
-                          _buildAddOrRemoveButton(),
+                          _buildAdminButtons(context, perfil, elemento, l10n),
+                          _buildAddOrRemoveButton(l10n),
                           const SizedBox(height: 24),
-                          Text('Sinopsis',
+                          Text(l10n.elementDetailSynopsis,
                               style: Theme.of(context).textTheme.titleLarge),
                           const SizedBox(height: 8),
                           Text(elemento.descripcion,
                               style: Theme.of(context).textTheme.bodyMedium),
-                          _buildProgresoTotalInfo(elemento),
+                          _buildProgresoTotalInfo(elemento, l10n),
                           _buildRelacionesSection(
                             context,
-                            'Precuelas',
+                            l10n.elementDetailPrequels,
                             elemento.precuelas,
                           ),
                           _buildRelacionesSection(
                             context,
-                            'Secuelas',
+                            l10n.elementDetailSequels,
                             elemento.secuelas,
                           ),
                           const Padding(
@@ -408,10 +414,10 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Text(
-                                'Reseñas (${_resenas.length})',
+                                l10n.elementDetailReviews(_resenas.length),
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
-                              _buildWriteReviewButton(),
+                              _buildWriteReviewButton(l10n),
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -443,7 +449,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     }
   }
 
-  Widget _buildProgresoTotalInfo(Elemento elemento) {
+  Widget _buildProgresoTotalInfo(Elemento elemento, AppLocalizations l10n) {
     final String tipo = elemento.tipo.toLowerCase();
     final List<Widget> infoWidgets = <Widget>[];
     if (tipo == 'serie') {
@@ -451,26 +457,27 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           _parseEpisodiosPorTemporada(elemento.episodiosPorTemporada);
       final int totalTemps = epCounts.length;
       if (totalTemps > 0) {
-        infoWidgets.add(_buildInfoRow(
-            context, Icons.movie_filter, 'Total Temporadas', '$totalTemps'));
-        infoWidgets.add(_buildInfoRow(
-            context, Icons.list_alt, 'Episodios', epCounts.join(', ')));
+        infoWidgets.add(_buildInfoRow(context, Icons.movie_filter,
+            l10n.elementDetailSeriesSeasons, '$totalTemps'));
+        infoWidgets.add(_buildInfoRow(context, Icons.list_alt,
+            l10n.elementDetailSeriesEpisodes, epCounts.join(', ')));
       }
     } else if (tipo == 'libro') {
       if (elemento.totalCapitulosLibro != null &&
           elemento.totalCapitulosLibro! > 0) {
         infoWidgets.add(_buildInfoRow(context, Icons.book_outlined,
-            'Total Capítulos', '${elemento.totalCapitulosLibro}'));
+            l10n.elementDetailBookChapters, '${elemento.totalCapitulosLibro}'));
       }
       if (elemento.totalPaginasLibro != null &&
           elemento.totalPaginasLibro! > 0) {
         infoWidgets.add(_buildInfoRow(context, Icons.pages_outlined,
-            'Total Páginas', '${elemento.totalPaginasLibro}'));
+            l10n.elementDetailBookPages, '${elemento.totalPaginasLibro}'));
       }
     } else if (tipo == 'anime' || tipo == 'manga') {
       if (elemento.totalUnidades != null && elemento.totalUnidades! > 0) {
-        final String label =
-            tipo == 'anime' ? 'Total Episodios' : 'Total Capítulos';
+        final String label = tipo == 'anime'
+            ? l10n.elementDetailAnimeEpisodes
+            : l10n.elementDetailMangaChapters;
         infoWidgets.add(_buildInfoRow(
             context, Icons.list, label, '${elemento.totalUnidades}'));
       }
@@ -485,7 +492,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           padding: EdgeInsets.symmetric(vertical: 24.0),
           child: Divider(),
         ),
-        Text('Detalles del Progreso',
+        Text(l10n.elementDetailProgressDetails,
             style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 16),
         ...infoWidgets,
@@ -520,13 +527,13 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
 
-  Widget _buildEstadoChip(BuildContext context, String estado) {
-    final bool isOficial = estado == 'OFICIAL';
+  Widget _buildEstadoChip(BuildContext context, Elemento elemento) {
+    final bool isOficial = elemento.estadoContenido == 'OFICIAL';
     final Color chipColor =
         isOficial ? Theme.of(context).colorScheme.secondary : Colors.grey[700]!;
     return Chip(
       label: Text(
-        isOficial ? 'OFICIAL' : 'COMUNITARIO',
+        elemento.estadoContenidoDisplay(context),
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -540,7 +547,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
 
-  Widget _buildAddOrRemoveButton() {
+  Widget _buildAddOrRemoveButton(AppLocalizations l10n) {
     final Color primaryColor = Theme.of(context).colorScheme.primary;
     if (_isDeleting) {
       return ElevatedButton.icon(
@@ -549,7 +556,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           height: 20,
           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
         ),
-        label: const Text('Eliminando...'),
+        label: Text(l10n.elementDetailRemovingButton),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red[700],
           foregroundColor: Colors.white,
@@ -561,7 +568,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     if (_isInCatalog) {
       return ElevatedButton.icon(
         icon: const Icon(Icons.remove_circle_outline),
-        label: const Text('Quitar del catálogo'),
+        label: Text(l10n.elementDetailRemoveButton),
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.surface,
           foregroundColor: Colors.red[300],
@@ -577,7 +584,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           height: 20,
           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
         ),
-        label: const Text('Añadiendo...'),
+        label: Text(l10n.elementDetailAddingButton),
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
@@ -588,7 +595,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     }
     return ElevatedButton.icon(
       icon: const Icon(Icons.add),
-      label: const Text('Añadir a Mi Catálogo'),
+      label: Text(l10n.elementDetailAddButton),
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
@@ -598,16 +605,17 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
 
-  Widget _buildWriteReviewButton() {
+  Widget _buildWriteReviewButton(AppLocalizations l10n) {
     if (_haResenado) {
-      return const TextButton(
+      return TextButton(
         onPressed: null,
-        child: Text('Ya has reseñado', style: TextStyle(color: Colors.grey)),
+        child: Text(l10n.elementDetailAlreadyReviewed,
+            style: const TextStyle(color: Colors.grey)),
       );
     }
     return TextButton.icon(
       icon: const Icon(Icons.edit, size: 16),
-      label: const Text('Escribir Reseña'),
+      label: Text(l10n.elementDetailWriteReview),
       style: TextButton.styleFrom(
           foregroundColor: Theme.of(context).colorScheme.primary),
       onPressed: _openWriteReviewModal,
@@ -620,7 +628,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            'Aún no hay reseñas para este elemento.',
+            l10n.elementDetailNoReviews,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
@@ -636,8 +644,8 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
 
-  Widget _buildAdminButtons(
-      BuildContext context, PerfilUsuario perfil, Elemento elemento) {
+  Widget _buildAdminButtons(BuildContext context, PerfilUsuario perfil,
+      Elemento elemento, AppLocalizations l10n) {
     if (!perfil.esModerador) {
       return const SizedBox.shrink();
     }
@@ -649,7 +657,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           Expanded(
             child: ElevatedButton.icon(
               icon: const Icon(Icons.edit_note, size: 18),
-              label: const Text('Editar'),
+              label: Text(l10n.elementDetailAdminEdit),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.surface,
                 foregroundColor: Theme.of(context).colorScheme.primary,
@@ -671,8 +679,10 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                     : Icon(esOficial ? Icons.public_off : Icons.verified,
                         size: 18),
                 label: Text(_isLoadingStatusChange
-                    ? '...'
-                    : (esOficial ? 'Comunitarizar' : 'Oficializar')),
+                    ? l10n.elementDetailAdminLoading
+                    : (esOficial
+                        ? l10n.elementDetailAdminMakeCommunity
+                        : l10n.elementDetailAdminMakeOfficial)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: esOficial
                       ? Colors.grey[700]

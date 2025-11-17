@@ -41,6 +41,7 @@ class _CatalogScreenState extends State<CatalogScreen>
   }
 
   Future<void> _loadCatalog() async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       await _catalogService.fetchCatalog();
 
@@ -64,7 +65,7 @@ class _CatalogScreenState extends State<CatalogScreen>
     } catch (e) {
       if (mounted) {
         setState(() {
-          _loadingError = e.toString();
+          _loadingError = l10n.errorLoadingCatalog(e.toString());
           _isLoading = false;
         });
       }
@@ -74,12 +75,6 @@ class _CatalogScreenState extends State<CatalogScreen>
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
-    final Map<EstadoPersonal, String> estadoDisplayNames = {
-      EstadoPersonal.enProgreso: l10n.catalogInProgress,
-      EstadoPersonal.pendiente: l10n.catalogPending,
-      EstadoPersonal.terminado: l10n.catalogFinished,
-      EstadoPersonal.abandonado: l10n.catalogDropped,
-    };
 
     return DefaultTabController(
       length: _estados.length,
@@ -92,7 +87,7 @@ class _CatalogScreenState extends State<CatalogScreen>
             tabAlignment: TabAlignment.center,
             tabs: _estados
                 .map((EstadoPersonal estado) =>
-                    Tab(text: estadoDisplayNames[estado]))
+                    Tab(text: estado.displayName(context)))
                 .toList(),
             labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
             indicatorColor: Theme.of(context).colorScheme.primary,
@@ -100,15 +95,12 @@ class _CatalogScreenState extends State<CatalogScreen>
             unselectedLabelColor: Colors.grey[500],
           ),
         ),
-        body: _buildBody(context, estadoDisplayNames),
+        body: _buildBody(context, l10n),
       ),
     );
   }
 
-  Widget _buildBody(
-      BuildContext context, Map<EstadoPersonal, String> estadoDisplayNames) {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-
+  Widget _buildBody(BuildContext context, AppLocalizations l10n) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -117,7 +109,7 @@ class _CatalogScreenState extends State<CatalogScreen>
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            'Error: $_loadingError',
+            _loadingError!,
             textAlign: TextAlign.center,
             style: Theme.of(context)
                 .textTheme
@@ -138,7 +130,7 @@ class _CatalogScreenState extends State<CatalogScreen>
         if (filteredList.isEmpty) {
           return Center(
             child: Text(
-              l10n.catalogEmptyState(estadoDisplayNames[estado]!),
+              l10n.catalogEmptyState(estado.displayName(context)),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),

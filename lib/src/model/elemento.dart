@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import '../core/l10n/app_localizations.dart';
+
 import 'elemento_relacion.dart';
 
 class Elemento {
@@ -5,16 +8,14 @@ class Elemento {
   final String titulo;
   final String descripcion;
   final String? urlImagen;
-  final String estadoContenido;
   final String tipo;
+  final String estadoContenido;
+  final String creadorUsername;
   final List<String> generos;
-  final String? creadorUsername;
-
   final String? episodiosPorTemporada;
   final int? totalUnidades;
   final int? totalCapitulosLibro;
   final int? totalPaginasLibro;
-
   final List<ElementoRelacion> precuelas;
   final List<ElementoRelacion> secuelas;
 
@@ -22,13 +23,13 @@ class Elemento {
     required this.id,
     required this.titulo,
     required this.descripcion,
-    required this.estadoContenido,
     required this.tipo,
+    required this.estadoContenido,
+    required this.creadorUsername,
     required this.generos,
     required this.precuelas,
     required this.secuelas,
     this.urlImagen,
-    this.creadorUsername,
     this.episodiosPorTemporada,
     this.totalUnidades,
     this.totalCapitulosLibro,
@@ -36,31 +37,49 @@ class Elemento {
   });
 
   factory Elemento.fromJson(Map<String, dynamic> json) {
-    List precuelasList = json['precuelas'] as List<dynamic>? ?? <dynamic>[];
-    List<ElementoRelacion> precuelas = precuelasList
-        .map((item) => ElementoRelacion.fromJson(item as Map<String, dynamic>))
-        .toList();
+    var generosList =
+        (json['generos'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+            <String>[];
 
-    List secuelasList = json['secuelas'] as List<dynamic>? ?? <dynamic>[];
-    List<ElementoRelacion> secuelas = secuelasList
-        .map((item) => ElementoRelacion.fromJson(item as Map<String, dynamic>))
-        .toList();
+    var precuelasList = (json['precuelas'] as List<dynamic>?)
+            ?.map((e) => ElementoRelacion.fromJson(e))
+            .toList() ??
+        <ElementoRelacion>[];
+
+    var secuelasList = (json['secuelas'] as List<dynamic>?)
+            ?.map((e) => ElementoRelacion.fromJson(e))
+            .toList() ??
+        <ElementoRelacion>[];
 
     return Elemento(
       id: json['id'],
       titulo: json['titulo'],
       descripcion: json['descripcion'],
-      urlImagen: json['urlImagen'] as String?,
-      estadoContenido: json['estadoContenido'],
+      urlImagen: json['urlImagen'],
       tipo: json['tipoNombre'],
-      generos: List<String>.from(json['generos']),
+      estadoContenido: json['estadoContenido'],
       creadorUsername: json['creadorUsername'],
-      episodiosPorTemporada: json['episodiosPorTemporada'] as String?,
-      totalUnidades: json['totalUnidades'] as int?,
-      totalCapitulosLibro: json['totalCapitulosLibro'] as int?,
-      totalPaginasLibro: json['totalPaginasLibro'] as int?,
-      precuelas: precuelas,
-      secuelas: secuelas,
+      generos: generosList,
+      episodiosPorTemporada: json['episodiosPorTemporada'],
+      totalUnidades: json['totalUnidades'],
+      totalCapitulosLibro: json['totalCapitulosLibro'],
+      totalPaginasLibro: json['totalPaginasLibro'],
+      precuelas: precuelasList,
+      secuelas: secuelasList,
     );
+  }
+
+  String estadoContenidoDisplay(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return estadoContenido;
+    }
+
+    if (estadoContenido == 'OFICIAL') {
+      return l10n.contentStatusOfficial;
+    } else if (estadoContenido == 'COMUNITARIO') {
+      return l10n.contentStatusCommunity;
+    }
+    return estadoContenido;
   }
 }

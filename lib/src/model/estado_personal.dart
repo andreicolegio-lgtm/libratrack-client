@@ -1,38 +1,35 @@
+import 'package:flutter/material.dart';
+import '../core/l10n/app_localizations.dart';
+
 enum EstadoPersonal {
-  pendiente,
-  enProgreso,
-  terminado,
-  abandonado;
+  pendiente('PENDIENTE'),
+  enProgreso('EN_PROGRESO'),
+  terminado('TERMINADO'),
+  abandonado('ABANDONADO');
 
-  static EstadoPersonal fromString(String apiValue) {
-    switch (apiValue) {
-      case 'PENDIENTE':
-        return EstadoPersonal.pendiente;
-      case 'EN_PROGRESO':
-        return EstadoPersonal.enProgreso;
-      case 'TERMINADO':
-        return EstadoPersonal.terminado;
-      case 'ABANDONADO':
-        return EstadoPersonal.abandonado;
-      default:
-        return EstadoPersonal.pendiente;
+  const EstadoPersonal(this.apiValue);
+  final String apiValue;
+
+  String displayName(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return apiValue;
     }
-  }
 
-  String get apiValue {
-    return name;
-  }
-
-  String get displayName {
     switch (this) {
       case EstadoPersonal.pendiente:
-        return 'Pendiente';
+        return l10n.catalogPending;
       case EstadoPersonal.enProgreso:
-        return 'En Progreso';
+        return l10n.catalogInProgress;
       case EstadoPersonal.terminado:
-        return 'Terminado';
+        return l10n.catalogFinished;
       case EstadoPersonal.abandonado:
-        return 'Abandonado';
+        return l10n.catalogDropped;
     }
+  }
+
+  static EstadoPersonal fromString(String apiValue) {
+    return EstadoPersonal.values.firstWhere((e) => e.apiValue == apiValue,
+        orElse: () => EstadoPersonal.pendiente);
   }
 }

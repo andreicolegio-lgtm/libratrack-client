@@ -16,18 +16,6 @@
     "@loginPasswordLabel": {
         "description": "Etiqueta para el campo de texto de contraseña"
     },
-    "loginEmailRequired": "El email es obligatorio.",
-    "@loginEmailRequired": {
-        "description": "Error de validación para email vacío"
-    },
-    "loginEmailInvalid": "Introduce un email válido.",
-    "@loginEmailInvalid": {
-        "description": "Error de validación para email con formato incorrecto"
-    },
-    "loginPasswordRequired": "La contraseña es obligatoria.",
-    "@loginPasswordRequired": {
-        "description": "Error de validación para contraseña vacía"
-    },
     "loginRegisterPrompt": "¿No tienes cuenta? Regístrate",
     "@loginRegisterPrompt": {
         "description": "Texto del botón para ir a la pantalla de registro"
@@ -39,18 +27,6 @@
     "registerUsernameLabel": "Nombre de Usuario",
     "@registerUsernameLabel": {
         "description": "Etiqueta para el campo de texto de nombre de usuario"
-    },
-    "registerUsernameRequired": "El nombre de usuario es obligatorio.",
-    "@registerUsernameRequired": {
-        "description": "Error de validación para nombre de usuario vacío"
-    },
-    "registerUsernameLength": "Debe tener al menos 4 caracteres.",
-    "@registerUsernameLength": {
-        "description": "Error de validación para nombre de usuario corto"
-    },
-    "registerPasswordLength": "Debe tener al menos 8 caracteres.",
-    "@registerPasswordLength": {
-        "description": "Error de validación para contraseña corta"
     },
     "registerLoginPrompt": "¿Ya tienes cuenta? Inicia sesión",
     "@registerLoginPrompt": {
@@ -178,6 +154,86 @@
     "@settingsLanguageEnglish": {
         "description": "Opción de idioma Inglés"
     },
+    "validationUsernameRequired": "El nombre de usuario es obligatorio.",
+    "@validationUsernameRequired": {
+        "description": "Error de validación para nombre de usuario vacío"
+    },
+    "validationUsernameLength450": "El nombre de usuario debe tener entre 4 y 50 caracteres.",
+    "@validationUsernameLength450": {
+        "description": "Error de validación para longitud de nombre de usuario"
+    },
+    "validationEmailRequired": "El email es obligatorio.",
+    "@validationEmailRequired": {
+        "description": "Error de validación para email vacío"
+    },
+    "validationEmailInvalid": "Introduce un email válido.",
+    "@validationEmailInvalid": {
+        "description": "Error de validación para email con formato incorrecto"
+    },
+    "validationPasswordRequired": "La contraseña es obligatoria.",
+    "@validationPasswordRequired": {
+        "description": "Error de validación para contraseña vacía"
+    },
+    "validationPasswordCurrentRequired": "La contraseña actual es obligatoria.",
+    "@validationPasswordCurrentRequired": {
+        "description": "Error de validación para contraseña actual vacía"
+    },
+    "validationPasswordNewRequired": "La nueva contraseña es obligatoria.",
+    "@validationPasswordNewRequired": {
+        "description": "Error de validación para nueva contraseña vacía"
+    },
+    "validationPasswordMin8": "La nueva contraseña debe tener al menos 8 caracteres.",
+    "@validationPasswordMin8": {
+        "description": "Error de validación para contraseña corta"
+    },
+    "validationElementIdRequired": "El ID del elemento no puede ser nulo.",
+    "@validationElementIdRequired": {
+        "description": "Error de validación"
+    },
+    "validationRatingRequired": "La valoración es obligatoria.",
+    "@validationRatingRequired": {
+        "description": "Error de validación"
+    },
+    "validationRatingMin1": "La valoración mínima es 1.",
+    "@validationRatingMin1": {
+        "description": "Error de validación"
+    },
+    "validationRatingMax5": "La valoración máxima es 5.",
+    "@validationRatingMax5": {
+        "description": "Error de validación"
+    },
+    "validationReviewMax2000": "La reseña no puede exceder los 2000 caracteres.",
+    "@validationReviewMax2000": {
+        "description": "Error de validación"
+    },
+    "validationTitleRequired": "El título es obligatorio.",
+    "@validationTitleRequired": {
+        "description": "Error de validación"
+    },
+    "validationDescRequired": "La descripción es obligatoria.",
+    "@validationDescRequired": {
+        "description": "Error de validación"
+    },
+    "validationTypeRequired": "El tipo es obligatorio.",
+    "@validationTypeRequired": {
+        "description": "Error de validación"
+    },
+    "validationGenresRequired": "Los géneros son obligatorios.",
+    "@validationGenresRequired": {
+        "description": "Error de validación"
+    },
+    "validationGoogleTokenRequired": "El token de Google no puede estar vacío.",
+    "@validationGoogleTokenRequired": {
+        "description": "Error de validación"
+    },
+    "validationModStatusRequired": "Debe especificar el estado de moderador.",
+    "@validationModStatusRequired": {
+        "description": "Error de validación"
+    },
+    "validationAdminStatusRequired": "Debe especificar el estado de administrador.",
+    "@validationAdminStatusRequired": {
+        "description": "Error de validación"
+    },
     "errorEmailAlreadyRegistered": "El email ya está registrado.",
     "@errorEmailAlreadyRegistered": {
         "description": "Error: El email ya está registrado."
@@ -233,5 +289,21 @@
     "errorInternalServerError": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
     "@errorInternalServerError": {
         "description": "Error: Error interno del servidor."
+    },
+    "errorAccessDenied": "No tienes permiso para acceder a este recurso.",
+    "@errorAccessDenied": {
+        "description": "Error: Acceso denegado."
+    },
+    "errorTokenExpired": "Tu sesión ha caducado. Por favor, inicia sesión de nuevo.",
+    "@errorTokenExpired": {
+        "description": "Error: Token JWT caducado."
+    },
+    "errorTokenInvalid": "Token inválido. Por favor, inicia sesión de nuevo.",
+    "@errorTokenInvalid": {
+        "description": "Error: Token JWT inválido."
+    },
+    "errorInvalidCredentials": "Email o contraseña incorrectos.",
+    "@errorInvalidCredentials": {
+        "description": "Error: Credenciales de login inválidas."
     }
 }

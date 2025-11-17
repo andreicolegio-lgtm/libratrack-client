@@ -14,6 +14,7 @@ import '../../model/genero.dart';
 import '../../model/paginated_response.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/l10n/app_localizations.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -189,15 +190,17 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        title: _buildSearchTextField(context),
+        title: _buildSearchTextField(context, l10n),
       ),
-      body: _buildBody(),
+      body: _buildBody(l10n),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
-        label: const Text('Proponer Elemento'),
+        label: Text(l10n.searchProposeButton),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         onPressed: () {
@@ -212,7 +215,7 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l10n) {
     return SingleChildScrollView(
       controller: _scrollController,
       child: Column(
@@ -243,7 +246,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                    child: Text('Explorar por Tipo',
+                    child: Text(l10n.searchExploreType,
                         style: Theme.of(context).textTheme.titleLarge),
                   ),
                   _buildFiltroChips(
@@ -254,7 +257,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                    child: Text('Explorar por Género',
+                    child: Text(l10n.searchExploreGenre,
                         style: Theme.of(context).textTheme.titleLarge),
                   ),
                   _buildFiltroChips(
@@ -273,14 +276,14 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: 80.0),
-            child: _buildResultadosLista(),
+            child: _buildResultadosLista(l10n),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildResultadosLista() {
+  Widget _buildResultadosLista(AppLocalizations l10n) {
     if (_isLoadingFirstPage) {
       return const Center(
           child: Padding(
@@ -297,10 +300,10 @@ class _SearchScreenState extends State<SearchScreen> {
                   ?.copyWith(color: Colors.red)));
     }
     if (_elementos.isEmpty) {
-      return const Center(
+      return Center(
           child: Padding(
-        padding: EdgeInsets.only(top: 50.0),
-        child: Text('No se encontraron elementos con el filtro aplicado.'),
+        padding: const EdgeInsets.only(top: 50.0),
+        child: Text(l10n.searchEmptyState),
       ));
     }
     return ListView.separated(
@@ -325,14 +328,14 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildSearchTextField(BuildContext context) {
+  Widget _buildSearchTextField(BuildContext context, AppLocalizations l10n) {
     final Color iconColor =
         Theme.of(context).colorScheme.onSurface.withAlpha(0x80);
     return TextField(
       controller: _searchController,
       style: Theme.of(context).textTheme.titleMedium,
       decoration: InputDecoration(
-        hintText: 'Buscar por título...',
+        hintText: l10n.searchFieldHint,
         hintStyle: Theme.of(context).textTheme.labelLarge,
         filled: true,
         fillColor: Theme.of(context).colorScheme.surface,

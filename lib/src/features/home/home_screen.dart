@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../catalog/catalog_screen.dart';
 import '../profile/profile_screen.dart';
 import '../search/search_screen.dart';
@@ -27,23 +28,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: 'Catálogo',
+            icon: const Icon(Icons.book),
+            label: l10n.bottomNavCatalog,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Buscar',
+            icon: const Icon(Icons.search),
+            label: l10n.bottomNavSearch,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Perfil',
+            icon: const Icon(Icons.person),
+            label: l10n.bottomNavProfile,
           ),
         ],
         currentIndex: _selectedIndex,

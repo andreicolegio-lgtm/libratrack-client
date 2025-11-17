@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/services/propuesta_service.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/api_exceptions.dart';
@@ -60,6 +61,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
   }
 
   Future<void> _submitPropuesta() async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -131,9 +133,10 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Proponer Elemento',
+        title: Text(l10n.searchProposeButton,
             style: Theme.of(context).textTheme.titleLarge),
         backgroundColor: Theme.of(context).colorScheme.surface,
         centerTitle: true,
@@ -147,38 +150,42 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
             children: <Widget>[
               _buildInputField(
                 context,
+                l10n: l10n,
                 controller: _tituloController,
                 labelText: 'Título Sugerido',
                 validator: (String? value) => (value == null || value.isEmpty)
-                    ? 'El título es obligatorio'
+                    ? l10n.validationTitleRequired
                     : null,
               ),
               const SizedBox(height: 16),
               _buildInputField(
                 context,
+                l10n: l10n,
                 controller: _descripcionController,
                 labelText: 'Descripción Breve',
                 maxLines: 4,
                 validator: (String? value) => (value == null || value.isEmpty)
-                    ? 'La descripción es obligatoria'
+                    ? l10n.validationDescRequired
                     : null,
               ),
               const SizedBox(height: 16),
               _buildInputField(
                 context,
+                l10n: l10n,
                 controller: _tipoController,
                 labelText: 'Tipo (Ej. Serie, Libro, Anime)',
                 validator: (String? value) => (value == null || value.isEmpty)
-                    ? 'El tipo es obligatorio'
+                    ? l10n.validationTypeRequired
                     : null,
               ),
               const SizedBox(height: 16),
               _buildInputField(
                 context,
+                l10n: l10n,
                 controller: _generosController,
                 labelText: 'Géneros (separados por coma)',
                 validator: (String? value) => (value == null || value.isEmpty)
-                    ? 'Los géneros son obligatorios'
+                    ? l10n.validationGenresRequired
                     : null,
               ),
               const Padding(
@@ -191,6 +198,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
               if (_tipoSeleccionado == 'serie')
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _episodiosPorTemporadaController,
                   labelText: 'Episodios por Temporada',
                   hintText: 'Ej. 10,8,12 (para T1, T2, T3)',
@@ -198,6 +206,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
               if (_tipoSeleccionado == 'libro') ...<Widget>[
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _totalCapitulosLibroController,
                   labelText: 'Total Capítulos (Libro)',
                   keyboardType: TextInputType.number,
@@ -208,6 +217,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 const SizedBox(height: 16),
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _totalPaginasLibroController,
                   labelText: 'Total Páginas (Libro)',
                   keyboardType: TextInputType.number,
@@ -219,6 +229,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
               if (_tipoSeleccionado == 'anime' || _tipoSeleccionado == 'manga')
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _totalUnidadesController,
                   labelText: _tipoSeleccionado == 'anime'
                       ? 'Total Episodios (Anime)'
@@ -263,6 +274,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
 
   Widget _buildInputField(
     BuildContext context, {
+    required AppLocalizations l10n,
     required TextEditingController controller,
     required String labelText,
     String? hintText,

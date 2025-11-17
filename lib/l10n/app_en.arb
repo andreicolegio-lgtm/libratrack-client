@@ -16,18 +16,6 @@
     "@loginPasswordLabel": {
         "description": "Label for the password text field"
     },
-    "loginEmailRequired": "Email is required.",
-    "@loginEmailRequired": {
-        "description": "Validation error for empty email"
-    },
-    "loginEmailInvalid": "Please enter a valid email.",
-    "@loginEmailInvalid": {
-        "description": "Validation error for incorrect email format"
-    },
-    "loginPasswordRequired": "Password is required.",
-    "@loginPasswordRequired": {
-        "description": "Validation error for empty password"
-    },
     "loginRegisterPrompt": "Don't have an account? Register",
     "@loginRegisterPrompt": {
         "description": "Text for the button to navigate to registration"
@@ -39,18 +27,6 @@
     "registerUsernameLabel": "Username",
     "@registerUsernameLabel": {
         "description": "Label for the username text field"
-    },
-    "registerUsernameRequired": "Username is required.",
-    "@registerUsernameRequired": {
-        "description": "Validation error for empty username"
-    },
-    "registerUsernameLength": "Must be at least 4 characters.",
-    "@registerUsernameLength": {
-        "description": "Validation error for short username"
-    },
-    "registerPasswordLength": "Must be at least 8 characters.",
-    "@registerPasswordLength": {
-        "description": "Validation error for short password"
     },
     "registerLoginPrompt": "Already have an account? Sign In",
     "@registerLoginPrompt": {
@@ -178,6 +154,86 @@
     "@settingsLanguageEnglish": {
         "description": "Language option English"
     },
+    "validationUsernameRequired": "Username is required.",
+    "@validationUsernameRequired": {
+        "description": "Validation error for empty username"
+    },
+    "validationUsernameLength450": "Username must be between 4 and 50 characters.",
+    "@validationUsernameLength450": {
+        "description": "Validation error for username length"
+    },
+    "validationEmailRequired": "Email is required.",
+    "@validationEmailRequired": {
+        "description": "Validation error for empty email"
+    },
+    "validationEmailInvalid": "Please enter a valid email.",
+    "@validationEmailInvalid": {
+        "description": "Validation error for incorrect email format"
+    },
+    "validationPasswordRequired": "Password is required.",
+    "@validationPasswordRequired": {
+        "description": "Validation error for empty password"
+    },
+    "validationPasswordCurrentRequired": "Current password is required.",
+    "@validationPasswordCurrentRequired": {
+        "description": "Validation error for empty current password"
+    },
+    "validationPasswordNewRequired": "New password is required.",
+    "@validationPasswordNewRequired": {
+        "description": "Validation error for empty new password"
+    },
+    "validationPasswordMin8": "New password must be at least 8 characters.",
+    "@validationPasswordMin8": {
+        "description": "Validation error for short password"
+    },
+    "validationElementIdRequired": "Element ID cannot be null.",
+    "@validationElementIdRequired": {
+        "description": "Validation error"
+    },
+    "validationRatingRequired": "Rating is required.",
+    "@validationRatingRequired": {
+        "description": "Validation error"
+    },
+    "validationRatingMin1": "Rating must be at least 1.",
+    "@validationRatingMin1": {
+        "description": "Validation error"
+    },
+    "validationRatingMax5": "Rating must be 5 or less.",
+    "@validationRatingMax5": {
+        "description": "Validation error"
+    },
+    "validationReviewMax2000": "Review cannot exceed 2000 characters.",
+    "@validationReviewMax2000": {
+        "description": "Validation error"
+    },
+    "validationTitleRequired": "Title is required.",
+    "@validationTitleRequired": {
+        "description": "Validation error"
+    },
+    "validationDescRequired": "Description is required.",
+    "@validationDescRequired": {
+        "description": "Validation error"
+    },
+    "validationTypeRequired": "Type is required.",
+    "@validationTypeRequired": {
+        "description": "Validation error"
+    },
+    "validationGenresRequired": "Genres are required.",
+    "@validationGenresRequired": {
+        "description": "Validation error"
+    },
+    "validationGoogleTokenRequired": "Google token cannot be empty.",
+    "@validationGoogleTokenRequired": {
+        "description": "Validation error"
+    },
+    "validationModStatusRequired": "Moderator status must be specified.",
+    "@validationModStatusRequired": {
+        "description": "Validation error"
+    },
+    "validationAdminStatusRequired": "Admin status must be specified.",
+    "@validationAdminStatusRequired": {
+        "description": "Validation error"
+    },
     "errorEmailAlreadyRegistered": "Email is already registered.",
     "@errorEmailAlreadyRegistered": {
         "description": "Error: Email is already registered."
@@ -233,5 +289,21 @@
     "errorInternalServerError": "An unexpected error occurred. Please try again later.",
     "@errorInternalServerError": {
         "description": "Error: Internal server error."
+    },
+    "errorAccessDenied": "You do not have permission to access this resource.",
+    "@errorAccessDenied": {
+        "description": "Error: Access denied."
+    },
+    "errorTokenExpired": "Your session has expired. Please log in again.",
+    "@errorTokenExpired": {
+        "description": "Error: JWT token expired."
+    },
+    "errorTokenInvalid": "Invalid token. Please log in again.",
+    "@errorTokenInvalid": {
+        "description": "Error: JWT token invalid."
+    },
+    "errorInvalidCredentials": "Incorrect email or password.",
+    "@errorInvalidCredentials": {
+        "description": "Error: Invalid login credentials."
     }
 }

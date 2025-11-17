@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/services/moderacion_service.dart';
 import '../../model/propuesta.dart';
 import '../../model/estado_propuesta.dart';
 import '../../core/widgets/maybe_marquee.dart';
 import 'propuesta_edit_screen.dart';
 import '../../core/utils/api_exceptions.dart';
+import '../../core/utils/snackbar_helper.dart';
 
 class ModeracionPanelScreen extends StatefulWidget {
   const ModeracionPanelScreen({super.key});
@@ -24,11 +26,12 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     return DefaultTabController(
       length: _estados.length,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Panel de Moderación',
+          title: Text(l10n.profileModPanelButton,
               style: Theme.of(context).textTheme.titleLarge),
           backgroundColor: Theme.of(context).colorScheme.surface,
           centerTitle: true,
@@ -108,10 +111,10 @@ class _PropuestasTabState extends State<_PropuestasTab>
       setState(() {
         _propuestas.removeWhere((Propuesta p) => p.id == propuesta.id);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('¡Propuesta aprobada!'),
-            backgroundColor: Colors.green),
+      SnackBarHelper.showTopSnackBar(
+        ScaffoldMessenger.of(context),
+        '¡Propuesta aprobada!',
+        isError: false,
       );
     }
   }
@@ -126,10 +129,11 @@ class _PropuestasTabState extends State<_PropuestasTab>
         _propuestas.removeWhere((Propuesta p) => p.id == propuestaId);
         _processingItems.remove(propuestaId);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Propuesta rechazada (simulado).'),
-            backgroundColor: Colors.grey),
+      SnackBarHelper.showTopSnackBar(
+        ScaffoldMessenger.of(context),
+        'Propuesta rechazada (simulado).',
+        isError: false,
+        isNeutral: true,
       );
     }
   }
@@ -137,7 +141,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     return FutureBuilder<List<Propuesta>>(
       future: _propuestasFuture,
       builder: (BuildContext context, AsyncSnapshot<List<Propuesta>> snapshot) {
@@ -172,15 +176,15 @@ class _PropuestasTabState extends State<_PropuestasTab>
           itemBuilder: (BuildContext context, int index) {
             final Propuesta propuesta = _propuestas[index];
             final bool isProcessing = _processingItems.contains(propuesta.id);
-            return _buildPropuestaCard(context, propuesta, isProcessing);
+            return _buildPropuestaCard(context, propuesta, isProcessing, l10n);
           },
         );
       },
     );
   }
 
-  Widget _buildPropuestaCard(
-      BuildContext context, Propuesta propuesta, bool isProcessing) {
+  Widget _buildPropuestaCard(BuildContext context, Propuesta propuesta,
+      bool isProcessing, AppLocalizations l10n) {
     return Card(
       color: Theme.of(context).cardTheme.color,
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),

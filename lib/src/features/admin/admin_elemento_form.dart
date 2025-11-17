@@ -4,13 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
-
+import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/api_client.dart';
 import '../../core/services/admin_service.dart';
 import '../../model/elemento.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/api_exceptions.dart';
-
 import '../../core/services/elemento_service.dart';
 import '../../model/elemento_relacion.dart';
 
@@ -256,6 +255,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         widget.isEditMode ? 'Editar Elemento' : 'Crear Elemento Oficial';
     final String botonGuardar =
         widget.isEditMode ? 'Guardar Cambios' : 'Crear Elemento';
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -275,38 +275,42 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               const SizedBox(height: 24),
               _buildInputField(
                 context,
+                l10n: l10n,
                 controller: _tituloController,
                 labelText: 'Título',
                 validator: (String? value) => (value == null || value.isEmpty)
-                    ? 'El título es obligatorio'
+                    ? l10n.validationTitleRequired
                     : null,
               ),
               const SizedBox(height: 16),
               _buildInputField(
                 context,
+                l10n: l10n,
                 controller: _descripcionController,
                 labelText: 'Descripción',
                 maxLines: 4,
                 validator: (String? value) => (value == null || value.isEmpty)
-                    ? 'La descripción es obligatoria'
+                    ? l10n.validationDescRequired
                     : null,
               ),
               const SizedBox(height: 16),
               _buildInputField(
                 context,
+                l10n: l10n,
                 controller: _tipoController,
                 labelText: 'Tipo (Ej. Serie, Libro)',
                 validator: (String? value) => (value == null || value.isEmpty)
-                    ? 'El tipo es obligatorio'
+                    ? l10n.validationTypeRequired
                     : null,
               ),
               const SizedBox(height: 16),
               _buildInputField(
                 context,
+                l10n: l10n,
                 controller: _generosController,
                 labelText: 'Géneros (separados por coma)',
                 validator: (String? value) => (value == null || value.isEmpty)
-                    ? 'Los géneros son obligatorios'
+                    ? l10n.validationGenresRequired
                     : null,
               ),
               const Padding(
@@ -319,6 +323,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               if (_tipoSeleccionado == 'serie')
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _episodiosPorTemporadaController,
                   labelText: 'Episodios por Temporada',
                   hintText: 'Ej. 10,8,12 (para T1, T2, T3)',
@@ -326,6 +331,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               if (_tipoSeleccionado == 'libro') ...<Widget>[
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _totalCapitulosLibroController,
                   labelText: 'Total Capítulos (Libro)',
                   keyboardType: TextInputType.number,
@@ -336,6 +342,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                 const SizedBox(height: 16),
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _totalPaginasLibroController,
                   labelText: 'Total Páginas (Libro)',
                   keyboardType: TextInputType.number,
@@ -347,6 +354,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               if (_tipoSeleccionado == 'anime' || _tipoSeleccionado == 'manga')
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _totalUnidadesController,
                   labelText: _tipoSeleccionado == 'anime'
                       ? 'Total Episodios (Anime)'
@@ -464,6 +472,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
   Widget _buildInputField(
     BuildContext context, {
+    required AppLocalizations l10n,
     required TextEditingController controller,
     required String labelText,
     String? hintText,

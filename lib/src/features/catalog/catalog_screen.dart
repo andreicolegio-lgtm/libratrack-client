@@ -7,6 +7,7 @@ import '../../model/estado_personal.dart';
 import 'widgets/catalog_entry_card.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/l10n/app_localizations.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -72,17 +73,26 @@ class _CatalogScreenState extends State<CatalogScreen>
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final Map<EstadoPersonal, String> estadoDisplayNames = {
+      EstadoPersonal.enProgreso: l10n.catalogInProgress,
+      EstadoPersonal.pendiente: l10n.catalogPending,
+      EstadoPersonal.terminado: l10n.catalogFinished,
+      EstadoPersonal.abandonado: l10n.catalogDropped,
+    };
+
     return DefaultTabController(
       length: _estados.length,
       child: Scaffold(
         appBar: AppBar(
-          title:
-              Text('LibraTrack', style: Theme.of(context).textTheme.titleLarge),
+          title: Text(l10n.catalogTitle,
+              style: Theme.of(context).textTheme.titleLarge),
           centerTitle: true,
           bottom: TabBar(
             tabAlignment: TabAlignment.center,
             tabs: _estados
-                .map((EstadoPersonal estado) => Tab(text: estado.displayName))
+                .map((EstadoPersonal estado) =>
+                    Tab(text: estadoDisplayNames[estado]))
                 .toList(),
             labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
             indicatorColor: Theme.of(context).colorScheme.primary,
@@ -90,12 +100,15 @@ class _CatalogScreenState extends State<CatalogScreen>
             unselectedLabelColor: Colors.grey[500],
           ),
         ),
-        body: _buildBody(context),
+        body: _buildBody(context, estadoDisplayNames),
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context) {
+  Widget _buildBody(
+      BuildContext context, Map<EstadoPersonal, String> estadoDisplayNames) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -125,7 +138,7 @@ class _CatalogScreenState extends State<CatalogScreen>
         if (filteredList.isEmpty) {
           return Center(
             child: Text(
-              'No hay elementos en estado: ${estado.displayName}',
+              l10n.catalogEmptyState(estadoDisplayNames[estado]!),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),

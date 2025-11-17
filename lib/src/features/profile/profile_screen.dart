@@ -387,15 +387,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: <Widget>[
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _nombreController,
                   labelText: l10n.registerUsernameLabel,
                   enabled: !_isAnyLoading(),
                   validator: (String? value) {
                     if (value == null || value.trim().isEmpty) {
-                      return l10n.registerUsernameRequired;
+                      return l10n.validationUsernameRequired;
                     }
                     if (value.trim().length < 4) {
-                      return l10n.registerUsernameLength;
+                      return l10n.validationUsernameLength450;
                     }
                     return null;
                   },
@@ -403,6 +404,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16.0),
                 _buildInputField(
                   context,
+                  l10n: l10n,
                   controller: _emailController,
                   labelText: l10n.loginEmailLabel,
                   enabled: false,
@@ -442,26 +444,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 _buildInputField(context,
+                    l10n: l10n,
                     controller: _contrasenaActualController,
                     labelText: l10n.profileCurrentPassword,
                     enabled: !_isAnyLoading(),
                     isPassword: true, validator: (String? value) {
                   if (value == null || value.isEmpty) {
-                    return l10n.loginPasswordRequired;
+                    return l10n.validationPasswordCurrentRequired;
                   }
                   return null;
                 }),
                 const SizedBox(height: 16.0),
                 _buildInputField(context,
+                    l10n: l10n,
                     controller: _nuevaContrasenaController,
                     labelText: l10n.profileNewPassword,
                     enabled: !_isAnyLoading(),
                     isPassword: true, validator: (String? value) {
                   if (value == null || value.isEmpty) {
-                    return l10n.loginPasswordRequired;
+                    return l10n.validationPasswordNewRequired;
                   }
                   if (value.length < 8) {
-                    return l10n.registerPasswordLength;
+                    return l10n.validationPasswordMin8;
                   }
                   return null;
                 }),
@@ -553,6 +557,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildInputField(
     BuildContext context, {
+    required AppLocalizations l10n,
     required TextEditingController controller,
     required String labelText,
     bool enabled = true,

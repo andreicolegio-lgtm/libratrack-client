@@ -115,10 +115,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   labelText: l10n.registerUsernameLabel,
                   validator: (String? value) {
                     if (value == null || value.trim().isEmpty) {
-                      return l10n.registerUsernameRequired;
+                      return l10n.validationUsernameRequired;
                     }
                     if (value.trim().length < 4) {
-                      return l10n.registerUsernameLength;
+                      return l10n.validationUsernameLength450;
                     }
                     return null;
                   },
@@ -131,10 +131,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   keyboardType: TextInputType.emailAddress,
                   validator: (String? value) {
                     if (value == null || value.isEmpty) {
-                      return l10n.loginEmailRequired;
+                      return l10n.validationEmailRequired;
                     }
                     if (!value.contains('@') || !value.contains('.')) {
-                      return l10n.loginEmailInvalid;
+                      return l10n.validationEmailInvalid;
                     }
                     return null;
                   },
@@ -147,10 +147,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   isPassword: true,
                   validator: (String? value) {
                     if (value == null || value.isEmpty) {
-                      return l10n.loginPasswordRequired;
+                      return l10n.validationPasswordRequired;
                     }
                     if (value.length < 8) {
-                      return l10n.registerPasswordLength;
+                      return l10n.validationPasswordMin8;
                     }
                     return null;
                   },

@@ -21,15 +21,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get loginPasswordLabel => 'Contraseña';
 
   @override
-  String get loginEmailRequired => 'El email es obligatorio.';
-
-  @override
-  String get loginEmailInvalid => 'Introduce un email válido.';
-
-  @override
-  String get loginPasswordRequired => 'La contraseña es obligatoria.';
-
-  @override
   String get loginRegisterPrompt => '¿No tienes cuenta? Regístrate';
 
   @override
@@ -37,15 +28,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get registerUsernameLabel => 'Nombre de Usuario';
-
-  @override
-  String get registerUsernameRequired => 'El nombre de usuario es obligatorio.';
-
-  @override
-  String get registerUsernameLength => 'Debe tener al menos 4 caracteres.';
-
-  @override
-  String get registerPasswordLength => 'Debe tener al menos 8 caracteres.';
 
   @override
   String get registerLoginPrompt => '¿Ya tienes cuenta? Inicia sesión';
@@ -141,6 +123,76 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsLanguageEnglish => 'Inglés';
 
   @override
+  String get validationUsernameRequired =>
+      'El nombre de usuario es obligatorio.';
+
+  @override
+  String get validationUsernameLength450 =>
+      'El nombre de usuario debe tener entre 4 y 50 caracteres.';
+
+  @override
+  String get validationEmailRequired => 'El email es obligatorio.';
+
+  @override
+  String get validationEmailInvalid => 'Introduce un email válido.';
+
+  @override
+  String get validationPasswordRequired => 'La contraseña es obligatoria.';
+
+  @override
+  String get validationPasswordCurrentRequired =>
+      'La contraseña actual es obligatoria.';
+
+  @override
+  String get validationPasswordNewRequired =>
+      'La nueva contraseña es obligatoria.';
+
+  @override
+  String get validationPasswordMin8 =>
+      'La nueva contraseña debe tener al menos 8 caracteres.';
+
+  @override
+  String get validationElementIdRequired =>
+      'El ID del elemento no puede ser nulo.';
+
+  @override
+  String get validationRatingRequired => 'La valoración es obligatoria.';
+
+  @override
+  String get validationRatingMin1 => 'La valoración mínima es 1.';
+
+  @override
+  String get validationRatingMax5 => 'La valoración máxima es 5.';
+
+  @override
+  String get validationReviewMax2000 =>
+      'La reseña no puede exceder los 2000 caracteres.';
+
+  @override
+  String get validationTitleRequired => 'El título es obligatorio.';
+
+  @override
+  String get validationDescRequired => 'La descripción es obligatoria.';
+
+  @override
+  String get validationTypeRequired => 'El tipo es obligatorio.';
+
+  @override
+  String get validationGenresRequired => 'Los géneros son obligatorios.';
+
+  @override
+  String get validationGoogleTokenRequired =>
+      'El token de Google no puede estar vacío.';
+
+  @override
+  String get validationModStatusRequired =>
+      'Debe especificar el estado de moderador.';
+
+  @override
+  String get validationAdminStatusRequired =>
+      'Debe especificar el estado de administrador.';
+
+  @override
   String get errorEmailAlreadyRegistered => 'El email ya está registrado.';
 
   @override
@@ -185,4 +237,19 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errorInternalServerError =>
       'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.';
+
+  @override
+  String get errorAccessDenied =>
+      'No tienes permiso para acceder a este recurso.';
+
+  @override
+  String get errorTokenExpired =>
+      'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.';
+
+  @override
+  String get errorTokenInvalid =>
+      'Token inválido. Por favor, inicia sesión de nuevo.';
+
+  @override
+  String get errorInvalidCredentials => 'Email o contraseña incorrectos.';
 }

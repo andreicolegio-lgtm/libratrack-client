@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../core/services/resena_service.dart';
 import '../../../model/resena.dart';
 import '../../../core/utils/snackbar_helper.dart';
@@ -36,6 +37,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
   }
 
   Future<void> _handleEnviarResena() async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -96,6 +98,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
@@ -142,13 +145,14 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
               const SizedBox(height: 24.0),
               _buildInputField(
                 context,
+                l10n: l10n,
                 controller: _textoController,
                 labelText: 'Reseña (opcional)',
                 hintText: 'Escribe tu opinión...',
                 maxLines: 5,
                 validator: (String? value) {
                   if (value != null && value.length > 2000) {
-                    return 'Máximo 2000 caracteres';
+                    return l10n.validationReviewMax2000;
                   }
                   return null;
                 },
@@ -183,6 +187,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
 
   Widget _buildInputField(
     BuildContext context, {
+    required AppLocalizations l10n,
     required TextEditingController controller,
     required String labelText,
     String? hintText,

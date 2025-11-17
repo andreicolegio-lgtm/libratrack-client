@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/services/auth_service.dart';
 import 'registration_screen.dart';
 import '../../core/utils/snackbar_helper.dart';
@@ -113,6 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final TextTheme textTheme = Theme.of(context).textTheme;
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: Center(
@@ -127,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    'Bienvenido a LibraTrack',
+                    l10n.appTitle,
                     style: textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -142,19 +144,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 48),
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.loginEmailLabel,
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     validator: (String? value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor, introduce tu email';
+                        return l10n.validationEmailRequired;
                       }
                       if (!value.contains('@')) {
-                        return 'Email no válido';
+                        return l10n.validationEmailInvalid;
                       }
                       return null;
                     },
@@ -162,17 +164,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(
-                      labelText: 'Contraseña',
-                      prefixIcon: Icon(Icons.lock_outline),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.loginPasswordLabel,
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      border: const OutlineInputBorder(),
                     ),
                     obscureText: true,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _handleLogin(),
                     validator: (String? value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor, introduce tu contraseña';
+                        return l10n.validationPasswordRequired;
                       }
                       return null;
                     },
@@ -194,7 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               strokeWidth: 3,
                             ),
                           )
-                        : const Text('Iniciar Sesión'),
+                        : Text(l10n.loginButton),
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -226,10 +228,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      const Text('¿No tienes cuenta?'),
+                      Text(l10n.loginRegisterPrompt.split('?')[0]),
                       TextButton(
                         onPressed: _isLoading ? null : _goToRegistration,
-                        child: const Text('Regístrate'),
+                        child:
+                            Text(l10n.loginRegisterPrompt.split('?')[1].trim()),
                       ),
                     ],
                   ),

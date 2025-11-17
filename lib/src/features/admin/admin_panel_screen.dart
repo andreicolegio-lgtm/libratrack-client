@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/services/admin_service.dart';
 import '../../model/perfil_usuario.dart';
 import '../../core/utils/snackbar_helper.dart';
@@ -226,9 +227,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Panel de Administrador',
+        title: Text(l10n.profileAdminPanelButton,
             style: Theme.of(context).textTheme.titleLarge),
         centerTitle: true,
         bottom: PreferredSize(

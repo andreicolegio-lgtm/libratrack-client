@@ -21,15 +21,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginPasswordLabel => 'Password';
 
   @override
-  String get loginEmailRequired => 'Email is required.';
-
-  @override
-  String get loginEmailInvalid => 'Please enter a valid email.';
-
-  @override
-  String get loginPasswordRequired => 'Password is required.';
-
-  @override
   String get loginRegisterPrompt => 'Don\'t have an account? Register';
 
   @override
@@ -37,15 +28,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerUsernameLabel => 'Username';
-
-  @override
-  String get registerUsernameRequired => 'Username is required.';
-
-  @override
-  String get registerUsernameLength => 'Must be at least 4 characters.';
-
-  @override
-  String get registerPasswordLength => 'Must be at least 8 characters.';
 
   @override
   String get registerLoginPrompt => 'Already have an account? Sign In';
@@ -141,6 +123,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageEnglish => 'English';
 
   @override
+  String get validationUsernameRequired => 'Username is required.';
+
+  @override
+  String get validationUsernameLength450 =>
+      'Username must be between 4 and 50 characters.';
+
+  @override
+  String get validationEmailRequired => 'Email is required.';
+
+  @override
+  String get validationEmailInvalid => 'Please enter a valid email.';
+
+  @override
+  String get validationPasswordRequired => 'Password is required.';
+
+  @override
+  String get validationPasswordCurrentRequired =>
+      'Current password is required.';
+
+  @override
+  String get validationPasswordNewRequired => 'New password is required.';
+
+  @override
+  String get validationPasswordMin8 =>
+      'New password must be at least 8 characters.';
+
+  @override
+  String get validationElementIdRequired => 'Element ID cannot be null.';
+
+  @override
+  String get validationRatingRequired => 'Rating is required.';
+
+  @override
+  String get validationRatingMin1 => 'Rating must be at least 1.';
+
+  @override
+  String get validationRatingMax5 => 'Rating must be 5 or less.';
+
+  @override
+  String get validationReviewMax2000 => 'Review cannot exceed 2000 characters.';
+
+  @override
+  String get validationTitleRequired => 'Title is required.';
+
+  @override
+  String get validationDescRequired => 'Description is required.';
+
+  @override
+  String get validationTypeRequired => 'Type is required.';
+
+  @override
+  String get validationGenresRequired => 'Genres are required.';
+
+  @override
+  String get validationGoogleTokenRequired => 'Google token cannot be empty.';
+
+  @override
+  String get validationModStatusRequired =>
+      'Moderator status must be specified.';
+
+  @override
+  String get validationAdminStatusRequired => 'Admin status must be specified.';
+
+  @override
   String get errorEmailAlreadyRegistered => 'Email is already registered.';
 
   @override
@@ -183,4 +229,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorInternalServerError =>
       'An unexpected error occurred. Please try again later.';
+
+  @override
+  String get errorAccessDenied =>
+      'You do not have permission to access this resource.';
+
+  @override
+  String get errorTokenExpired =>
+      'Your session has expired. Please log in again.';
+
+  @override
+  String get errorTokenInvalid => 'Invalid token. Please log in again.';
+
+  @override
+  String get errorInvalidCredentials => 'Incorrect email or password.';
 }

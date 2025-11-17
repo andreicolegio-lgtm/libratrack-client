@@ -122,24 +122,6 @@ abstract class AppLocalizations {
   /// **'Contraseña'**
   String get loginPasswordLabel;
 
-  /// Error de validación para email vacío
-  ///
-  /// In es, this message translates to:
-  /// **'El email es obligatorio.'**
-  String get loginEmailRequired;
-
-  /// Error de validación para email con formato incorrecto
-  ///
-  /// In es, this message translates to:
-  /// **'Introduce un email válido.'**
-  String get loginEmailInvalid;
-
-  /// Error de validación para contraseña vacía
-  ///
-  /// In es, this message translates to:
-  /// **'La contraseña es obligatoria.'**
-  String get loginPasswordRequired;
-
   /// Texto del botón para ir a la pantalla de registro
   ///
   /// In es, this message translates to:
@@ -157,24 +139,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Nombre de Usuario'**
   String get registerUsernameLabel;
-
-  /// Error de validación para nombre de usuario vacío
-  ///
-  /// In es, this message translates to:
-  /// **'El nombre de usuario es obligatorio.'**
-  String get registerUsernameRequired;
-
-  /// Error de validación para nombre de usuario corto
-  ///
-  /// In es, this message translates to:
-  /// **'Debe tener al menos 4 caracteres.'**
-  String get registerUsernameLength;
-
-  /// Error de validación para contraseña corta
-  ///
-  /// In es, this message translates to:
-  /// **'Debe tener al menos 8 caracteres.'**
-  String get registerPasswordLength;
 
   /// Texto del botón para volver a la pantalla de login
   ///
@@ -356,6 +320,126 @@ abstract class AppLocalizations {
   /// **'Inglés'**
   String get settingsLanguageEnglish;
 
+  /// Error de validación para nombre de usuario vacío
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre de usuario es obligatorio.'**
+  String get validationUsernameRequired;
+
+  /// Error de validación para longitud de nombre de usuario
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre de usuario debe tener entre 4 y 50 caracteres.'**
+  String get validationUsernameLength450;
+
+  /// Error de validación para email vacío
+  ///
+  /// In es, this message translates to:
+  /// **'El email es obligatorio.'**
+  String get validationEmailRequired;
+
+  /// Error de validación para email con formato incorrecto
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce un email válido.'**
+  String get validationEmailInvalid;
+
+  /// Error de validación para contraseña vacía
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña es obligatoria.'**
+  String get validationPasswordRequired;
+
+  /// Error de validación para contraseña actual vacía
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña actual es obligatoria.'**
+  String get validationPasswordCurrentRequired;
+
+  /// Error de validación para nueva contraseña vacía
+  ///
+  /// In es, this message translates to:
+  /// **'La nueva contraseña es obligatoria.'**
+  String get validationPasswordNewRequired;
+
+  /// Error de validación para contraseña corta
+  ///
+  /// In es, this message translates to:
+  /// **'La nueva contraseña debe tener al menos 8 caracteres.'**
+  String get validationPasswordMin8;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'El ID del elemento no puede ser nulo.'**
+  String get validationElementIdRequired;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'La valoración es obligatoria.'**
+  String get validationRatingRequired;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'La valoración mínima es 1.'**
+  String get validationRatingMin1;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'La valoración máxima es 5.'**
+  String get validationRatingMax5;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'La reseña no puede exceder los 2000 caracteres.'**
+  String get validationReviewMax2000;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'El título es obligatorio.'**
+  String get validationTitleRequired;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'La descripción es obligatoria.'**
+  String get validationDescRequired;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'El tipo es obligatorio.'**
+  String get validationTypeRequired;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'Los géneros son obligatorios.'**
+  String get validationGenresRequired;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'El token de Google no puede estar vacío.'**
+  String get validationGoogleTokenRequired;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'Debe especificar el estado de moderador.'**
+  String get validationModStatusRequired;
+
+  /// Error de validación
+  ///
+  /// In es, this message translates to:
+  /// **'Debe especificar el estado de administrador.'**
+  String get validationAdminStatusRequired;
+
   /// Error: El email ya está registrado.
   ///
   /// In es, this message translates to:
@@ -439,6 +523,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.'**
   String get errorInternalServerError;
+
+  /// Error: Acceso denegado.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes permiso para acceder a este recurso.'**
+  String get errorAccessDenied;
+
+  /// Error: Token JWT caducado.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.'**
+  String get errorTokenExpired;
+
+  /// Error: Token JWT inválido.
+  ///
+  /// In es, this message translates to:
+  /// **'Token inválido. Por favor, inicia sesión de nuevo.'**
+  String get errorTokenInvalid;
+
+  /// Error: Credenciales de login inválidas.
+  ///
+  /// In es, this message translates to:
+  /// **'Email o contraseña incorrectos.'**
+  String get errorInvalidCredentials;
 }
 
 class _AppLocalizationsDelegate

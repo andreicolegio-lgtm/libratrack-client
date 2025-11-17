@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/services/elemento_service.dart';
 import '../../core/services/catalog_service.dart';
 import '../../core/services/resena_service.dart';
@@ -9,9 +10,7 @@ import '../../model/elemento.dart';
 import '../../model/catalogo_entrada.dart';
 import '../../model/resena.dart';
 import '../../model/perfil_usuario.dart';
-
 import '../../model/elemento_relacion.dart';
-
 import 'widgets/resena_form_modal.dart';
 import 'widgets/resena_card.dart';
 import '../../core/utils/snackbar_helper.dart';
@@ -276,6 +275,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: FutureBuilder<Map<String, dynamic>>(
         future: _screenDataFuture,
@@ -415,7 +415,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          _buildReviewList(),
+                          _buildReviewList(l10n),
                         ],
                       ),
                     ),
@@ -614,7 +614,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
 
-  Widget _buildReviewList() {
+  Widget _buildReviewList(AppLocalizations l10n) {
     if (_resenas.isEmpty) {
       return Center(
         child: Padding(

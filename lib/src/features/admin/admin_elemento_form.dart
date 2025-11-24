@@ -13,6 +13,8 @@ import '../../core/utils/api_exceptions.dart';
 import '../../core/services/elemento_service.dart';
 import '../../model/elemento_relacion.dart';
 import '../../core/utils/error_translator.dart';
+import '../../core/services/tipo_service.dart';
+import '../../model/tipo.dart';
 
 class AdminElementoFormScreen extends StatefulWidget {
   final Elemento? elemento;
@@ -42,7 +44,6 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
   final TextEditingController _tituloController = TextEditingController();
   final TextEditingController _descripcionController = TextEditingController();
-  final TextEditingController _tipoController = TextEditingController();
   final TextEditingController _generosController = TextEditingController();
   final TextEditingController _episodiosPorTemporadaController =
       TextEditingController();
@@ -53,7 +54,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   final TextEditingController _totalPaginasLibroController =
       TextEditingController();
 
-  String _tipoSeleccionado = '';
+  String? _tipoSeleccionado;
+  List<Tipo> _tipos = [];
 
   late Future<List<ElementoRelacion>> _elementosFuture;
   List<ElementoRelacion> _allElementos = <ElementoRelacion>[];
@@ -76,7 +78,6 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       final Elemento e = widget.elemento!;
       _tituloController.text = e.titulo;
       _descripcionController.text = e.descripcion;
-      _tipoController.text = e.tipo;
       _generosController.text = e.generos.join(', ');
       _episodiosPorTemporadaController.text = e.episodiosPorTemporada ?? '';
       _totalUnidadesController.text = e.totalUnidades?.toString() ?? '';
@@ -89,7 +90,19 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       _selectedSecuelaIds.addAll(e.secuelas.map((ElementoRelacion s) => s.id));
     }
 
-    _tipoController.addListener(_actualizarCamposDinamicos);
+    _loadTipos();
+  }
+
+  Future<void> _loadTipos() async {
+    final tipoService = context.read<TipoService>();
+    try {
+      final tipos = await tipoService.fetchTipos('Error loading types');
+      setState(() {
+        _tipos = tipos;
+      });
+    } catch (e) {
+      // Handle error
+    }
   }
 
   @override
@@ -112,8 +125,6 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   void dispose() {
     _tituloController.dispose();
     _descripcionController.dispose();
-    _tipoController.removeListener(_actualizarCamposDinamicos);
-    _tipoController.dispose();
     _generosController.dispose();
     _episodiosPorTemporadaController.dispose();
     _totalUnidadesController.dispose();
@@ -121,12 +132,6 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     _totalPaginasLibroController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _actualizarCamposDinamicos() {
-    setState(() {
-      _tipoSeleccionado = _tipoController.text.trim().toLowerCase();
-    });
   }
 
   Future<void> _handlePickImage() async {
@@ -144,8 +149,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       if (!mounted) {
         return;
       }
-      SnackBarHelper.showTopSnackBar(
-          ScaffoldMessenger.of(context), l10n.errorImagePick(e.toString()),
+      SnackBarHelper.showTopSnackBar(context, l10n.errorImagePick(e.toString()),
           isError: true);
     }
   }
@@ -157,7 +161,6 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     setState(() {
       _isUploading = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       final dynamic data = await _apiClient.upload('uploads', _pickedImage!);
@@ -168,8 +171,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           _uploadedImageUrl = url;
           _isUploading = false;
         });
-        SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.snackbarImageUploadSuccess,
+        SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadSuccess,
             isError: false);
       }
     } on ApiException catch (e) {
@@ -178,7 +180,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           _isUploading = false;
         });
         SnackBarHelper.showTopSnackBar(
-            msgContext, ErrorTranslator.translate(context, e.message),
+            context, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
@@ -187,7 +189,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           _isUploading = false;
         });
         SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.errorImageUpload(e.toString()),
+            context, l10n.errorImageUpload(e.toString()),
             isError: true);
       }
     }
@@ -198,11 +200,9 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     if (_uploadedImageUrl == null) {
-      SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.snackbarImageUploadRequired,
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadRequired,
           isError: true);
       return;
     }
@@ -217,7 +217,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       final Map<String, dynamic> body = <String, dynamic>{
         'titulo': _tituloController.text,
         'descripcion': _descripcionController.text,
-        'tipoNombre': _tipoController.text,
+        'tipoNombre': _tipoSeleccionado,
         'generosNombres': _generosController.text,
         'urlImagen': _uploadedImageUrl,
         'episodiosPorTemporada': _episodiosPorTemporadaController.text.isEmpty
@@ -250,8 +250,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           ? l10n.snackbarAdminElementUpdated
           : l10n.snackbarAdminElementCreated;
 
-      SnackBarHelper.showTopSnackBar(msgContext, successMessage,
-          isError: false);
+      SnackBarHelper.showTopSnackBar(context, successMessage, isError: false);
       navContext.pop(true);
     } on ApiException catch (e) {
       if (mounted) {
@@ -259,7 +258,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-          msgContext,
+          context,
           l10n.errorSaving(e.toString()),
           isError: true,
         );
@@ -270,7 +269,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-          msgContext,
+          context,
           l10n.errorUnexpected(e.toString()),
           isError: true,
         );
@@ -324,15 +323,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                     : null,
               ),
               const SizedBox(height: 16),
-              _buildInputField(
-                context,
-                l10n: l10n,
-                controller: _tipoController,
-                labelText: l10n.adminFormTypeLabel,
-                validator: (String? value) => (value == null || value.isEmpty)
-                    ? l10n.validationTypeRequired
-                    : null,
-              ),
+              _buildTipoField(context, l10n),
               const SizedBox(height: 16),
               _buildInputField(
                 context,
@@ -397,7 +388,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               if (_tipoSeleccionado == 'película' ||
                   _tipoSeleccionado == 'videojuego')
                 Text(
-                  l10n.proposalFormNoProgress(_tipoController.text),
+                  l10n.proposalFormNoProgress(_tipoSeleccionado ?? ''),
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               const Padding(
@@ -529,6 +520,46 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
             .textTheme
             .bodyMedium
             ?.copyWith(color: Colors.grey[600]),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTipoField(BuildContext context, AppLocalizations l10n) {
+    return DropdownButtonFormField<String>(
+      initialValue: _tipoSeleccionado,
+      items: _tipos.map((tipo) {
+        return DropdownMenuItem(
+          value: tipo.nombre,
+          child: Text(tipo.nombre),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _tipoSeleccionado = value;
+        });
+      },
+      decoration: InputDecoration(
+        labelText: l10n.adminFormTypeLabel,
+        labelStyle: Theme.of(context).textTheme.labelLarge,
         filled: true,
         fillColor: Theme.of(context).colorScheme.surface,
         border: OutlineInputBorder(

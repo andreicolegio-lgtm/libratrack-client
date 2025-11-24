@@ -84,7 +84,6 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     setState(() {
       _isLoading = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     try {
@@ -96,19 +95,19 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       if (mounted) {
         widget.onUpdate();
         SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.snackbarCatalogStatusUpdated,
+            context, l10n.snackbarCatalogStatusUpdated,
             isError: false);
       }
     } on ApiException catch (e) {
       if (mounted) {
         SnackBarHelper.showTopSnackBar(
-            msgContext, ErrorTranslator.translate(context, e.message),
+            context, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
       if (mounted) {
         SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.errorUpdating(e.toString()),
+            context, l10n.errorUpdating(e.toString()),
             isError: true);
       }
     } finally {
@@ -129,7 +128,6 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     setState(() {
       _isLoading = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     final Map<String, dynamic> body = <String, dynamic>{};
@@ -185,19 +183,19 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       if (mounted) {
         widget.onUpdate();
         SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.snackbarCatalogProgressSaved,
+            context, l10n.snackbarCatalogProgressSaved,
             isError: false);
       }
     } on ApiException catch (e) {
       if (mounted) {
         SnackBarHelper.showTopSnackBar(
-            msgContext, ErrorTranslator.translate(context, e.message),
+            context, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
       if (mounted) {
         SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.errorUpdating(e.toString()),
+            context, l10n.errorUpdating(e.toString()),
             isError: true);
       }
     } finally {

@@ -40,7 +40,6 @@ void main() {
           create: (BuildContext context) => AuthService(
             context.read<ApiClient>(),
             context.read<FlutterSecureStorage>(),
-            navigatorKey, // Pass navigatorKey to AuthService
           ),
         ),
         ChangeNotifierProvider<AdminService>(

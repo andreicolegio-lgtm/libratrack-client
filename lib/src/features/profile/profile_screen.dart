@@ -64,7 +64,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_isAnyLoading()) {
       return;
     }
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -92,8 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         _authService.updateLocalProfileData(perfilActualizado);
       });
-      SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.snackbarProfilePhotoUpdated,
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarProfilePhotoUpdated,
           isError: false);
     } on ApiException catch (e) {
       if (!mounted) {
@@ -106,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _authService.logout();
       } else {
         SnackBarHelper.showTopSnackBar(
-            msgContext, ErrorTranslator.translate(context, e.message),
+            context, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
@@ -117,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isUploadingFoto = false;
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.errorImageUpload(e.toString()),
+          context, l10n.errorImageUpload(e.toString()),
           isError: true);
     }
   }
@@ -128,10 +126,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     final String nuevoUsername = _nombreController.text.trim();
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     if (nuevoUsername == _originalUsername) {
-      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarProfileNoChanges,
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarProfileNoChanges,
           isError: false, isNeutral: true);
       return;
     }
@@ -155,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _authService.updateLocalProfileData(perfilActualizado);
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.snackbarProfileUsernameUpdated,
+          context, l10n.snackbarProfileUsernameUpdated,
           isError: false);
     } on ApiException catch (e) {
       if (!mounted) {
@@ -168,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _authService.logout();
       } else {
         SnackBarHelper.showTopSnackBar(
-            msgContext, ErrorTranslator.translate(context, e.message),
+            context, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
@@ -178,8 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isLoadingUpdate = false;
       });
-      SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.errorUpdating(e.toString()),
+      SnackBarHelper.showTopSnackBar(context, l10n.errorUpdating(e.toString()),
           isError: true);
     }
   }
@@ -203,13 +199,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .requestFocus(FocusScope.of(context).focusedChild);
       }
 
-      setState(() {}); // Trigger UI update
+      setState(() {});
       return;
     }
     setState(() {
       _isLoadingPasswordChange = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final FocusScopeNode focusScope = FocusScope.of(context);
 
     final String actual = _contrasenaActualController.text;
@@ -232,7 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
       focusScope.unfocus();
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.snackbarProfilePasswordUpdated,
+          context, l10n.snackbarProfilePasswordUpdated,
           isError: false);
       debugPrint(
           '[ProfileScreen._handleChangePassword] Password changed successfully');
@@ -247,7 +242,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _authService.logout();
       } else {
         SnackBarHelper.showTopSnackBar(
-            msgContext, ErrorTranslator.translate(context, e.message),
+            context, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
       debugPrint(
@@ -259,8 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isLoadingPasswordChange = false;
       });
-      SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.errorUpdating(e.toString()),
+      SnackBarHelper.showTopSnackBar(context, l10n.errorUpdating(e.toString()),
           isError: true);
       debugPrint(
           '[ProfileScreen._handleChangePassword] Unexpected error: ${e.toString()}');
@@ -271,7 +265,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _isLoadingLogout = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       await _authService.logout();
@@ -283,7 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoadingLogout = false;
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, ErrorTranslator.translate(context, e.message),
+          context, ErrorTranslator.translate(context, e.message),
           isError: true);
     } catch (e) {
       if (!mounted) {
@@ -293,7 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoadingLogout = false;
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.errorUnexpected(e.toString()),
+          context, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }

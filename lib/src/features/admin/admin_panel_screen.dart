@@ -177,7 +177,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     final bool esAdministrador =
         changes['admin'] ?? currentUser.esAdministrador;
 
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     try {
@@ -193,7 +192,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         return;
       }
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.snackbarAdminRolesUpdated(currentUser.username),
+          context, l10n.snackbarAdminRolesUpdated(currentUser.username),
           isError: false);
 
       setState(() {
@@ -215,14 +214,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         return;
       }
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.errorUpdatingRoles(e.toString()),
+          context, l10n.errorUpdatingRoles(e.toString()),
           isError: true);
     } catch (e) {
       if (!mounted) {
         return;
       }
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.errorUnexpected(e.toString()),
+          context, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }

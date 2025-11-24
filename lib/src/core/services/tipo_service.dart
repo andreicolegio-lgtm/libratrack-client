@@ -7,12 +7,12 @@ class TipoService with ChangeNotifier {
   final ApiClient _apiClient;
   TipoService(this._apiClient);
 
-  List<Tipo>? _tipos;
-  List<Tipo>? get tipos => _tipos;
+  List<Tipo> _tipos = [];
+  List<Tipo> get tipos => _tipos;
 
-  Future<List<Tipo>> fetchTipos() async {
-    if (_tipos != null) {
-      return _tipos!;
+  Future<List<Tipo>> fetchTipos(String localizedErrorMessage) async {
+    if (_tipos.isNotEmpty) {
+      return _tipos;
     }
 
     try {
@@ -20,11 +20,11 @@ class TipoService with ChangeNotifier {
 
       _tipos = data.map((item) => Tipo.fromJson(item)).toList();
       notifyListeners();
-      return _tipos!;
+      return _tipos;
     } on ApiException {
       rethrow;
     } catch (e) {
-      throw ApiException('Error al cargar los tipos: ${e.toString()}');
+      throw ApiException('$localizedErrorMessage: ${e.toString()}');
     }
   }
 }

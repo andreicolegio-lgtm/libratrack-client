@@ -115,7 +115,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
         _propuestas.removeWhere((Propuesta p) => p.id == propuesta.id);
       });
       SnackBarHelper.showTopSnackBar(
-        ScaffoldMessenger.of(context),
+        context,
         l10n.snackbarModProposalApproved,
         isError: false,
       );
@@ -134,7 +134,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
         _processingItems.remove(propuestaId);
       });
       SnackBarHelper.showTopSnackBar(
-        ScaffoldMessenger.of(context),
+        context,
         l10n.snackbarModProposalRejected,
         isError: false,
         isNeutral: true,

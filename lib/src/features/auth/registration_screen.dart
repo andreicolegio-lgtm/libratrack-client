@@ -33,7 +33,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     final AuthService authService = context.read<AuthService>();
     final NavigatorState navContext = Navigator.of(context);
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     try {
       await authService.register(
@@ -42,18 +41,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         _passwordController.text,
       );
 
-      if (!mounted) {
-        return;
+      if (mounted) {
+        navContext.popUntil((route) => route.isFirst);
+        SnackBarHelper.showTopSnackBar(
+          context,
+          l10n.snackbarRegisterSuccess,
+          isError: false,
+        );
       }
-
-      SnackBarHelper.showTopSnackBar(
-        msgContext,
-        l10n.snackbarRegisterSuccess,
-        isError: false,
-      );
-
-      // Navigate to the home screen after auto-login
-      navContext.pushReplacementNamed('/home');
     } on ApiException catch (e) {
       if (!mounted) {
         return;
@@ -63,7 +58,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       });
 
       SnackBarHelper.showTopSnackBar(
-        msgContext,
+        context,
         ErrorTranslator.translate(context, e.message),
         isError: true,
       );
@@ -76,10 +71,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       });
 
       SnackBarHelper.showTopSnackBar(
-        msgContext,
+        context,
         l10n.errorUnexpected(e.toString()),
         isError: true,
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

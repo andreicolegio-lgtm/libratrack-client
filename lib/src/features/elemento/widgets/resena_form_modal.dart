@@ -42,11 +42,8 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
       return;
     }
 
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
-
     if (_valoracion == 0) {
-      SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.snackbarReviewRatingRequired,
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarReviewRatingRequired,
           isError: true);
       return;
     }
@@ -68,7 +65,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
         return;
       }
 
-      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarReviewPublished,
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarReviewPublished,
           isError: false);
       navContext.pop(nuevaResena);
     } on ApiException catch (e) {
@@ -79,7 +76,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
         _isLoading = false;
       });
       SnackBarHelper.showTopSnackBar(
-        msgContext,
+        context,
         ErrorTranslator.translate(context, e.message),
         isError: true,
       );
@@ -91,7 +88,7 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
         _isLoading = false;
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.errorUnexpected(e.toString()),
+          context, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }

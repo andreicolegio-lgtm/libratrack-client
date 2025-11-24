@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../config/environment_config.dart';
 import '../utils/api_client.dart';
 import '../utils/api_exceptions.dart';
 import '../../model/perfil_usuario.dart';
-import '../../features/home/home_screen.dart';
 
 class GoogleSignInCanceledException implements Exception {
   const GoogleSignInCanceledException();
@@ -16,17 +16,6 @@ const String _accessTokenKey = 'jwt_access_token';
 const String _refreshTokenKey = 'jwt_refresh_token';
 
 class AuthService with ChangeNotifier {
-  Future<void> logout({bool shouldNotify = true}) async {
-    _accessToken = null;
-    _refreshToken = null;
-    _perfilUsuario = null;
-    await _secureStorage.delete(key: _accessTokenKey);
-    await _secureStorage.delete(key: _refreshTokenKey);
-    if (shouldNotify) {
-      notifyListeners();
-    }
-  }
-
   final ApiClient _apiClient;
   final FlutterSecureStorage _secureStorage;
 
@@ -42,9 +31,7 @@ class AuthService with ChangeNotifier {
   bool get isAuthenticated => _accessToken != null && _perfilUsuario != null;
   bool get isLoading => _isLoading;
 
-  final GlobalKey<NavigatorState> navigatorKey;
-
-  AuthService(this._apiClient, this._secureStorage, this.navigatorKey) {
+  AuthService(this._apiClient, this._secureStorage) {
     _initialize();
   }
 
@@ -52,8 +39,7 @@ class AuthService with ChangeNotifier {
     try {
       _googleSignIn = GoogleSignIn.instance;
       await _googleSignIn.initialize(
-        serverClientId:
-            '1078651925823-g53s0f6i4on4ugdc0t7pfg11vpu86rdp.apps.googleusercontent.com',
+        serverClientId: EnvironmentConfig.googleWebClientId,
       );
       await _tryAutoLogin();
     } catch (e) {
@@ -73,14 +59,6 @@ class AuthService with ChangeNotifier {
 
       if (_accessToken != null && _refreshToken != null) {
         await _loadUserProfile(shouldNotify: false);
-
-        // Navigate to the main screen and clear the stack
-        if (navigatorKey.currentState != null) {
-          navigatorKey.currentState!.pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-            (route) => false,
-          );
-        }
       } else {
         debugPrint('⚠️ No hay tokens guardados, cerrando sesión');
         await logout(shouldNotify: false);
@@ -138,7 +116,7 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future<void> signInWithGoogle(BuildContext? context) async {
+  Future<void> signInWithGoogle() async {
     try {
       final user = await _googleSignIn.authenticate();
       debugPrint('✅ Google Sign-In exitoso: ${user.email}');
@@ -213,5 +191,30 @@ class AuthService with ChangeNotifier {
   void updateLocalProfileData(PerfilUsuario perfilActualizado) {
     _perfilUsuario = perfilActualizado;
     notifyListeners();
+  }
+
+  Future<void> logout({bool shouldNotify = true}) async {
+    try {
+      await _apiClient.logout();
+
+      try {
+        await _googleSignIn.signOut();
+      } catch (e) {
+        debugPrint('Error silencioso al cerrar sesión de Google: $e');
+      }
+    } catch (e) {
+      debugPrint('Error durante el logout remoto: $e');
+    } finally {
+      _accessToken = null;
+      _refreshToken = null;
+      _perfilUsuario = null;
+
+      await _secureStorage.delete(key: _accessTokenKey);
+      await _secureStorage.delete(key: _refreshTokenKey);
+
+      if (shouldNotify) {
+        notifyListeners();
+      }
+    }
   }
 }

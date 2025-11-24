@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config/environment_config.dart';
 import 'api_exceptions.dart';
 
 import 'package:flutter/foundation.dart';
@@ -11,7 +12,7 @@ const String _accessTokenKey = 'jwt_access_token';
 const String _refreshTokenKey = 'jwt_refresh_token';
 
 class ApiClient {
-  final String _baseUrl = 'http://10.0.2.2:8080/api';
+  final String _baseUrl = EnvironmentConfig.apiUrl;
 
   final FlutterSecureStorage _storage;
   ApiClient(this._storage);

@@ -73,7 +73,7 @@ class _SearchScreenState extends State<SearchScreen> {
     try {
       final List<List<Object>> results =
           await Future.wait(<Future<List<Object>>>[
-        _tipoService.fetchTipos(),
+        _tipoService.fetchTipos(l10n.errorLoadingElements('')),
         _generoService.fetchGeneros(),
       ]);
       if (mounted) {

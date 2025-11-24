@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/services/propuesta_service.dart';
+import '../../core/services/tipo_service.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/utils/error_translator.dart';
+import '../../model/tipo.dart';
 
 class PropuestaFormScreen extends StatefulWidget {
   const PropuestaFormScreen({super.key});
@@ -21,9 +23,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
 
   final TextEditingController _tituloController = TextEditingController();
   final TextEditingController _descripcionController = TextEditingController();
-  final TextEditingController _tipoController = TextEditingController();
   final TextEditingController _generosController = TextEditingController();
-
   final TextEditingController _episodiosPorTemporadaController =
       TextEditingController();
   final TextEditingController _totalUnidadesController =
@@ -33,32 +33,25 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
   final TextEditingController _totalPaginasLibroController =
       TextEditingController();
 
-  String _tipoSeleccionado = '';
+  String? _tipoSeleccionado;
+  List<Tipo> _tipos = [];
 
   @override
   void initState() {
     super.initState();
-    _tipoController.addListener(_actualizarCamposDinamicos);
+    _loadTipos();
   }
 
-  @override
-  void dispose() {
-    _tituloController.dispose();
-    _descripcionController.dispose();
-    _tipoController.removeListener(_actualizarCamposDinamicos);
-    _tipoController.dispose();
-    _generosController.dispose();
-    _episodiosPorTemporadaController.dispose();
-    _totalUnidadesController.dispose();
-    _totalCapitulosLibroController.dispose();
-    _totalPaginasLibroController.dispose();
-    super.dispose();
-  }
-
-  void _actualizarCamposDinamicos() {
-    setState(() {
-      _tipoSeleccionado = _tipoController.text.trim().toLowerCase();
-    });
+  Future<void> _loadTipos() async {
+    final tipoService = context.read<TipoService>();
+    try {
+      final tipos = await tipoService.fetchTipos('Error loading types');
+      setState(() {
+        _tipos = tipos;
+      });
+    } catch (e) {
+      // Handle error
+    }
   }
 
   Future<void> _submitPropuesta() async {
@@ -70,7 +63,6 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     setState(() {
       _isLoading = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final NavigatorState navContext = Navigator.of(context);
 
     final PropuestaService propuestaService = context.read<PropuestaService>();
@@ -79,7 +71,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
       final Map<String, dynamic> body = <String, dynamic>{
         'tituloSugerido': _tituloController.text,
         'descripcionSugerida': _descripcionController.text,
-        'tipoSugerido': _tipoController.text,
+        'tipoSugerido': _tipoSeleccionado ?? '',
         'generosSugeridos': _generosController.text,
         'episodiosPorTemporada': _episodiosPorTemporadaController.text.isEmpty
             ? null
@@ -102,7 +94,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
         return;
       }
 
-      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarProposalSent,
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarProposalSent,
           isError: false);
 
       navContext.pop();
@@ -112,7 +104,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-          msgContext,
+          context,
           ErrorTranslator.translate(context, e.message),
           isError: true,
         );
@@ -123,7 +115,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-          msgContext,
+          context,
           l10n.errorUnexpected(e.toString()),
           isError: true,
         );
@@ -169,14 +161,41 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                     : null,
               ),
               const SizedBox(height: 16),
-              _buildInputField(
-                context,
-                l10n: l10n,
-                controller: _tipoController,
-                labelText: l10n.proposalFormTypeLabel,
-                validator: (String? value) => (value == null || value.isEmpty)
-                    ? l10n.validationTypeRequired
-                    : null,
+              DropdownButtonFormField<String>(
+                initialValue: _tipoSeleccionado,
+                items: _tipos.map((tipo) {
+                  return DropdownMenuItem(
+                    value: tipo.nombre,
+                    child: Text(tipo.nombre),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _tipoSeleccionado = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: l10n.proposalFormTypeLabel,
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary, width: 2),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               _buildInputField(
@@ -243,9 +262,9 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                   _tipoSeleccionado != 'libro' &&
                   _tipoSeleccionado != 'anime' &&
                   _tipoSeleccionado != 'manga' &&
-                  _tipoSeleccionado.isNotEmpty)
+                  _tipoSeleccionado?.isNotEmpty == true)
                 Text(
-                  l10n.proposalFormNoProgress(_tipoController.text),
+                  l10n.proposalFormNoProgress(_tipoSeleccionado ?? ''),
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               const SizedBox(height: 32.0),

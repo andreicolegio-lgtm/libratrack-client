@@ -6,7 +6,9 @@ import 'package:provider/provider.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/api_client.dart';
 import '../../core/services/moderacion_service.dart';
+import '../../core/services/tipo_service.dart';
 import '../../model/propuesta.dart';
+import '../../model/tipo.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/error_translator.dart';
 import '../../core/utils/api_exceptions.dart';
@@ -31,14 +33,14 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
 
   late TextEditingController _tituloController;
   late TextEditingController _descripcionController;
-  late TextEditingController _tipoController;
   late TextEditingController _generosController;
   late TextEditingController _episodiosPorTemporadaController;
   late TextEditingController _totalUnidadesController;
   late TextEditingController _totalCapitulosLibroController;
   late TextEditingController _totalPaginasLibroController;
 
-  String _tipoSeleccionado = '';
+  String? _tipoSeleccionado;
+  List<Tipo> _tipos = [];
 
   XFile? _pickedImage;
   String? _uploadedImageUrl;
@@ -54,7 +56,6 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     _tituloController = TextEditingController(text: p.tituloSugerido);
     _descripcionController =
         TextEditingController(text: p.descripcionSugerida ?? '');
-    _tipoController = TextEditingController(text: p.tipoSugerido);
     _generosController = TextEditingController(text: p.generosSugeridos);
     _episodiosPorTemporadaController =
         TextEditingController(text: p.episodiosPorTemporada ?? '');
@@ -65,27 +66,31 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     _totalPaginasLibroController =
         TextEditingController(text: p.totalPaginasLibro?.toString() ?? '');
     _tipoSeleccionado = p.tipoSugerido.toLowerCase();
-    _tipoController.addListener(_actualizarCamposDinamicos);
+    _loadTipos();
+  }
+
+  Future<void> _loadTipos() async {
+    final tipoService = context.read<TipoService>();
+    try {
+      final tipos = await tipoService.fetchTipos('Error loading types');
+      setState(() {
+        _tipos = tipos;
+      });
+    } catch (e) {
+      // Handle error
+    }
   }
 
   @override
   void dispose() {
     _tituloController.dispose();
     _descripcionController.dispose();
-    _tipoController.removeListener(_actualizarCamposDinamicos);
-    _tipoController.dispose();
     _generosController.dispose();
     _episodiosPorTemporadaController.dispose();
     _totalUnidadesController.dispose();
     _totalCapitulosLibroController.dispose();
     _totalPaginasLibroController.dispose();
     super.dispose();
-  }
-
-  void _actualizarCamposDinamicos() {
-    setState(() {
-      _tipoSeleccionado = _tipoController.text.trim().toLowerCase();
-    });
   }
 
   Future<void> _handlePickImage() async {
@@ -103,8 +108,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
       if (!mounted) {
         return;
       }
-      SnackBarHelper.showTopSnackBar(
-          ScaffoldMessenger.of(context), l10n.errorImagePick(e.toString()),
+      SnackBarHelper.showTopSnackBar(context, l10n.errorImagePick(e.toString()),
           isError: true);
     }
   }
@@ -117,7 +121,6 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     setState(() {
       _isUploading = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       final dynamic data = await _apiClient.upload('uploads', _pickedImage!);
@@ -128,8 +131,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           _uploadedImageUrl = url;
           _isUploading = false;
         });
-        SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.snackbarImageUploadSuccess,
+        SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadSuccess,
             isError: false);
       }
     } on ApiException catch (e) {
@@ -138,7 +140,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           _isUploading = false;
         });
         SnackBarHelper.showTopSnackBar(
-            msgContext, ErrorTranslator.translate(context, e.message),
+            context, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
@@ -147,7 +149,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           _isUploading = false;
         });
         SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.errorImageUpload(e.toString()),
+            context, l10n.errorImageUpload(e.toString()),
             isError: true);
       }
     }
@@ -158,11 +160,10 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
 
     if (_uploadedImageUrl == null) {
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.snackbarImageUploadRequiredApproval,
+          context, l10n.snackbarImageUploadRequiredApproval,
           isError: true);
       return;
     }
@@ -177,7 +178,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
       final Map<String, dynamic> body = <String, dynamic>{
         'tituloSugerido': _tituloController.text,
         'descripcionSugerida': _descripcionController.text,
-        'tipoSugerido': _tipoController.text,
+        'tipoSugerido': _tipoSeleccionado,
         'generosSugeridos': _generosController.text,
         'urlImagen': _uploadedImageUrl,
         'episodiosPorTemporada': _episodiosPorTemporadaController.text.isEmpty
@@ -208,7 +209,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-          msgContext,
+          context,
           l10n.errorApproving(e.toString()),
           isError: true,
         );
@@ -219,7 +220,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-          msgContext,
+          context,
           l10n.errorUnexpected(e.toString()),
           isError: true,
         );
@@ -272,15 +273,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                     : null,
               ),
               const SizedBox(height: 16),
-              _buildInputField(
-                context,
-                l10n: l10n,
-                controller: _tipoController,
-                labelText: l10n.proposalFormTypeLabel,
-                validator: (String? value) => (value == null || value.isEmpty)
-                    ? l10n.validationTypeRequired
-                    : null,
-              ),
+              _buildTipoDropdown(l10n),
               const SizedBox(height: 16),
               _buildInputField(
                 context,
@@ -357,7 +350,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
               if (_tipoSeleccionado == 'película' ||
                   _tipoSeleccionado == 'videojuego')
                 Text(
-                  l10n.proposalFormNoProgress(_tipoController.text),
+                  l10n.proposalFormNoProgress(_tipoSeleccionado ?? ''),
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               const SizedBox(height: 32.0),
@@ -477,6 +470,46 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
             .textTheme
             .bodyMedium
             ?.copyWith(color: Colors.grey[600]),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTipoDropdown(AppLocalizations l10n) {
+    return DropdownButtonFormField<String>(
+      initialValue: _tipoSeleccionado ?? '',
+      items: _tipos.map((tipo) {
+        return DropdownMenuItem(
+          value: tipo.nombre,
+          child: Text(tipo.nombre),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _tipoSeleccionado = value;
+        });
+      },
+      decoration: InputDecoration(
+        labelText: l10n.proposalFormTypeLabel,
+        labelStyle: Theme.of(context).textTheme.labelLarge,
         filled: true,
         fillColor: Theme.of(context).colorScheme.surface,
         border: OutlineInputBorder(

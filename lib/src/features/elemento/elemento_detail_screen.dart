@@ -114,7 +114,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     setState(() {
       _isAdding = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       await _catalogService.addElemento(widget.elementoId);
@@ -125,7 +124,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         _isAdding = false;
         _isInCatalog = true;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarCatalogAdded,
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarCatalogAdded,
           isError: false);
     } on ApiException catch (e) {
       if (!mounted) {
@@ -135,7 +134,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         _isAdding = false;
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, ErrorTranslator.translate(context, e.message),
+          context, ErrorTranslator.translate(context, e.message),
           isError: true);
     } catch (e) {
       if (!mounted) {
@@ -145,7 +144,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         _isAdding = false;
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.errorUnexpected(e.toString()),
+          context, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }
@@ -154,7 +153,6 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     setState(() {
       _isDeleting = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       await _catalogService.removeElemento(widget.elementoId);
@@ -165,7 +163,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         _isDeleting = false;
         _isInCatalog = false;
       });
-      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarCatalogRemoved,
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarCatalogRemoved,
           isError: false);
     } on ApiException catch (e) {
       if (!mounted) {
@@ -175,7 +173,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         _isDeleting = false;
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, ErrorTranslator.translate(context, e.message),
+          context, ErrorTranslator.translate(context, e.message),
           isError: true);
     } catch (e) {
       if (!mounted) {
@@ -185,7 +183,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         _isDeleting = false;
       });
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.errorUnexpected(e.toString()),
+          context, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }
@@ -211,37 +209,33 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     setState(() {
       _isLoadingStatusChange = true;
     });
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
     try {
       await _adminService.toggleElementoOficial(
         elemento.id,
         !esOficial,
       );
-
-      final String successMessage = esOficial
-          ? l10n.snackbarAdminStatusCommunity
-          : l10n.snackbarAdminStatusOfficial;
-      SnackBarHelper.showTopSnackBar(msgContext, successMessage,
-          isError: false);
-
       if (!mounted) {
         return;
       }
+      final String successMessage = esOficial
+          ? l10n.snackbarAdminStatusCommunity
+          : l10n.snackbarAdminStatusOfficial;
+      SnackBarHelper.showTopSnackBar(context, successMessage, isError: false);
       _loadScreenData();
     } on ApiException catch (e) {
       if (!mounted) {
         return;
       }
       SnackBarHelper.showTopSnackBar(
-          msgContext, ErrorTranslator.translate(context, e.message),
+          context, ErrorTranslator.translate(context, e.message),
           isError: true);
     } catch (e) {
       if (!mounted) {
         return;
       }
       SnackBarHelper.showTopSnackBar(
-          msgContext, l10n.errorUnexpected(e.toString()),
+          context, l10n.errorUnexpected(e.toString()),
           isError: true);
     } finally {
       if (mounted) {
@@ -819,3 +813,4 @@ class _RelacionCard extends StatelessWidget {
     );
   }
 }
+// Fixed BuildContext usage across async gaps.

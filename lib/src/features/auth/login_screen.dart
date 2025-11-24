@@ -7,8 +7,6 @@ import 'registration_screen.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/error_translator.dart';
 import '../../core/utils/api_exceptions.dart';
-import '../home/home_screen.dart';
-import '../../../main.dart'; // Import navigatorKey
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,12 +36,9 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
-    final AuthService authService = context.read<AuthService>();
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final authService = context.read<AuthService>();
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     try {
@@ -57,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-            msgContext, ErrorTranslator.translate(context, e.message),
+            context, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
@@ -66,54 +61,40 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
         });
         SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.errorUnexpected(e.toString()),
+            context, l10n.errorUnexpected(e.toString()),
             isError: true);
       }
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
-    setState(() {
-      _isGoogleLoading = true;
-    });
+    setState(() => _isGoogleLoading = true);
 
-    final AuthService authService = context.read<AuthService>();
-    final ScaffoldMessengerState msgContext = ScaffoldMessenger.of(context);
+    final authService = context.read<AuthService>();
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     try {
-      await authService.signInWithGoogle(context);
-
-      // Navigate to the home screen and clear the stack
-      if (navigatorKey.currentState != null) {
-        navigatorKey.currentState!.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (route) => false,
-        );
-      }
+      await authService.signInWithGoogle();
     } on GoogleSignInCanceledException {
       if (mounted) {
-        SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.snackbarLoginGoogleCancel,
+        SnackBarHelper.showTopSnackBar(context, l10n.snackbarLoginGoogleCancel,
             isError: false, isNeutral: true);
       }
     } on ApiException catch (e) {
       if (mounted) {
         SnackBarHelper.showTopSnackBar(
-            msgContext, ErrorTranslator.translate(context, e.message),
+            context, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
     } catch (e) {
       if (mounted) {
         SnackBarHelper.showTopSnackBar(
-            msgContext, l10n.errorUnexpected(e.toString()),
+            context, l10n.errorUnexpected(e.toString()),
             isError: true);
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isGoogleLoading = false;
-        });
+        setState(() => _isGoogleLoading = false);
       }
     }
   }

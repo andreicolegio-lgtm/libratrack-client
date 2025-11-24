@@ -13,6 +13,7 @@ class ErrorTranslator {
       case 'E_INVALID_CREDENTIALS':
         return loc.errorInvalidCredentials;
       case 'E_ACCESS_DENIED':
+      case 'FORBIDDEN':
         return loc.errorAccessDenied;
       case 'E_TOKEN_EXPIRED':
         return loc.errorTokenExpired;
@@ -31,6 +32,7 @@ class ErrorTranslator {
       case 'PROPOSAL_NOT_FOUND':
         return loc.errorProposalNotFound;
       case 'NOT_IN_CATALOG':
+      case 'CATALOG_ENTRY_NOT_FOUND':
         return loc.errorNotInCatalog;
       case 'EMAIL_ALREADY_REGISTERED':
         return loc.errorEmailAlreadyRegistered;
@@ -60,14 +62,20 @@ class ErrorTranslator {
         return loc.errorIllegalArgument;
       case 'INTERNAL_SERVER_ERROR':
         return loc.errorInternalServerError;
-      case 'FORBIDDEN':
-        return loc.errorAccessDenied;
+      case 'USER_NOT_FOUND':
+        return loc.errorUserNotFound;
+      case 'REVIEWER_NOT_FOUND':
+        return loc.errorReviewerNotFound;
+      case 'FILE_UPLOAD_ERROR':
+        return loc.errorImageUpload('');
+      case 'FILE_SAVE_ERROR':
+        return loc.errorFileSave;
 
       case 'RESOURCE_NOT_FOUND':
       case 'ELEMENT_NOT_FOUND':
+        return loc.elementDetailNoElement;
       case 'INVALID_USER_TOKEN':
-      case 'FILE_SAVE_ERROR':
-        return loc.errorInternalServerError;
+        return loc.errorTokenInvalid;
 
       case 'VALIDATION_USERNAME_REQUIRED':
         return loc.validationUsernameRequired;
@@ -110,8 +118,39 @@ class ErrorTranslator {
       case 'VALIDATION_ADMIN_STATUS_REQUIRED':
         return loc.validationAdminStatusRequired;
 
+      case 'VALIDATION_SEASON_MIN_1':
+        return loc.validationSeasonMin1;
+      case 'VALIDATION_UNIT_MIN_0':
+        return loc.validationUnitMin0;
+      case 'VALIDATION_CHAPTER_MIN_0':
+        return loc.validationChapterMin0;
+      case 'VALIDATION_PAGE_MIN_0':
+        return loc.validationPageMin0;
+      case 'VALIDATION_TYPE_NAME_REQUIRED':
+        return loc.validationTypeNameRequired;
+      case 'VALIDATION_TYPE_NAME_MAX_50':
+        return loc.validationTypeNameMax50;
+      case 'VALIDATION_GENRE_NAME_REQUIRED':
+        return loc.validationGenreNameRequired;
+      case 'VALIDATION_GENRE_NAME_MAX_50':
+        return loc.validationGenreNameMax50;
+      case 'VALIDATION_TITLE_MAX_255':
+        return loc.validationTitleMax255;
+      case 'VALIDATION_DESC_MAX_5000':
+        return loc.validationDescMax5000;
+      case 'VALIDATION_EPISODES_STRING_MAX_255':
+        return loc.validationEpisodesStringMax255;
+      case 'VALIDATION_UNITS_MIN_1':
+        return loc.validationUnitsMin1;
+      case 'VALIDATION_CHAPTERS_MIN_1':
+        return loc.validationChaptersMin1;
+      case 'VALIDATION_PAGES_MIN_1':
+        return loc.validationPagesMin1;
+      case 'VALIDATION_COMMENT_MAX_500':
+        return loc.validationCommentMax500;
+
       default:
-        return loc.errorInternalServerError;
+        return errorKey;
     }
   }
 }

@@ -19,6 +19,8 @@ import 'src/features/auth/login_screen.dart';
 import 'src/features/home/home_screen.dart';
 import 'src/core/utils/api_client.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() {
   runApp(
     MultiProvider(
@@ -38,6 +40,7 @@ void main() {
           create: (BuildContext context) => AuthService(
             context.read<ApiClient>(),
             context.read<FlutterSecureStorage>(),
+            navigatorKey, // Pass navigatorKey to AuthService
           ),
         ),
         ChangeNotifierProvider<AdminService>(
@@ -90,6 +93,7 @@ class MyApp extends StatelessWidget {
     return Consumer<SettingsService>(
       builder: (BuildContext context, SettingsService settings, Widget? child) {
         return MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'LibraTrack',
           debugShowCheckedModeBanner: false,
           locale: settings.locale,
@@ -99,22 +103,14 @@ class MyApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          supportedLocales: const <Locale>[
-            Locale('en', ''),
-            Locale('es', ''),
-          ],
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            brightness: Brightness.light,
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData(
-            primarySwatch: Colors.blue,
-            brightness: Brightness.dark,
-            useMaterial3: true,
-          ),
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
           themeMode: settings.themeMode,
           home: const AuthWrapper(),
+          routes: {
+            '/home': (context) => const HomeScreen(),
+          },
         );
       },
     );

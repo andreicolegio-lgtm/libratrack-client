@@ -14,9 +14,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   
-  # --- ¡PAQUETE AÑADIDO (ID: QA-091)! ---
   google_sign_in: ^7.2.0
-  # ---
 
   intl: 0.20.2
   http: ^1.5.0
@@ -30,6 +28,7 @@ dependencies:
   shared_preferences: ^2.2.3
   
   cupertino_icons: ^1.0.6
+  flutter_svg: ^1.1.6
 
 dev_dependencies:
   flutter_test:
@@ -39,3 +38,5 @@ dev_dependencies:
 flutter:
   generate: true 
   uses-material-design: true
+  assets:
+    - assets/images/google_logo.svg

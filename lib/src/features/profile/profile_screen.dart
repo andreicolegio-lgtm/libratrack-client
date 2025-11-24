@@ -44,6 +44,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nuevaContrasenaController =
       TextEditingController();
 
+  bool _isCurrentPasswordObscured = true;
+  bool _isNewPasswordObscured = true;
+
   @override
   void initState() {
     super.initState();
@@ -184,6 +187,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _handleChangePassword() async {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (!_passwordFormKey.currentState!.validate()) {
+      debugPrint(
+          '[ProfileScreen._handleChangePassword] Form validation failed');
+
+      // Focus the first invalid field
+      if (_contrasenaActualController.text.isEmpty ||
+          !RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}')
+              .hasMatch(_contrasenaActualController.text)) {
+        FocusScope.of(context)
+            .requestFocus(FocusScope.of(context).focusedChild);
+      } else if (_nuevaContrasenaController.text.isEmpty ||
+          !RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}')
+              .hasMatch(_nuevaContrasenaController.text)) {
+        FocusScope.of(context)
+            .requestFocus(FocusScope.of(context).focusedChild);
+      }
+
+      setState(() {}); // Trigger UI update
       return;
     }
     setState(() {
@@ -194,6 +214,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final String actual = _contrasenaActualController.text;
     final String nueva = _nuevaContrasenaController.text;
+    debugPrint(
+        '[ProfileScreen._handleChangePassword] Attempting to change password');
+    debugPrint(
+        '[ProfileScreen._handleChangePassword] Current password: $actual');
+    debugPrint('[ProfileScreen._handleChangePassword] New password: $nueva');
     try {
       await _userService.updatePassword(actual, nueva);
 
@@ -209,6 +234,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       SnackBarHelper.showTopSnackBar(
           msgContext, l10n.snackbarProfilePasswordUpdated,
           isError: false);
+      debugPrint(
+          '[ProfileScreen._handleChangePassword] Password changed successfully');
     } on ApiException catch (e) {
       if (!mounted) {
         return;
@@ -223,6 +250,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             msgContext, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
+      debugPrint(
+          '[ProfileScreen._handleChangePassword] ApiException: ${e.message}');
     } catch (e) {
       if (!mounted) {
         return;
@@ -233,6 +262,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       SnackBarHelper.showTopSnackBar(
           msgContext, l10n.errorUpdating(e.toString()),
           isError: true);
+      debugPrint(
+          '[ProfileScreen._handleChangePassword] Unexpected error: ${e.toString()}');
     }
   }
 
@@ -452,32 +483,125 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                _buildInputField(context,
-                    l10n: l10n,
-                    controller: _contrasenaActualController,
-                    labelText: l10n.profileCurrentPassword,
-                    enabled: !_isAnyLoading(),
-                    isPassword: true, validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return l10n.validationPasswordCurrentRequired;
-                  }
-                  return null;
-                }),
+                _buildInputField(
+                  context,
+                  l10n: l10n,
+                  controller: _contrasenaActualController,
+                  labelText: l10n.profileCurrentPassword,
+                  isPassword: _isCurrentPasswordObscured,
+                  prefixIcon: const Icon(Icons.lock_open),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isCurrentPasswordObscured
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isCurrentPasswordObscured =
+                            !_isCurrentPasswordObscured;
+                      });
+                    },
+                  ),
+                  validator: (String? value) {
+                    debugPrint(
+                        '[ProfileScreen._buildInputField] Validating current password: $value');
+
+                    // Validate current password strength
+                    final regex = RegExp(
+                        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}');
+                    if (value == null || value.isEmpty) {
+                      debugPrint(
+                          '[ProfileScreen._buildInputField] Validation failed: Current password is empty');
+                      return l10n.validationPasswordCurrentRequired;
+                    }
+                    if (!regex.hasMatch(value)) {
+                      debugPrint(
+                          '[ProfileScreen._buildInputField] Validation failed: Current password does not meet complexity requirements');
+                      return l10n.validationPasswordComplexity;
+                    }
+
+                    debugPrint(
+                        '[ProfileScreen._buildInputField] Current password validation passed');
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 16.0),
-                _buildInputField(context,
-                    l10n: l10n,
-                    controller: _nuevaContrasenaController,
-                    labelText: l10n.profileNewPassword,
-                    enabled: !_isAnyLoading(),
-                    isPassword: true, validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return l10n.validationPasswordNewRequired;
-                  }
-                  if (value.length < 8) {
-                    return l10n.validationPasswordMin8;
-                  }
-                  return null;
-                }),
+                _buildInputField(
+                  context,
+                  l10n: l10n,
+                  controller: _nuevaContrasenaController,
+                  labelText: l10n.profileNewPassword,
+                  isPassword: _isNewPasswordObscured,
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.info_outline),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text(l10n.passwordRulesTitle),
+                                content: Text(l10n.passwordRulesContent),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    child: Text(l10n.dialogCloseButton),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _isNewPasswordObscured
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isNewPasswordObscured = !_isNewPasswordObscured;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  validator: (String? value) {
+                    debugPrint(
+                        '[ProfileScreen._buildInputField] Validating new password: $value');
+
+                    // Validate new password strength
+                    final regex = RegExp(
+                        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}');
+                    if (value == null || value.isEmpty) {
+                      debugPrint(
+                          '[ProfileScreen._buildInputField] Validation failed: New password is empty');
+                      return l10n.validationPasswordNewRequired;
+                    }
+                    if (!regex.hasMatch(value)) {
+                      debugPrint(
+                          '[ProfileScreen._buildInputField] Validation failed: New password does not meet complexity requirements');
+                      return l10n.validationPasswordComplexity;
+                    }
+
+                    // Check if new password matches current password
+                    if (value == _contrasenaActualController.text) {
+                      debugPrint(
+                          '[ProfileScreen._buildInputField] Validation failed: Password is unchanged');
+                      return l10n.validationPasswordUnchanged;
+                    }
+
+                    debugPrint(
+                        '[ProfileScreen._buildInputField] New password validation passed');
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 24.0),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -571,6 +695,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String labelText,
     bool enabled = true,
     bool isPassword = false,
+    Widget? suffixIcon,
+    Widget? prefixIcon,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
@@ -607,6 +733,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           borderRadius: BorderRadius.circular(10.0),
           borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
+        suffixIcon: suffixIcon,
+        prefixIcon: prefixIcon,
       ),
     );
   }

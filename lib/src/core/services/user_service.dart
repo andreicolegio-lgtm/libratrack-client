@@ -25,10 +25,33 @@ class UserService with ChangeNotifier {
         'contraseñaActual': actual,
         'nuevaContraseña': nueva,
       };
-      await _apiClient.put('usuarios/me/password', body);
-    } on ApiException {
+      debugPrint(
+          '[UserService.updatePassword] Sending request to update password');
+      debugPrint('[UserService.updatePassword] Request body: $body');
+      final response = await _apiClient.put('usuarios/me/password', body);
+
+      if (response is String) {
+        debugPrint(
+            '[UserService.updatePassword] Plain text response: $response');
+        if (!response
+            .toLowerCase()
+            .contains('contraseña actualizada con éxito')) {
+          throw ApiException('Unexpected response: $response');
+        }
+      } else if (response is Map<String, dynamic> &&
+          response['message'] != null) {
+        debugPrint(
+            '[UserService.updatePassword] JSON response: ${response['message']}');
+      } else {
+        throw ApiException('Unexpected response format');
+      }
+      debugPrint('[UserService.updatePassword] Password updated successfully');
+    } on ApiException catch (e) {
+      debugPrint('[UserService.updatePassword] ApiException: ${e.message}');
       rethrow;
     } catch (e) {
+      debugPrint(
+          '[UserService.updatePassword] Unexpected error: ${e.toString()}');
       throw ApiException('Error al cambiar la contraseña: ${e.toString()}');
     }
   }

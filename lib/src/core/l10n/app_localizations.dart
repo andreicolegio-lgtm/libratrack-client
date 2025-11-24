@@ -677,7 +677,7 @@ abstract class AppLocalizations {
   /// No description provided for @snackbarRegisterSuccess.
   ///
   /// In es, this message translates to:
-  /// **'¡Registro exitoso! Por favor, inicia sesión.'**
+  /// **'¡Registro exitoso! Ahora has iniciado sesión automáticamente.'**
   String get snackbarRegisterSuccess;
 
   /// No description provided for @snackbarReviewPublished.
@@ -1435,6 +1435,156 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Este elemento no está en tu catálogo.'**
   String get errorNotInCatalog;
+
+  /// Error de validación: El valor mínimo de temporada es 1.
+  ///
+  /// In es, this message translates to:
+  /// **'La temporada debe ser al menos 1.'**
+  String get validationSeasonMin1;
+
+  /// Error de validación: El valor mínimo de unidad es 0.
+  ///
+  /// In es, this message translates to:
+  /// **'La unidad debe ser al menos 0.'**
+  String get validationUnitMin0;
+
+  /// Error de validación: El valor mínimo de capítulo es 0.
+  ///
+  /// In es, this message translates to:
+  /// **'El capítulo debe ser al menos 0.'**
+  String get validationChapterMin0;
+
+  /// Error de validación: El valor mínimo de página es 0.
+  ///
+  /// In es, this message translates to:
+  /// **'La página debe ser al menos 0.'**
+  String get validationPageMin0;
+
+  /// Error de validación: El nombre del tipo no puede estar vacío.
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre del tipo es obligatorio.'**
+  String get validationTypeNameRequired;
+
+  /// Error de validación: El nombre del tipo excede los 50 caracteres.
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre del tipo debe tener 50 caracteres o menos.'**
+  String get validationTypeNameMax50;
+
+  /// Error de validación: El nombre del género no puede estar vacío.
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre del género es obligatorio.'**
+  String get validationGenreNameRequired;
+
+  /// Error de validación: El nombre del género excede los 50 caracteres.
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre del género debe tener 50 caracteres o menos.'**
+  String get validationGenreNameMax50;
+
+  /// Error de validación: El título excede los 255 caracteres.
+  ///
+  /// In es, this message translates to:
+  /// **'El título debe tener 255 caracteres o menos.'**
+  String get validationTitleMax255;
+
+  /// Error de validación: La descripción excede los 5000 caracteres.
+  ///
+  /// In es, this message translates to:
+  /// **'La descripción debe tener 5000 caracteres o menos.'**
+  String get validationDescMax5000;
+
+  /// Error de validación: La cadena de episodios excede los 255 caracteres.
+  ///
+  /// In es, this message translates to:
+  /// **'La cadena de episodios es demasiado larga.'**
+  String get validationEpisodesStringMax255;
+
+  /// Error de validación: El total mínimo de unidades es 1.
+  ///
+  /// In es, this message translates to:
+  /// **'El total de unidades debe ser al menos 1.'**
+  String get validationUnitsMin1;
+
+  /// Error de validación: El total mínimo de capítulos es 1.
+  ///
+  /// In es, this message translates to:
+  /// **'El total de capítulos debe ser al menos 1.'**
+  String get validationChaptersMin1;
+
+  /// Error de validación: El total mínimo de páginas es 1.
+  ///
+  /// In es, this message translates to:
+  /// **'El total de páginas debe ser al menos 1.'**
+  String get validationPagesMin1;
+
+  /// Error de validación: El comentario excede los 500 caracteres.
+  ///
+  /// In es, this message translates to:
+  /// **'El comentario debe tener 500 caracteres o menos.'**
+  String get validationCommentMax500;
+
+  /// Error: Revisor no encontrado.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisor no encontrado.'**
+  String get errorReviewerNotFound;
+
+  /// Error: No se pudo guardar el archivo.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al guardar el archivo.'**
+  String get errorFileSave;
+
+  /// Error: Usuario no encontrado en el sistema.
+  ///
+  /// In es, this message translates to:
+  /// **'Usuario no encontrado.'**
+  String get errorUserNotFound;
+
+  /// Título para el diálogo de reglas de contraseña.
+  ///
+  /// In es, this message translates to:
+  /// **'Reglas de Contraseña'**
+  String get passwordRulesTitle;
+
+  /// Contenido para el diálogo de reglas de contraseña.
+  ///
+  /// In es, this message translates to:
+  /// **'\n• Mínimo 8 caracteres\n• Al menos 1 mayúscula\n• Al menos 1 minúscula\n• Al menos 1 número\n• Al menos 1 carácter especial (@\$!%*?&)\n'**
+  String get passwordRulesContent;
+
+  /// Etiqueta para el botón de cerrar en diálogos.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar'**
+  String get dialogCloseButton;
+
+  /// Mensaje de validación para la complejidad de la contraseña.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña debe cumplir con los requisitos de complejidad.'**
+  String get validationPasswordComplexity;
+
+  /// Mensaje mostrado cuando el usuario intenta guardar la misma contraseña que la actual
+  ///
+  /// In es, this message translates to:
+  /// **'No has realizado ningún cambio.'**
+  String get validationPasswordUnchanged;
+
+  /// Mensaje mostrado después de un registro exitoso e inicio de sesión automático
+  ///
+  /// In es, this message translates to:
+  /// **'¡Registro exitoso! Ahora has iniciado sesión automáticamente.'**
+  String get registrationSuccessAutoLogin;
+
+  /// Reglas de validación para contraseñas
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.'**
+  String get validationPasswordRules;
 }
 
 class _AppLocalizationsDelegate

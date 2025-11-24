@@ -333,11 +333,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get snackbarCloseButton => 'CLOSE';
 
   @override
-  String get snackbarLoginGoogleCancel => 'Sign in canceled.';
+  String get snackbarLoginGoogleCancel => 'Sign in cancelled.';
 
   @override
   String get snackbarRegisterSuccess =>
-      'Registration successful! Please sign in.';
+      'Registration successful! You are now logged in automatically.';
 
   @override
   String get snackbarReviewPublished => 'Review published!';
@@ -750,4 +750,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorNotInCatalog => 'This item is not in your catalog.';
+
+  @override
+  String get validationSeasonMin1 => 'Season must be at least 1.';
+
+  @override
+  String get validationUnitMin0 => 'Unit must be at least 0.';
+
+  @override
+  String get validationChapterMin0 => 'Chapter must be at least 0.';
+
+  @override
+  String get validationPageMin0 => 'Page must be at least 0.';
+
+  @override
+  String get validationTypeNameRequired => 'Type name is required.';
+
+  @override
+  String get validationTypeNameMax50 =>
+      'Type name must be 50 characters or less.';
+
+  @override
+  String get validationGenreNameRequired => 'Genre name is required.';
+
+  @override
+  String get validationGenreNameMax50 =>
+      'Genre name must be 50 characters or less.';
+
+  @override
+  String get validationTitleMax255 => 'Title must be 255 characters or less.';
+
+  @override
+  String get validationDescMax5000 =>
+      'Description must be 5000 characters or less.';
+
+  @override
+  String get validationEpisodesStringMax255 => 'Episodes string is too long.';
+
+  @override
+  String get validationUnitsMin1 => 'Total units must be at least 1.';
+
+  @override
+  String get validationChaptersMin1 => 'Total chapters must be at least 1.';
+
+  @override
+  String get validationPagesMin1 => 'Total pages must be at least 1.';
+
+  @override
+  String get validationCommentMax500 =>
+      'Comment must be 500 characters or less.';
+
+  @override
+  String get errorReviewerNotFound => 'Reviewer not found.';
+
+  @override
+  String get errorFileSave => 'Error saving file.';
+
+  @override
+  String get errorUserNotFound => 'User not found.';
+
+  @override
+  String get passwordRulesTitle => 'Password Rules';
+
+  @override
+  String get passwordRulesContent =>
+      '\n• Minimum 8 characters\n• At least 1 uppercase letter\n• At least 1 lowercase letter\n• At least 1 number\n• At least 1 special character (@\$!%*?&)\n';
+
+  @override
+  String get dialogCloseButton => 'Close';
+
+  @override
+  String get validationPasswordComplexity =>
+      'Password must meet complexity requirements.';
+
+  @override
+  String get validationPasswordUnchanged => 'You haven\'t made any changes.';
+
+  @override
+  String get registrationSuccessAutoLogin =>
+      'Registration successful! You are now logged in automatically.';
+
+  @override
+  String get validationPasswordRules =>
+      'The password must be at least 8 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.';
 }

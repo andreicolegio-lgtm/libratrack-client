@@ -19,6 +19,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isPasswordObscured = true;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   Future<void> _handleRegister() async {
@@ -45,10 +46,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         return;
       }
 
-      SnackBarHelper.showTopSnackBar(msgContext, l10n.snackbarRegisterSuccess,
-          isError: false);
+      SnackBarHelper.showTopSnackBar(
+        msgContext,
+        l10n.snackbarRegisterSuccess,
+        isError: false,
+      );
 
-      navContext.pop();
+      // Navigate to the home screen after auto-login
+      navContext.pushReplacementNamed('/home');
     } on ApiException catch (e) {
       if (!mounted) {
         return;
@@ -109,51 +114,103 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       ?.copyWith(fontSize: 48),
                 ),
                 const SizedBox(height: 64.0),
-                _buildInputField(
-                  context,
-                  l10n: l10n,
+                TextFormField(
                   controller: _usernameController,
-                  labelText: l10n.registerUsernameLabel,
+                  decoration: InputDecoration(
+                    labelText: l10n.registerUsernameLabel,
+                    prefixIcon: const Icon(Icons.person_outline),
+                    border: const OutlineInputBorder(),
+                    errorMaxLines:
+                        2, // Allow error messages to wrap to the next line
+                  ),
+                  textInputAction: TextInputAction.next,
                   validator: (String? value) {
-                    if (value == null || value.trim().isEmpty) {
+                    if (value == null || value.isEmpty) {
                       return l10n.validationUsernameRequired;
-                    }
-                    if (value.trim().length < 4) {
-                      return l10n.validationUsernameLength450;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16.0),
-                _buildInputField(
-                  context,
-                  l10n: l10n,
+                TextFormField(
                   controller: _emailController,
-                  labelText: l10n.loginEmailLabel,
+                  decoration: InputDecoration(
+                    labelText: l10n.loginEmailLabel,
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    border: const OutlineInputBorder(),
+                    errorMaxLines:
+                        2, // Allow error messages to wrap to the next line
+                  ),
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   validator: (String? value) {
                     if (value == null || value.isEmpty) {
                       return l10n.validationEmailRequired;
                     }
-                    if (!value.contains('@') || !value.contains('.')) {
+                    if (!value.contains('@')) {
                       return l10n.validationEmailInvalid;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16.0),
-                _buildInputField(
-                  context,
-                  l10n: l10n,
+                TextFormField(
                   controller: _passwordController,
-                  labelText: l10n.loginPasswordLabel,
-                  isPassword: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.loginPasswordLabel,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.info_outline),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(l10n.passwordRulesTitle),
+                                  content: Text(l10n.passwordRulesContent),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                      child: Text(l10n.dialogCloseButton),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            _isPasswordObscured
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordObscured = !_isPasswordObscured;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    errorMaxLines:
+                        2, // Allow error messages to wrap to the next line
+                  ),
+                  obscureText: _isPasswordObscured,
+                  textInputAction: TextInputAction.done,
                   validator: (String? value) {
                     if (value == null || value.isEmpty) {
                       return l10n.validationPasswordRequired;
                     }
-                    if (value.length < 8) {
-                      return l10n.validationPasswordMin8;
+                    if (!RegExp(
+                            r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$')
+                        .hasMatch(value)) {
+                      return l10n.validationPasswordComplexity;
                     }
                     return null;
                   },
@@ -192,47 +249,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInputField(
-    BuildContext context, {
-    required AppLocalizations l10n,
-    required TextEditingController controller,
-    required String labelText,
-    TextInputType keyboardType = TextInputType.text,
-    bool isPassword = false,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: isPassword,
-      style: Theme.of(context).textTheme.bodyMedium,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: Theme.of(context).textTheme.labelLarge,
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
       ),
     );

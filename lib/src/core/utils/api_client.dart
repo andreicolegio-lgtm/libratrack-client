@@ -268,7 +268,15 @@ class ApiClient {
       if (response.body.isEmpty) {
         return <String, dynamic>{};
       }
-      return json.decode(utf8.decode(response.bodyBytes));
+
+      // Check Content-Type header
+      final contentType = response.headers['content-type'];
+      if (contentType != null && contentType.contains('application/json')) {
+        return json.decode(utf8.decode(response.bodyBytes));
+      } else {
+        // Return plain text response if not JSON
+        return utf8.decode(response.bodyBytes);
+      }
     }
 
     String errorKey = 'INTERNAL_SERVER_ERROR';

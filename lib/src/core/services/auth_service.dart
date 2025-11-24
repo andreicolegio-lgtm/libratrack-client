@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../utils/api_client.dart';
 import '../utils/api_exceptions.dart';
 import '../../model/perfil_usuario.dart';
+import '../../features/home/home_screen.dart';
 
 class GoogleSignInCanceledException implements Exception {
   const GoogleSignInCanceledException();
@@ -41,7 +42,9 @@ class AuthService with ChangeNotifier {
   bool get isAuthenticated => _accessToken != null && _perfilUsuario != null;
   bool get isLoading => _isLoading;
 
-  AuthService(this._apiClient, this._secureStorage) {
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  AuthService(this._apiClient, this._secureStorage, this.navigatorKey) {
     _initialize();
   }
 
@@ -70,6 +73,14 @@ class AuthService with ChangeNotifier {
 
       if (_accessToken != null && _refreshToken != null) {
         await _loadUserProfile(shouldNotify: false);
+
+        // Navigate to the main screen and clear the stack
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (route) => false,
+          );
+        }
       } else {
         debugPrint('⚠️ No hay tokens guardados, cerrando sesión');
         await logout(shouldNotify: false);
@@ -185,7 +196,13 @@ class AuthService with ChangeNotifier {
             'password': password,
           },
           isAuthEndpoint: true);
-      return PerfilUsuario.fromJson(data);
+
+      final PerfilUsuario user = PerfilUsuario.fromJson(data);
+
+      // Auto-login after successful registration
+      await login(email, password);
+
+      return user;
     } on ApiException {
       rethrow;
     } catch (e) {

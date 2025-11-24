@@ -432,7 +432,7 @@
     "@snackbarCloseButton": {},
     "snackbarLoginGoogleCancel": "Inicio de sesión cancelado.",
     "@snackbarLoginGoogleCancel": {},
-    "snackbarRegisterSuccess": "¡Registro exitoso! Por favor, inicia sesión.",
+    "snackbarRegisterSuccess": "¡Registro exitoso! Ahora has iniciado sesión automáticamente.",
     "@snackbarRegisterSuccess": {},
     "snackbarReviewPublished": "¡Reseña publicada!",
     "@snackbarReviewPublished": {},
@@ -772,5 +772,105 @@
     "errorProposalNotFound": "Propuesta no encontrada.",
     "@errorProposalNotFound": {},
     "errorNotInCatalog": "Este elemento no está en tu catálogo.",
-    "@errorNotInCatalog": {}
+    "@errorNotInCatalog": {},
+    "validationSeasonMin1": "La temporada debe ser al menos 1.",
+    "@validationSeasonMin1": {
+        "description": "Error de validación: El valor mínimo de temporada es 1."
+    },
+    "validationUnitMin0": "La unidad debe ser al menos 0.",
+    "@validationUnitMin0": {
+        "description": "Error de validación: El valor mínimo de unidad es 0."
+    },
+    "validationChapterMin0": "El capítulo debe ser al menos 0.",
+    "@validationChapterMin0": {
+        "description": "Error de validación: El valor mínimo de capítulo es 0."
+    },
+    "validationPageMin0": "La página debe ser al menos 0.",
+    "@validationPageMin0": {
+        "description": "Error de validación: El valor mínimo de página es 0."
+    },
+    "validationTypeNameRequired": "El nombre del tipo es obligatorio.",
+    "@validationTypeNameRequired": {
+        "description": "Error de validación: El nombre del tipo no puede estar vacío."
+    },
+    "validationTypeNameMax50": "El nombre del tipo debe tener 50 caracteres o menos.",
+    "@validationTypeNameMax50": {
+        "description": "Error de validación: El nombre del tipo excede los 50 caracteres."
+    },
+    "validationGenreNameRequired": "El nombre del género es obligatorio.",
+    "@validationGenreNameRequired": {
+        "description": "Error de validación: El nombre del género no puede estar vacío."
+    },
+    "validationGenreNameMax50": "El nombre del género debe tener 50 caracteres o menos.",
+    "@validationGenreNameMax50": {
+        "description": "Error de validación: El nombre del género excede los 50 caracteres."
+    },
+    "validationTitleMax255": "El título debe tener 255 caracteres o menos.",
+    "@validationTitleMax255": {
+        "description": "Error de validación: El título excede los 255 caracteres."
+    },
+    "validationDescMax5000": "La descripción debe tener 5000 caracteres o menos.",
+    "@validationDescMax5000": {
+        "description": "Error de validación: La descripción excede los 5000 caracteres."
+    },
+    "validationEpisodesStringMax255": "La cadena de episodios es demasiado larga.",
+    "@validationEpisodesStringMax255": {
+        "description": "Error de validación: La cadena de episodios excede los 255 caracteres."
+    },
+    "validationUnitsMin1": "El total de unidades debe ser al menos 1.",
+    "@validationUnitsMin1": {
+        "description": "Error de validación: El total mínimo de unidades es 1."
+    },
+    "validationChaptersMin1": "El total de capítulos debe ser al menos 1.",
+    "@validationChaptersMin1": {
+        "description": "Error de validación: El total mínimo de capítulos es 1."
+    },
+    "validationPagesMin1": "El total de páginas debe ser al menos 1.",
+    "@validationPagesMin1": {
+        "description": "Error de validación: El total mínimo de páginas es 1."
+    },
+    "validationCommentMax500": "El comentario debe tener 500 caracteres o menos.",
+    "@validationCommentMax500": {
+        "description": "Error de validación: El comentario excede los 500 caracteres."
+    },
+    "errorReviewerNotFound": "Revisor no encontrado.",
+    "@errorReviewerNotFound": {
+        "description": "Error: Revisor no encontrado."
+    },
+    "errorFileSave": "Error al guardar el archivo.",
+    "@errorFileSave": {
+        "description": "Error: No se pudo guardar el archivo."
+    },
+    "errorUserNotFound": "Usuario no encontrado.",
+    "@errorUserNotFound": {
+        "description": "Error: Usuario no encontrado en el sistema."
+    },
+    "passwordRulesTitle": "Reglas de Contraseña",
+    "@passwordRulesTitle": {
+        "description": "Título para el diálogo de reglas de contraseña."
+    },
+    "passwordRulesContent": "\n• Mínimo 8 caracteres\n• Al menos 1 mayúscula\n• Al menos 1 minúscula\n• Al menos 1 número\n• Al menos 1 carácter especial (@$!%*?&)\n",
+    "@passwordRulesContent": {
+        "description": "Contenido para el diálogo de reglas de contraseña."
+    },
+    "dialogCloseButton": "Cerrar",
+    "@dialogCloseButton": {
+        "description": "Etiqueta para el botón de cerrar en diálogos."
+    },
+    "validationPasswordComplexity": "La contraseña debe cumplir con los requisitos de complejidad.",
+    "@validationPasswordComplexity": {
+        "description": "Mensaje de validación para la complejidad de la contraseña."
+    },
+    "validationPasswordUnchanged": "No has realizado ningún cambio.",
+    "@validationPasswordUnchanged": {
+        "description": "Mensaje mostrado cuando el usuario intenta guardar la misma contraseña que la actual"
+    },
+    "registrationSuccessAutoLogin": "¡Registro exitoso! Ahora has iniciado sesión automáticamente.",
+    "@registrationSuccessAutoLogin": {
+        "description": "Mensaje mostrado después de un registro exitoso e inicio de sesión automático"
+    },
+    "validationPasswordRules": "La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.",
+    "@validationPasswordRules": {
+        "description": "Reglas de validación para contraseñas"
+    }
 }

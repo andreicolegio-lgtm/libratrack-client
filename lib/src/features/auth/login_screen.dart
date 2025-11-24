@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/services/auth_service.dart';
 import 'registration_screen.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/error_translator.dart';
 import '../../core/utils/api_exceptions.dart';
+import '../home/home_screen.dart';
+import '../../../main.dart'; // Import navigatorKey
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isPasswordObscured = true;
+  bool _isGoogleLoading = false;
 
   @override
   void dispose() {
@@ -69,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleGoogleSignIn() async {
     setState(() {
-      _isLoading = true;
+      _isGoogleLoading = true;
     });
 
     final AuthService authService = context.read<AuthService>();
@@ -78,6 +83,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await authService.signInWithGoogle(context);
+
+      // Navigate to the home screen and clear the stack
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
+        );
+      }
     } on GoogleSignInCanceledException {
       if (mounted) {
         SnackBarHelper.showTopSnackBar(
@@ -99,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          _isGoogleLoading = false;
         });
       }
     }
@@ -131,17 +144,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    l10n.loginTitle,
-                    style: textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    l10n.appTitle,
                     textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.loginSubtitle,
-                    style: textTheme.titleMedium,
-                    textAlign: TextAlign.center,
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineLarge
+                        ?.copyWith(fontSize: 48),
                   ),
                   const SizedBox(height: 48),
                   TextFormField(
@@ -170,8 +178,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       labelText: l10n.loginPasswordLabel,
                       prefixIcon: const Icon(Icons.lock_outline),
                       border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordObscured
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordObscured = !_isPasswordObscured;
+                          });
+                        },
+                      ),
                     ),
-                    obscureText: true,
+                    obscureText: _isPasswordObscured,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _handleLogin(),
                     validator: (String? value) {
@@ -184,21 +204,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 32),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      textStyle: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.w600),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
                     ),
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 3,
-                            ),
-                          )
-                        : Text(l10n.loginButton),
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            l10n.loginButton,
+                            style: const TextStyle(
+                                fontSize: 18, color: Colors.white),
+                          ),
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -215,7 +234,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
                   OutlinedButton.icon(
-                    icon: const Text('G'),
+                    icon: _isGoogleLoading
+                        ? const CircularProgressIndicator(strokeWidth: 2.0)
+                        : SvgPicture.asset(
+                            'assets/images/google_logo.svg',
+                            width: 24,
+                            height: 24,
+                          ),
                     label: Text(l10n.loginGoogle),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -224,19 +249,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       foregroundColor: Theme.of(context).colorScheme.onSurface,
                       side: BorderSide(color: Colors.grey[700]!),
                     ),
-                    onPressed: _isLoading ? null : _handleGoogleSignIn,
+                    onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
                   ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text(l10n.loginRegisterPrompt.split('?')[0]),
-                      TextButton(
-                        onPressed: _isLoading ? null : _goToRegistration,
-                        child:
-                            Text(l10n.loginRegisterPrompt.split('?')[1].trim()),
+                  const SizedBox(height: 16.0),
+                  TextButton(
+                    onPressed: _isLoading ? null : _goToRegistration,
+                    child: Text(
+                      l10n.loginRegisterPrompt,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),

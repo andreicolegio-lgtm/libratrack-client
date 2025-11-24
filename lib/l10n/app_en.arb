@@ -430,9 +430,9 @@
     },
     "snackbarCloseButton": "CLOSE",
     "@snackbarCloseButton": {},
-    "snackbarLoginGoogleCancel": "Sign in canceled.",
+    "snackbarLoginGoogleCancel": "Sign in cancelled.",
     "@snackbarLoginGoogleCancel": {},
-    "snackbarRegisterSuccess": "Registration successful! Please sign in.",
+    "snackbarRegisterSuccess": "Registration successful! You are now logged in automatically.",
     "@snackbarRegisterSuccess": {},
     "snackbarReviewPublished": "Review published!",
     "@snackbarReviewPublished": {},
@@ -772,5 +772,105 @@
     "errorProposalNotFound": "Proposal not found.",
     "@errorProposalNotFound": {},
     "errorNotInCatalog": "This item is not in your catalog.",
-    "@errorNotInCatalog": {}
+    "@errorNotInCatalog": {},
+    "errorReviewerNotFound": "Reviewer not found.",
+    "@errorReviewerNotFound": {
+        "description": "Error: Reviewer not found."
+    },
+    "errorFileSave": "Error saving file.",
+    "@errorFileSave": {
+        "description": "Error: Unable to save the file."
+    },
+    "errorUserNotFound": "User not found.",
+    "@errorUserNotFound": {
+        "description": "Error: User not found in the system."
+    },
+    "validationSeasonMin1": "Season must be at least 1.",
+    "@validationSeasonMin1": {
+        "description": "Validation error: Minimum season value is 1."
+    },
+    "validationUnitMin0": "Unit must be at least 0.",
+    "@validationUnitMin0": {
+        "description": "Validation error: Minimum unit value is 0."
+    },
+    "validationChapterMin0": "Chapter must be at least 0.",
+    "@validationChapterMin0": {
+        "description": "Validation error: Minimum chapter value is 0."
+    },
+    "validationPageMin0": "Page must be at least 0.",
+    "@validationPageMin0": {
+        "description": "Validation error: Minimum page value is 0."
+    },
+    "validationTypeNameRequired": "Type name is required.",
+    "@validationTypeNameRequired": {
+        "description": "Validation error: Type name cannot be empty."
+    },
+    "validationTypeNameMax50": "Type name must be 50 characters or less.",
+    "@validationTypeNameMax50": {
+        "description": "Validation error: Type name exceeds 50 characters."
+    },
+    "validationGenreNameRequired": "Genre name is required.",
+    "@validationGenreNameRequired": {
+        "description": "Validation error: Genre name cannot be empty."
+    },
+    "validationGenreNameMax50": "Genre name must be 50 characters or less.",
+    "@validationGenreNameMax50": {
+        "description": "Validation error: Genre name exceeds 50 characters."
+    },
+    "validationTitleMax255": "Title must be 255 characters or less.",
+    "@validationTitleMax255": {
+        "description": "Validation error: Title exceeds 255 characters."
+    },
+    "validationDescMax5000": "Description must be 5000 characters or less.",
+    "@validationDescMax5000": {
+        "description": "Validation error: Description exceeds 5000 characters."
+    },
+    "validationEpisodesStringMax255": "Episodes string is too long.",
+    "@validationEpisodesStringMax255": {
+        "description": "Validation error: Episodes string exceeds 255 characters."
+    },
+    "validationUnitsMin1": "Total units must be at least 1.",
+    "@validationUnitsMin1": {
+        "description": "Validation error: Minimum total units is 1."
+    },
+    "validationChaptersMin1": "Total chapters must be at least 1.",
+    "@validationChaptersMin1": {
+        "description": "Validation error: Minimum total chapters is 1."
+    },
+    "validationPagesMin1": "Total pages must be at least 1.",
+    "@validationPagesMin1": {
+        "description": "Validation error: Minimum total pages is 1."
+    },
+    "validationCommentMax500": "Comment must be 500 characters or less.",
+    "@validationCommentMax500": {
+        "description": "Validation error: Comment exceeds 500 characters."
+    },
+    "passwordRulesTitle": "Password Rules",
+    "@passwordRulesTitle": {
+        "description": "Title for the password rules dialog."
+    },
+    "passwordRulesContent": "\n• Minimum 8 characters\n• At least 1 uppercase letter\n• At least 1 lowercase letter\n• At least 1 number\n• At least 1 special character (@$!%*?&)\n",
+    "@passwordRulesContent": {
+        "description": "Content for the password rules dialog."
+    },
+    "dialogCloseButton": "Close",
+    "@dialogCloseButton": {
+        "description": "Label for the close button in dialogs."
+    },
+    "validationPasswordComplexity": "Password must meet complexity requirements.",
+    "@validationPasswordComplexity": {
+        "description": "Validation message for password complexity."
+    },
+    "validationPasswordUnchanged": "You haven't made any changes.",
+    "@validationPasswordUnchanged": {
+        "description": "Message shown when the user tries to save the same password as the current one"
+    },
+    "registrationSuccessAutoLogin": "Registration successful! You are now logged in automatically.",
+    "@registrationSuccessAutoLogin": {
+        "description": "Message shown after successful registration and automatic login"
+    },
+    "validationPasswordRules": "The password must be at least 8 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.",
+    "@validationPasswordRules": {
+        "description": "Validation rules for passwords"
+    }
 }

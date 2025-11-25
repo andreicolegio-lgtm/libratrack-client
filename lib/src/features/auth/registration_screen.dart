@@ -17,9 +17,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final FocusNode _passwordFocusNode = FocusNode();
 
   bool _isLoading = false;
   bool _isPasswordObscured = true;
+  bool _showPasswordValidation = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   Future<void> _handleRegister() async {
@@ -83,11 +85,36 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _passwordFocusNode.addListener(() {
+      if (!_passwordFocusNode.hasFocus) {
+        setState(() {
+          _showPasswordValidation = false;
+        });
+      }
+    });
+  }
+
+  @override
   void dispose() {
+    _passwordFocusNode.dispose();
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  List<MapEntry<String, bool>> _getValidationRules(
+      String password, AppLocalizations l10n) {
+    return [
+      MapEntry(l10n.passwordRuleLength, password.length >= 8),
+      MapEntry(l10n.passwordRuleUppercase, password.contains(RegExp(r'[A-Z]'))),
+      MapEntry(l10n.passwordRuleLowercase, password.contains(RegExp(r'[a-z]'))),
+      MapEntry(l10n.passwordRuleNumber, password.contains(RegExp(r'\d'))),
+      MapEntry(
+          l10n.passwordRuleSpecial, password.contains(RegExp(r'[@$!%*?&]'))),
+    ];
   }
 
   @override
@@ -129,6 +156,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     }
                     return null;
                   },
+                  onTap: () {
+                    setState(() {
+                      _showPasswordValidation = false;
+                    });
+                  },
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
@@ -151,57 +183,45 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     }
                     return null;
                   },
+                  onTap: () {
+                    setState(() {
+                      _showPasswordValidation = false;
+                    });
+                  },
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
                   controller: _passwordController,
+                  focusNode: _passwordFocusNode,
                   decoration: InputDecoration(
                     labelText: l10n.loginPasswordLabel,
                     prefixIcon: const Icon(Icons.lock_outline),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.info_outline),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text(l10n.passwordRulesTitle),
-                                  content: Text(l10n.passwordRulesContent),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(),
-                                      child: Text(l10n.dialogCloseButton),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            _isPasswordObscured
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isPasswordObscured = !_isPasswordObscured;
-                            });
-                          },
-                        ),
-                      ],
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordObscured
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordObscured = !_isPasswordObscured;
+                        });
+                      },
                     ),
+                    border: const OutlineInputBorder(),
                     errorMaxLines:
                         2, // Allow error messages to wrap to the next line
                   ),
                   obscureText: _isPasswordObscured,
                   textInputAction: TextInputAction.done,
+                  onTap: () {
+                    setState(() {
+                      _showPasswordValidation = true;
+                    });
+                  },
+                  onChanged: (value) {
+                    setState(() {});
+                  },
                   validator: (String? value) {
                     if (value == null || value.isEmpty) {
                       return l10n.validationPasswordRequired;
@@ -214,6 +234,35 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     return null;
                   },
                 ),
+                // Real-time password validation feedback
+                if (_showPasswordValidation)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children:
+                          _getValidationRules(_passwordController.text, l10n)
+                              .map((entry) {
+                        return Row(
+                          children: [
+                            Icon(
+                              entry.value ? Icons.check_circle : Icons.cancel,
+                              color: entry.value ? Colors.green : Colors.red,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              entry.key,
+                              style: TextStyle(
+                                color: entry.value ? Colors.green : Colors.red,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 const SizedBox(height: 32.0),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(

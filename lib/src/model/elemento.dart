@@ -18,6 +18,7 @@ class Elemento {
   final int? totalPaginasLibro;
   final List<ElementoRelacion> precuelas;
   final List<ElementoRelacion> secuelas;
+  final String? duracion;
 
   Elemento({
     required this.id,
@@ -34,6 +35,7 @@ class Elemento {
     this.totalUnidades,
     this.totalCapitulosLibro,
     this.totalPaginasLibro,
+    this.duracion,
   });
 
   factory Elemento.fromJson(Map<String, dynamic> json) {
@@ -57,7 +59,7 @@ class Elemento {
       descripcion: json['descripcion'],
       urlImagen: json['urlImagen'],
       tipo: json['tipoNombre'],
-      estadoContenido: json['estadoContenido'],
+      estadoContenido: json['estadoContenido'] ?? '',
       creadorUsername: json['creadorUsername'],
       generos: generosList,
       episodiosPorTemporada: json['episodiosPorTemporada'],
@@ -66,6 +68,7 @@ class Elemento {
       totalPaginasLibro: json['totalPaginasLibro'],
       precuelas: precuelasList,
       secuelas: secuelasList,
+      duracion: json['duracion'] as String?,
     );
   }
 

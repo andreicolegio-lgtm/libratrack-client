@@ -43,6 +43,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       TextEditingController();
   final TextEditingController _nuevaContrasenaController =
       TextEditingController();
+  final FocusNode _newPasswordFocusNode = FocusNode();
+  bool _showPasswordValidation = false;
 
   bool _isCurrentPasswordObscured = true;
   bool _isNewPasswordObscured = true;
@@ -58,6 +60,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _nombreController.text = _perfil.username;
     _emailController.text = _perfil.email;
     _originalUsername = _perfil.username;
+
+    // Add listener to update validation rules dynamically
+    _nuevaContrasenaController.addListener(() {
+      setState(() {});
+    });
+
+    // Add focus listener to show/hide validation rules
+    _newPasswordFocusNode.addListener(() {
+      setState(() {
+        _showPasswordValidation = _newPasswordFocusNode.hasFocus;
+      });
+    });
   }
 
   Future<void> _handlePickAndUploadFoto() async {
@@ -320,10 +334,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
+    // Clean up controllers and focus nodes
+    _nuevaContrasenaController.dispose();
+    _newPasswordFocusNode.dispose();
     _nombreController.dispose();
     _emailController.dispose();
     _contrasenaActualController.dispose();
-    _nuevaContrasenaController.dispose();
     super.dispose();
   }
 
@@ -525,32 +541,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   l10n: l10n,
                   controller: _nuevaContrasenaController,
                   labelText: l10n.profileNewPassword,
+                  focusNode: _newPasswordFocusNode, // Connected FocusNode
                   isPassword: _isNewPasswordObscured,
-                  prefixIcon: const Icon(Icons.lock),
+                  prefixIcon: const Icon(
+                      Icons.lock), // Re-added the lock icon as prefix
                   suffixIcon: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.info_outline),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text(l10n.passwordRulesTitle),
-                                content: Text(l10n.passwordRulesContent),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    child: Text(l10n.dialogCloseButton),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                      ),
                       IconButton(
                         icon: Icon(
                           _isNewPasswordObscured
@@ -566,34 +563,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   validator: (String? value) {
-                    debugPrint(
-                        '[ProfileScreen._buildInputField] Validating new password: $value');
-
-                    // Validate new password strength
-                    final regex = RegExp(
-                        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}');
                     if (value == null || value.isEmpty) {
-                      debugPrint(
-                          '[ProfileScreen._buildInputField] Validation failed: New password is empty');
                       return l10n.validationPasswordNewRequired;
                     }
-                    if (!regex.hasMatch(value)) {
-                      debugPrint(
-                          '[ProfileScreen._buildInputField] Validation failed: New password does not meet complexity requirements');
+                    if (!RegExp(
+                            r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$')
+                        .hasMatch(value)) {
                       return l10n.validationPasswordComplexity;
                     }
-
-                    // Check if new password matches current password
                     if (value == _contrasenaActualController.text) {
-                      debugPrint(
-                          '[ProfileScreen._buildInputField] Validation failed: Password is unchanged');
                       return l10n.validationPasswordUnchanged;
                     }
-
-                    debugPrint(
-                        '[ProfileScreen._buildInputField] New password validation passed');
                     return null;
                   },
+                ),
+                Visibility(
+                  visible: _showPasswordValidation,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _getValidationRules(
+                              _nuevaContrasenaController.text, l10n)
+                          .map((entry) {
+                        return Row(
+                          children: [
+                            Icon(
+                              entry.value ? Icons.check_circle : Icons.cancel,
+                              color: entry.value ? Colors.green : Colors.red,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              entry.key,
+                              style: TextStyle(
+                                color: entry.value ? Colors.green : Colors.red,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24.0),
                 ElevatedButton(
@@ -686,17 +698,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required AppLocalizations l10n,
     required TextEditingController controller,
     required String labelText,
+    FocusNode? focusNode, // Added optional FocusNode parameter
     bool enabled = true,
     bool isPassword = false,
     Widget? suffixIcon,
     Widget? prefixIcon,
     String? Function(String?)? validator,
+    void Function(String)? onChanged,
+    void Function()? onEditingComplete,
   }) {
     return TextFormField(
       controller: controller,
+      focusNode: focusNode, // Connected FocusNode to TextFormField
       enabled: enabled,
       obscureText: isPassword,
       validator: validator,
+      onChanged: onChanged,
+      onEditingComplete: onEditingComplete,
       style: Theme.of(context).textTheme.bodyMedium,
       decoration: InputDecoration(
         labelText: labelText,
@@ -730,5 +748,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         prefixIcon: prefixIcon,
       ),
     );
+  }
+
+  List<MapEntry<String, bool>> _getValidationRules(
+      String password, AppLocalizations l10n) {
+    return [
+      MapEntry(l10n.passwordRuleLength, password.length >= 8),
+      MapEntry(l10n.passwordRuleUppercase, password.contains(RegExp(r'[A-Z]'))),
+      MapEntry(l10n.passwordRuleLowercase, password.contains(RegExp(r'[a-z]'))),
+      MapEntry(l10n.passwordRuleNumber, password.contains(RegExp(r'\d'))),
+      MapEntry(
+          l10n.passwordRuleSpecial, password.contains(RegExp(r'[@$!%*?&]'))),
+    ];
   }
 }

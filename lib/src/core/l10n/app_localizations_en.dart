@@ -1007,4 +1007,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get genreMagicalRealism => 'Magical Realism';
+
+  @override
+  String get passwordRuleLength => 'At least 8 characters';
+
+  @override
+  String get passwordRuleUppercase => 'At least one uppercase letter';
+
+  @override
+  String get passwordRuleLowercase => 'At least one lowercase letter';
+
+  @override
+  String get passwordRuleNumber => 'At least one number';
+
+  @override
+  String get passwordRuleSpecial => 'At least one special character (@\$!%*?&)';
+
+  @override
+  String get totalEpisodes => 'Total Episodes';
+
+  @override
+  String get duration => 'Duration';
+
+  @override
+  String get totalChapters => 'Total Chapters';
+
+  @override
+  String get totalPages => 'Total Pages';
+
+  @override
+  String get episodesPerSeason => 'Episodes per Season';
 }

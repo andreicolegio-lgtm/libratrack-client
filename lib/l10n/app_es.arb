@@ -988,5 +988,35 @@
     "genreNoir": "Novela Negra",
     "@genreNoir": {},
     "genreMagicalRealism": "Realismo Mágico",
-    "@genreMagicalRealism": {}
+    "@genreMagicalRealism": {},
+    "passwordRuleLength": "Al menos 8 caracteres",
+    "@passwordRuleLength": {},
+    "passwordRuleUppercase": "Al menos una mayúscula",
+    "@passwordRuleUppercase": {},
+    "passwordRuleLowercase": "Al menos una minúscula",
+    "@passwordRuleLowercase": {},
+    "passwordRuleNumber": "Al menos un número",
+    "@passwordRuleNumber": {},
+    "passwordRuleSpecial": "Al menos un carácter especial (@$!%*?&)",
+    "@passwordRuleSpecial": {},
+    "totalEpisodes": "Total de Episodios",
+    "@totalEpisodes": {
+        "description": "Etiqueta para el campo de entrada de episodios totales."
+    },
+    "duration": "Duración",
+    "@duration": {
+        "description": "Etiqueta para el campo de entrada de duración."
+    },
+    "totalChapters": "Total de Capítulos",
+    "@totalChapters": {
+        "description": "Etiqueta para el campo de entrada de capítulos totales."
+    },
+    "totalPages": "Total de Páginas",
+    "@totalPages": {
+        "description": "Etiqueta para el campo de entrada de páginas totales."
+    },
+    "episodesPerSeason": "Episodios por Temporada",
+    "@episodesPerSeason": {
+        "description": "Etiqueta para el campo de entrada de episodios por temporada."
+    }
 }

@@ -20,6 +20,7 @@ class CatalogoEntrada {
   final int? elementoTotalPaginasLibro;
 
   final int usuarioId;
+  final bool esFavorito;
 
   CatalogoEntrada({
     required this.id,
@@ -39,7 +40,33 @@ class CatalogoEntrada {
     this.elementoTotalCapitulosLibro,
     this.elementoTotalPaginasLibro,
     this.elementoUrlImagen,
+    this.esFavorito = false,
   });
+
+  CatalogoEntrada copyWith({
+    bool? esFavorito,
+  }) {
+    return CatalogoEntrada(
+      id: id,
+      estadoPersonal: estadoPersonal,
+      agregadoEn: agregadoEn,
+      elementoId: elementoId,
+      elementoTitulo: elementoTitulo,
+      elementoTipoNombre: elementoTipoNombre,
+      usuarioId: usuarioId,
+      temporadaActual: temporadaActual,
+      unidadActual: unidadActual,
+      capituloActual: capituloActual,
+      paginaActual: paginaActual,
+      elementoEstadoPublicacion: elementoEstadoPublicacion,
+      elementoEpisodiosPorTemporada: elementoEpisodiosPorTemporada,
+      elementoTotalUnidades: elementoTotalUnidades,
+      elementoTotalCapitulosLibro: elementoTotalCapitulosLibro,
+      elementoTotalPaginasLibro: elementoTotalPaginasLibro,
+      elementoUrlImagen: elementoUrlImagen,
+      esFavorito: esFavorito ?? this.esFavorito,
+    );
+  }
 
   factory CatalogoEntrada.fromJson(Map<String, dynamic> json) {
     return CatalogoEntrada(
@@ -61,6 +88,7 @@ class CatalogoEntrada {
       elementoTotalCapitulosLibro: json['elementoTotalCapitulosLibro'] as int?,
       elementoTotalPaginasLibro: json['elementoTotalPaginasLibro'] as int?,
       usuarioId: json['usuarioId'] as int,
+      esFavorito: (json['esFavorito'] as bool?) ?? false,
     );
   }
 }

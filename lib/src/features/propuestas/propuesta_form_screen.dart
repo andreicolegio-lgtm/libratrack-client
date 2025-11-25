@@ -9,6 +9,7 @@ import '../../core/utils/api_exceptions.dart';
 import '../../core/utils/error_translator.dart';
 import '../../model/tipo.dart';
 import '../../core/widgets/genre_selector_widget.dart';
+import '../../core/widgets/content_type_progress_forms.dart';
 
 class PropuestaFormScreen extends StatefulWidget {
   const PropuestaFormScreen({super.key});
@@ -33,6 +34,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
       TextEditingController();
   final TextEditingController _totalPaginasLibroController =
       TextEditingController();
+  final TextEditingController _durationController = TextEditingController();
 
   String? _tipoSeleccionado;
   List<Tipo> _tipos = [];
@@ -41,6 +43,19 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
   void initState() {
     super.initState();
     _loadTipos();
+  }
+
+  @override
+  void dispose() {
+    _tituloController.dispose();
+    _descripcionController.dispose();
+    _generosController.dispose();
+    _episodiosPorTemporadaController.dispose();
+    _totalUnidadesController.dispose();
+    _totalCapitulosLibroController.dispose();
+    _totalPaginasLibroController.dispose();
+    _durationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadTipos() async {
@@ -86,6 +101,8 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
         'totalPaginasLibro': _totalPaginasLibroController.text.isEmpty
             ? null
             : int.tryParse(_totalPaginasLibroController.text),
+        'duracion':
+            _durationController.text.isEmpty ? null : _durationController.text,
       };
       body.removeWhere((String key, value) => value == null);
 
@@ -222,59 +239,15 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
               Text(l10n.proposalFormProgressTitle,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
-              if (_tipoSeleccionado == 'serie')
-                _buildInputField(
-                  context,
-                  l10n: l10n,
-                  controller: _episodiosPorTemporadaController,
-                  labelText: l10n.proposalFormSeriesEpisodesLabel,
-                  hintText: l10n.proposalFormSeriesEpisodesHint,
-                ),
-              if (_tipoSeleccionado == 'libro') ...<Widget>[
-                _buildInputField(
-                  context,
-                  l10n: l10n,
-                  controller: _totalCapitulosLibroController,
-                  labelText: l10n.proposalFormBookChaptersLabel,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildInputField(
-                  context,
-                  l10n: l10n,
-                  controller: _totalPaginasLibroController,
-                  labelText: l10n.proposalFormBookPagesLabel,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ],
-                ),
-              ],
-              if (_tipoSeleccionado == 'anime' || _tipoSeleccionado == 'manga')
-                _buildInputField(
-                  context,
-                  l10n: l10n,
-                  controller: _totalUnidadesController,
-                  labelText: _tipoSeleccionado == 'anime'
-                      ? l10n.proposalFormAnimeEpisodesLabel
-                      : l10n.proposalFormMangaChaptersLabel,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ],
-                ),
-              if (_tipoSeleccionado != 'serie' &&
-                  _tipoSeleccionado != 'libro' &&
-                  _tipoSeleccionado != 'anime' &&
-                  _tipoSeleccionado != 'manga' &&
-                  _tipoSeleccionado?.isNotEmpty == true)
-                Text(
-                  l10n.proposalFormNoProgress(_tipoSeleccionado ?? ''),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+              ContentTypeProgressForms(
+                selectedTypeKey: _tipoSeleccionado,
+                episodesController: _episodiosPorTemporadaController,
+                chaptersController: _totalCapitulosLibroController,
+                pagesController: _totalPaginasLibroController,
+                durationController: _durationController,
+                unitsController: _totalUnidadesController,
+                l10n: AppLocalizations.of(context)!,
+              ),
               const SizedBox(height: 32.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(

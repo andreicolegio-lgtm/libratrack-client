@@ -22,8 +22,8 @@ class PerfilUsuario {
       username: json['username'],
       email: json['email'],
       fotoPerfilUrl: json['fotoPerfilUrl'] as String?,
-      esModerador: json['esModerador'] as bool,
-      esAdministrador: json['esAdministrador'] as bool,
+      esModerador: (json['esModerador'] as bool?) ?? false,
+      esAdministrador: (json['esAdministrador'] as bool?) ?? false,
     );
   }
 }

@@ -14,6 +14,7 @@ class Propuesta {
   final int? totalUnidades;
   final int? totalCapitulosLibro;
   final int? totalPaginasLibro;
+  final String? duracion;
 
   Propuesta({
     required this.id,
@@ -30,6 +31,7 @@ class Propuesta {
     this.totalUnidades,
     this.totalCapitulosLibro,
     this.totalPaginasLibro,
+    this.duracion,
   });
 
   factory Propuesta.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class Propuesta {
       totalUnidades: json['totalUnidades'] as int?,
       totalCapitulosLibro: json['totalCapitulosLibro'] as int?,
       totalPaginasLibro: json['totalPaginasLibro'] as int?,
+      duracion: json['duracion'] as String?,
     );
   }
 }

@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/catalog_service.dart';
 import '../../model/catalogo_entrada.dart';
-import '../../model/estado_personal.dart';
 import 'widgets/catalog_entry_card.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../model/estado_personal.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -30,6 +30,15 @@ class _CatalogScreenState extends State<CatalogScreen>
     EstadoPersonal.pendiente,
     EstadoPersonal.terminado,
     EstadoPersonal.abandonado
+  ];
+
+  final List<Tab> _tabs = const [
+    Tab(text: 'All'),
+    Tab(text: 'Favorites'),
+    Tab(text: 'In Progress'),
+    Tab(text: 'Pending'),
+    Tab(text: 'Finished'),
+    Tab(text: 'Dropped'),
   ];
 
   bool _isDataLoaded = false;
@@ -83,27 +92,43 @@ class _CatalogScreenState extends State<CatalogScreen>
     }
   }
 
+  List<CatalogoEntrada> _filterCatalogo(String tab) {
+    if (_estados.any((estado) => estado.name == tab)) {
+      return _catalogoCompleto
+          .where((item) => item.estadoPersonal == tab.toUpperCase())
+          .toList();
+    }
+    switch (tab) {
+      case 'Favorites':
+        return _catalogoCompleto.where((item) => item.esFavorito).toList();
+      default:
+        return _catalogoCompleto;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     return DefaultTabController(
-      length: _estados.length,
+      length: _tabs.length,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.catalogTitle,
               style: Theme.of(context).textTheme.titleLarge),
           centerTitle: true,
-          bottom: TabBar(
-            tabAlignment: TabAlignment.center,
-            tabs: _estados
-                .map((EstadoPersonal estado) =>
-                    Tab(text: estado.displayName(context)))
-                .toList(),
-            labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
-            indicatorColor: Theme.of(context).colorScheme.primary,
-            labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: Colors.grey[500],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48.0),
+            child: TabBar(
+              isScrollable: true,
+              tabAlignment: TabAlignment.center,
+              physics: const BouncingScrollPhysics(),
+              tabs: _tabs,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
+              indicatorColor: Theme.of(context).colorScheme.primary,
+              labelColor: Theme.of(context).colorScheme.primary,
+              unselectedLabelColor: Colors.grey[500],
+            ),
           ),
         ),
         body: _buildBody(context, l10n),
@@ -132,16 +157,13 @@ class _CatalogScreenState extends State<CatalogScreen>
     }
 
     return TabBarView(
-      children: _estados.map((EstadoPersonal estado) {
-        final List<CatalogoEntrada> filteredList = _catalogoCompleto
-            .where((CatalogoEntrada item) =>
-                item.estadoPersonal == estado.apiValue)
-            .toList();
+      children: _tabs.map((Tab tab) {
+        final List<CatalogoEntrada> filteredList = _filterCatalogo(tab.text!);
 
         if (filteredList.isEmpty) {
           return Center(
             child: Text(
-              l10n.catalogEmptyState(estado.displayName(context)),
+              l10n.catalogEmptyState(tab.text!),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),

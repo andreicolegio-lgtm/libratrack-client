@@ -16,6 +16,7 @@ import '../../core/utils/error_translator.dart';
 import '../../core/services/tipo_service.dart';
 import '../../model/tipo.dart';
 import '../../core/widgets/genre_selector_widget.dart';
+import '../../core/widgets/content_type_progress_forms.dart';
 
 class AdminElementoFormScreen extends StatefulWidget {
   final Elemento? elemento;
@@ -54,6 +55,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       TextEditingController();
   final TextEditingController _totalPaginasLibroController =
       TextEditingController();
+  final TextEditingController _durationController = TextEditingController();
 
   String? _tipoSeleccionado;
   List<Tipo> _tipos = [];
@@ -85,13 +87,20 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       _totalCapitulosLibroController.text =
           e.totalCapitulosLibro?.toString() ?? '';
       _totalPaginasLibroController.text = e.totalPaginasLibro?.toString() ?? '';
-      _tipoSeleccionado = e.tipo.toLowerCase();
+      _tipoSeleccionado = e.tipo; // Set the default type to the current type
       _uploadedImageUrl = e.urlImagen;
 
       _selectedSecuelaIds.addAll(e.secuelas.map((ElementoRelacion s) => s.id));
     }
 
-    _loadTipos();
+    _loadTipos().then((_) {
+      if (_tipoSeleccionado != null &&
+          !_tipos.any((tipo) => tipo.nombre == _tipoSeleccionado)) {
+        setState(() {
+          _tipoSeleccionado = null; // Reset if invalid
+        });
+      }
+    });
   }
 
   Future<void> _loadTipos() async {
@@ -99,7 +108,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     try {
       final tipos = await tipoService.fetchTipos('Error loading types');
       setState(() {
-        _tipos = tipos;
+        _tipos = tipos.toSet().toList(); // Ensure unique values
       });
     } catch (e) {
       // Handle error
@@ -131,6 +140,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     _totalUnidadesController.dispose();
     _totalCapitulosLibroController.dispose();
     _totalPaginasLibroController.dispose();
+    _durationController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -234,6 +244,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
             ? null
             : int.tryParse(_totalPaginasLibroController.text),
         'secuelaIds': _selectedSecuelaIds.toList(),
+        'duracion':
+            _durationController.text.isEmpty ? null : _durationController.text,
       };
       body.removeWhere((String key, value) => value == null);
 
@@ -334,56 +346,15 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               Text(l10n.adminFormProgressTitle,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
-              if (_tipoSeleccionado == 'serie')
-                _buildInputField(
-                  context,
-                  l10n: l10n,
-                  controller: _episodiosPorTemporadaController,
-                  labelText: l10n.proposalFormSeriesEpisodesLabel,
-                  hintText: l10n.proposalFormSeriesEpisodesHint,
-                ),
-              if (_tipoSeleccionado == 'libro') ...<Widget>[
-                _buildInputField(
-                  context,
-                  l10n: l10n,
-                  controller: _totalCapitulosLibroController,
-                  labelText: l10n.proposalFormBookChaptersLabel,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildInputField(
-                  context,
-                  l10n: l10n,
-                  controller: _totalPaginasLibroController,
-                  labelText: l10n.proposalFormBookPagesLabel,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ],
-                ),
-              ],
-              if (_tipoSeleccionado == 'anime' || _tipoSeleccionado == 'manga')
-                _buildInputField(
-                  context,
-                  l10n: l10n,
-                  controller: _totalUnidadesController,
-                  labelText: _tipoSeleccionado == 'anime'
-                      ? l10n.proposalFormAnimeEpisodesLabel
-                      : l10n.proposalFormMangaChaptersLabel,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ],
-                ),
-              if (_tipoSeleccionado == 'película' ||
-                  _tipoSeleccionado == 'videojuego')
-                Text(
-                  l10n.proposalFormNoProgress(_tipoSeleccionado ?? ''),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+              ContentTypeProgressForms(
+                selectedTypeKey: _tipoSeleccionado,
+                episodesController: _episodiosPorTemporadaController,
+                chaptersController: _totalCapitulosLibroController,
+                pagesController: _totalPaginasLibroController,
+                durationController: _durationController,
+                unitsController: _totalUnidadesController,
+                l10n: AppLocalizations.of(context)!,
+              ),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),
@@ -579,7 +550,12 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   Widget _buildGenerosField(AppLocalizations l10n) {
     return GenreSelectorWidget(
       selectedTypes: _tipoSeleccionado != null
-          ? [_tipos.firstWhere((tipo) => tipo.nombre == _tipoSeleccionado)]
+          ? [
+              _tipos.firstWhere(
+                (tipo) => tipo.nombre == _tipoSeleccionado,
+                orElse: () => Tipo(id: 0, nombre: 'Default', validGenres: []),
+              )
+            ]
           : [],
       initialGenres:
           _generosController.text.split(',').map((e) => e.trim()).toList(),

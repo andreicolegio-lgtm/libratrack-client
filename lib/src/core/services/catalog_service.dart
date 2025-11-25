@@ -91,6 +91,20 @@ class CatalogService with ChangeNotifier {
     }
   }
 
+  Future<void> toggleFavorite(int id) async {
+    try {
+      await _apiClient
+          .put('catalogo/favorito/${id.toString()}', <String, dynamic>{});
+      final index = _entradas.indexWhere((e) => e.id == id);
+      if (index != -1) {
+        _entradas[index] =
+            _entradas[index].copyWith(esFavorito: !_entradas[index].esFavorito);
+      }
+    } catch (e) {
+      throw ApiException('Error toggling favorite: ${e.toString()}');
+    }
+  }
+
   void _actualizarEntradaEnLista(CatalogoEntrada entradaActualizada) {
     final int index = _entradas.indexWhere(
         (CatalogoEntrada entrada) => entrada.id == entradaActualizada.id);

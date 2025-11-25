@@ -1933,6 +1933,66 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Realismo Mágico'**
   String get genreMagicalRealism;
+
+  /// No description provided for @passwordRuleLength.
+  ///
+  /// In es, this message translates to:
+  /// **'Al menos 8 caracteres'**
+  String get passwordRuleLength;
+
+  /// No description provided for @passwordRuleUppercase.
+  ///
+  /// In es, this message translates to:
+  /// **'Al menos una mayúscula'**
+  String get passwordRuleUppercase;
+
+  /// No description provided for @passwordRuleLowercase.
+  ///
+  /// In es, this message translates to:
+  /// **'Al menos una minúscula'**
+  String get passwordRuleLowercase;
+
+  /// No description provided for @passwordRuleNumber.
+  ///
+  /// In es, this message translates to:
+  /// **'Al menos un número'**
+  String get passwordRuleNumber;
+
+  /// No description provided for @passwordRuleSpecial.
+  ///
+  /// In es, this message translates to:
+  /// **'Al menos un carácter especial (@\$!%*?&)'**
+  String get passwordRuleSpecial;
+
+  /// Etiqueta para el campo de entrada de episodios totales.
+  ///
+  /// In es, this message translates to:
+  /// **'Total de Episodios'**
+  String get totalEpisodes;
+
+  /// Etiqueta para el campo de entrada de duración.
+  ///
+  /// In es, this message translates to:
+  /// **'Duración'**
+  String get duration;
+
+  /// Etiqueta para el campo de entrada de capítulos totales.
+  ///
+  /// In es, this message translates to:
+  /// **'Total de Capítulos'**
+  String get totalChapters;
+
+  /// Etiqueta para el campo de entrada de páginas totales.
+  ///
+  /// In es, this message translates to:
+  /// **'Total de Páginas'**
+  String get totalPages;
+
+  /// Etiqueta para el campo de entrada de episodios por temporada.
+  ///
+  /// In es, this message translates to:
+  /// **'Episodios por Temporada'**
+  String get episodesPerSeason;
 }
 
 class _AppLocalizationsDelegate

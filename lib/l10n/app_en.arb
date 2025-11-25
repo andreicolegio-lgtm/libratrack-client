@@ -988,5 +988,35 @@
     "genreNoir": "Noir",
     "@genreNoir": {},
     "genreMagicalRealism": "Magical Realism",
-    "@genreMagicalRealism": {}
+    "@genreMagicalRealism": {},
+    "passwordRuleLength": "At least 8 characters",
+    "@passwordRuleLength": {},
+    "passwordRuleUppercase": "At least one uppercase letter",
+    "@passwordRuleUppercase": {},
+    "passwordRuleLowercase": "At least one lowercase letter",
+    "@passwordRuleLowercase": {},
+    "passwordRuleNumber": "At least one number",
+    "@passwordRuleNumber": {},
+    "passwordRuleSpecial": "At least one special character (@$!%*?&)",
+    "@passwordRuleSpecial": {},
+    "totalEpisodes": "Total Episodes",
+    "@totalEpisodes": {
+        "description": "Label for total episodes input field."
+    },
+    "duration": "Duration",
+    "@duration": {
+        "description": "Label for duration input field."
+    },
+    "totalChapters": "Total Chapters",
+    "@totalChapters": {
+        "description": "Label for total chapters input field."
+    },
+    "totalPages": "Total Pages",
+    "@totalPages": {
+        "description": "Label for total pages input field."
+    },
+    "episodesPerSeason": "Episodes per Season",
+    "@episodesPerSeason": {
+        "description": "Label for episodes per season input field."
+    }
 }

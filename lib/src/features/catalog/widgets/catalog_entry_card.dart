@@ -139,8 +139,10 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     final int totalTemps = _episodiosPorTemporada.length;
 
     if (tipo == 'serie') {
-      final int temp = int.tryParse(_temporadaController.text) ?? 1;
-      final int unid = int.tryParse(_unidadController.text) ?? 0;
+      final int temp =
+          (int.tryParse(_temporadaController.text) ?? 1).clamp(1, totalTemps);
+      final int unid = (int.tryParse(_unidadController.text) ?? 0)
+          .clamp(0, totalTemps > 0 ? _episodiosPorTemporada[temp - 1] : 0);
       body['temporadaActual'] = temp;
       body['unidadActual'] = unid;
 
@@ -151,7 +153,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       }
     } else if (tipo == 'libro') {
       final int cap = int.tryParse(_capituloController.text) ?? 0;
-      final int pag = int.tryParse(_paginaController.text) ?? 0;
+      final int pag =
+          (int.tryParse(_paginaController.text) ?? 0).clamp(0, totalPaginas);
       body['capituloActual'] = cap;
       body['paginaActual'] = pag;
 
@@ -159,7 +162,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
         autoTerminado = true;
       }
     } else if (tipo == 'anime' || tipo == 'manga') {
-      final int unid = int.tryParse(_unidadController.text) ?? 0;
+      final int unid =
+          (int.tryParse(_unidadController.text) ?? 0).clamp(0, totalUnidades);
       body['unidadActual'] = unid;
 
       if (totalUnidades > 0 && unid == totalUnidades) {
@@ -205,6 +209,23 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
         });
       }
     }
+  }
+
+  Future<void> _handleEstadoChange(EstadoPersonal nuevoEstado) async {
+    if (nuevoEstado == EstadoPersonal.terminado) {
+      final String tipo = _entrada.elementoTipoNombre.toLowerCase();
+      if (tipo == 'serie' && _episodiosPorTemporada.isNotEmpty) {
+        _temporadaController.text = _episodiosPorTemporada.length.toString();
+        _unidadController.text = _episodiosPorTemporada.last.toString();
+      } else if (tipo == 'libro') {
+        _paginaController.text =
+            (_entrada.elementoTotalPaginasLibro ?? 0).toString();
+      } else if (tipo == 'anime' || tipo == 'manga') {
+        _unidadController.text =
+            (_entrada.elementoTotalUnidades ?? 0).toString();
+      }
+    }
+    await _handleUpdateEstado(nuevoEstado);
   }
 
   double get _progresoValue {
@@ -477,6 +498,24 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
           _buildStatusMenu(context, l10n, isEditable),
+          IconButton(
+            icon: Icon(
+              widget.entrada.esFavorito ? Icons.star : Icons.star_border,
+              color: widget.entrada.esFavorito ? Colors.yellow : Colors.grey,
+            ),
+            onPressed: () async {
+              try {
+                await _catalogService.toggleFavorite(widget.entrada.id);
+                widget.onUpdate();
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content:
+                          Text('Error toggling favorite: ${e.toString()}')),
+                );
+              }
+            },
+          ),
         ],
       ),
     );
@@ -486,7 +525,9 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       BuildContext context, AppLocalizations l10n, bool isEditable) {
     return PopupMenuButton<EstadoPersonal>(
       enabled: isEditable,
-      onSelected: _handleUpdateEstado,
+      onSelected: (EstadoPersonal nuevoEstado) async {
+        await _handleEstadoChange(nuevoEstado);
+      },
       itemBuilder: (BuildContext context) {
         return EstadoPersonal.values
             .map((EstadoPersonal e) => PopupMenuItem<EstadoPersonal>(
@@ -504,11 +545,9 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
                   .displayName(context),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
                   ),
             ),
-            Icon(Icons.arrow_drop_down,
-                color: Theme.of(context).colorScheme.primary),
+            const Icon(Icons.arrow_drop_down),
           ],
         ),
       ),

@@ -25,12 +25,12 @@ class GenreSelectorWidgetState extends State<GenreSelectorWidget> {
   @override
   void initState() {
     super.initState();
+    final availableGenres = _computeAvailableGenres();
     _selectedGenres =
         widget.initialGenres.where((genre) => genre.isNotEmpty).toSet();
-    _customGenres = _selectedGenres
-        .difference(_computeAvailableGenres())
-        .where((genre) => genre.isNotEmpty)
-        .toSet();
+
+    // Derive custom genres without modifying selected genres
+    _customGenres = _selectedGenres.difference(availableGenres);
   }
 
   Set<String> _computeAvailableGenres() {

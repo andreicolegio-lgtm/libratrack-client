@@ -8,6 +8,7 @@ import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/utils/error_translator.dart';
 import '../../model/tipo.dart';
+import '../../core/widgets/genre_selector_widget.dart';
 
 class PropuestaFormScreen extends StatefulWidget {
   const PropuestaFormScreen({super.key});
@@ -123,6 +124,21 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     }
   }
 
+  Widget _buildGenerosField(AppLocalizations l10n) {
+    return GenreSelectorWidget(
+      selectedTypes: _tipoSeleccionado != null
+          ? [_tipos.firstWhere((tipo) => tipo.nombre == _tipoSeleccionado)]
+          : [],
+      initialGenres:
+          _generosController.text.split(',').map((e) => e.trim()).toList(),
+      onChanged: (List<String> updatedGenres) {
+        setState(() {
+          _generosController.text = updatedGenres.join(', ');
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
@@ -198,15 +214,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildInputField(
-                context,
-                l10n: l10n,
-                controller: _generosController,
-                labelText: l10n.proposalFormGenresLabel,
-                validator: (String? value) => (value == null || value.isEmpty)
-                    ? l10n.validationGenresRequired
-                    : null,
-              ),
+              _buildGenerosField(l10n),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),

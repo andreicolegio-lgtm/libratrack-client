@@ -1,4 +1,5 @@
 import '../../core/utils/error_translator.dart';
+import '../../core/utils/content_translator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/widgets/maybe_marquee.dart';
@@ -16,6 +17,7 @@ import '../../core/utils/api_exceptions.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import 'dart:async';
+import 'dart:collection';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -31,9 +33,6 @@ class _SearchScreenState extends State<SearchScreen> {
 
   final TextEditingController _searchController = TextEditingController();
   List<Tipo> _tipos = <Tipo>[];
-  List<Genero> _generos = <Genero>[];
-  String? _filtroTipoActivo;
-  String? _filtroGeneroActivo;
   Future<void>? _filtrosFuture;
   final ScrollController _scrollController = ScrollController();
   final List<Elemento> _elementos = <Elemento>[];
@@ -45,6 +44,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   bool _isDataLoaded = false;
   Timer? _debounce;
+
+  final Set<int> _selectedTypeIds = HashSet<int>();
+  final Set<int> _selectedGenreIds = HashSet<int>();
 
   @override
   void initState() {
@@ -79,7 +81,6 @@ class _SearchScreenState extends State<SearchScreen> {
       if (mounted) {
         setState(() {
           _tipos = results[0] as List<Tipo>;
-          _generos = results[1] as List<Genero>;
         });
       }
     } on ApiException catch (e) {
@@ -139,8 +140,8 @@ class _SearchScreenState extends State<SearchScreen> {
       final PaginatedResponse<Elemento> respuesta =
           await _elementoService.searchElementos(
         search: _searchController.text.isEmpty ? null : _searchController.text,
-        tipo: _filtroTipoActivo,
-        genero: _filtroGeneroActivo,
+        tipo: _selectedTypeIds.isEmpty ? null : _selectedTypeIds.join(','),
+        genero: _selectedGenreIds.isEmpty ? null : _selectedGenreIds.join(','),
         page: _currentPage,
       );
 
@@ -184,21 +185,6 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _clearSearch() {
     _searchController.clear();
-    _filtroTipoActivo = null;
-    _filtroGeneroActivo = null;
-    _reiniciarBusqueda();
-  }
-
-  void _handleFiltroTap(String tipoFiltro, String nombre) {
-    setState(() {
-      if (tipoFiltro == 'tipo') {
-        _filtroTipoActivo = (_filtroTipoActivo == nombre) ? null : nombre;
-        _filtroGeneroActivo = null;
-      } else if (tipoFiltro == 'genero') {
-        _filtroGeneroActivo = (_filtroGeneroActivo == nombre) ? null : nombre;
-        _filtroTipoActivo = null;
-      }
-    });
     _reiniciarBusqueda();
   }
 
@@ -273,23 +259,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: Text(l10n.searchExploreType,
                         style: Theme.of(context).textTheme.titleLarge),
                   ),
-                  _buildFiltroChips(
-                    context,
-                    data: _tipos.map((Tipo t) => t.nombre).toList(),
-                    tipoFiltro: 'tipo',
-                    filtroActivo: _filtroTipoActivo,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                    child: Text(l10n.searchExploreGenre,
-                        style: Theme.of(context).textTheme.titleLarge),
-                  ),
-                  _buildFiltroChips(
-                    context,
-                    data: _generos.map((Genero g) => g.nombre).toList(),
-                    tipoFiltro: 'genero',
-                    filtroActivo: _filtroGeneroActivo,
-                  ),
+                  _buildTypeFilterChips(),
+                  if (_selectedTypeIds.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                      child: Text(l10n.searchExploreGenre,
+                          style: Theme.of(context).textTheme.titleLarge),
+                    ),
+                  if (_selectedTypeIds.isNotEmpty) _buildGenreFilterChips(),
                 ],
               );
             },
@@ -477,34 +454,58 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildFiltroChips(
-    BuildContext context, {
-    required List<String> data,
-    required String tipoFiltro,
-    required String? filtroActivo,
-  }) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        children: data.map((String nombre) {
-          final bool isSelected = nombre == filtroActivo;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: ActionChip(
-              label: Text(nombre),
-              backgroundColor: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.surface,
-              labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 14,
-                    color: isSelected ? Colors.white : Colors.grey[400],
-                  ),
-              onPressed: () => _handleFiltroTap(tipoFiltro, nombre),
-            ),
-          );
-        }).toList(),
-      ),
+  Widget _buildTypeFilterChips() {
+    return Wrap(
+      spacing: 8.0,
+      children: _tipos.map((Tipo tipo) {
+        final bool isSelected = _selectedTypeIds.contains(tipo.id);
+        return FilterChip(
+          label: Text(ContentTranslator.translateType(context, tipo.nombre)),
+          selected: isSelected,
+          onSelected: (bool selected) {
+            setState(() {
+              if (selected) {
+                _selectedTypeIds.add(tipo.id);
+              } else {
+                _selectedTypeIds.remove(tipo.id);
+              }
+            });
+          },
+        );
+      }).toList(),
     );
+  }
+
+  Widget _buildGenreFilterChips() {
+    final Set<Genero> visibleGenres = _getVisibleGenres();
+    return Wrap(
+      spacing: 8.0,
+      children: visibleGenres.map((Genero genero) {
+        final bool isSelected = _selectedGenreIds.contains(genero.id);
+        return FilterChip(
+          label: Text(ContentTranslator.translateGenre(context, genero.nombre)),
+          selected: isSelected,
+          onSelected: (bool selected) {
+            setState(() {
+              if (selected) {
+                _selectedGenreIds.add(genero.id);
+              } else {
+                _selectedGenreIds.remove(genero.id);
+              }
+            });
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  Set<Genero> _getVisibleGenres() {
+    final Set<Genero> visibleGenres = {};
+    for (final Tipo tipo in _tipos) {
+      if (_selectedTypeIds.contains(tipo.id)) {
+        visibleGenres.addAll(tipo.validGenres);
+      }
+    }
+    return visibleGenres;
   }
 }

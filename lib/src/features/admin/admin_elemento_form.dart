@@ -15,6 +15,7 @@ import '../../model/elemento_relacion.dart';
 import '../../core/utils/error_translator.dart';
 import '../../core/services/tipo_service.dart';
 import '../../model/tipo.dart';
+import '../../core/widgets/genre_selector_widget.dart';
 
 class AdminElementoFormScreen extends StatefulWidget {
   final Elemento? elemento;
@@ -325,15 +326,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               const SizedBox(height: 16),
               _buildTipoField(context, l10n),
               const SizedBox(height: 16),
-              _buildInputField(
-                context,
-                l10n: l10n,
-                controller: _generosController,
-                labelText: l10n.adminFormGenresLabel,
-                validator: (String? value) => (value == null || value.isEmpty)
-                    ? l10n.validationGenresRequired
-                    : null,
-              ),
+              _buildGenerosField(l10n),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),
@@ -580,6 +573,21 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
       ),
+    );
+  }
+
+  Widget _buildGenerosField(AppLocalizations l10n) {
+    return GenreSelectorWidget(
+      selectedTypes: _tipoSeleccionado != null
+          ? [_tipos.firstWhere((tipo) => tipo.nombre == _tipoSeleccionado)]
+          : [],
+      initialGenres:
+          _generosController.text.split(',').map((e) => e.trim()).toList(),
+      onChanged: (List<String> updatedGenres) {
+        setState(() {
+          _generosController.text = updatedGenres.join(', ');
+        });
+      },
     );
   }
 

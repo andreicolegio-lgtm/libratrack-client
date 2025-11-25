@@ -833,4 +833,178 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get validationPasswordRules =>
       'The password must be at least 8 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.';
+
+  @override
+  String get typeAnime => 'Anime';
+
+  @override
+  String get typeMovie => 'Movie';
+
+  @override
+  String get typeVideoGame => 'Video Game';
+
+  @override
+  String get typeManga => 'Manga';
+
+  @override
+  String get typeManhwa => 'Manhwa';
+
+  @override
+  String get typeBook => 'Book';
+
+  @override
+  String get typeSeries => 'Series';
+
+  @override
+  String get genreAction => 'Action';
+
+  @override
+  String get genreAdventure => 'Adventure';
+
+  @override
+  String get genreComedy => 'Comedy';
+
+  @override
+  String get genreDrama => 'Drama';
+
+  @override
+  String get genreFantasy => 'Fantasy';
+
+  @override
+  String get genreHorror => 'Horror';
+
+  @override
+  String get genreMystery => 'Mystery';
+
+  @override
+  String get genreRomance => 'Romance';
+
+  @override
+  String get genreSciFi => 'Sci-Fi';
+
+  @override
+  String get genreSliceOfLife => 'Slice of Life';
+
+  @override
+  String get genrePsychological => 'Psychological';
+
+  @override
+  String get genreThriller => 'Thriller';
+
+  @override
+  String get genreHistorical => 'Historical';
+
+  @override
+  String get genreCrime => 'Crime';
+
+  @override
+  String get genreFamily => 'Family';
+
+  @override
+  String get genreWar => 'War';
+
+  @override
+  String get genreCyberpunk => 'Cyberpunk';
+
+  @override
+  String get genrePostApocalyptic => 'Post-Apocalyptic';
+
+  @override
+  String get genreShonen => 'Shonen';
+
+  @override
+  String get genreShojo => 'Shojo';
+
+  @override
+  String get genreSeinen => 'Seinen';
+
+  @override
+  String get genreJosei => 'Josei';
+
+  @override
+  String get genreIsekai => 'Isekai';
+
+  @override
+  String get genreMecha => 'Mecha';
+
+  @override
+  String get genreHarem => 'Harem';
+
+  @override
+  String get genreEcchi => 'Ecchi';
+
+  @override
+  String get genreYaoi => 'Yaoi';
+
+  @override
+  String get genreYuri => 'Yuri';
+
+  @override
+  String get genreMartialArts => 'Martial Arts';
+
+  @override
+  String get genreSchool => 'School';
+
+  @override
+  String get genreRPG => 'RPG';
+
+  @override
+  String get genreShooter => 'Shooter';
+
+  @override
+  String get genrePlatformer => 'Platformer';
+
+  @override
+  String get genreStrategy => 'Strategy';
+
+  @override
+  String get genrePuzzle => 'Puzzle';
+
+  @override
+  String get genreFighting => 'Fighting';
+
+  @override
+  String get genreSports => 'Sports';
+
+  @override
+  String get genreRacing => 'Racing';
+
+  @override
+  String get genreOpenWorld => 'Open World';
+
+  @override
+  String get genreRoguelike => 'Roguelike';
+
+  @override
+  String get genreMOBA => 'MOBA';
+
+  @override
+  String get genreBattleRoyale => 'Battle Royale';
+
+  @override
+  String get genreSimulator => 'Simulator';
+
+  @override
+  String get genreSurvivalHorror => 'Survival Horror';
+
+  @override
+  String get genreBiography => 'Biography';
+
+  @override
+  String get genreEssay => 'Essay';
+
+  @override
+  String get genrePoetry => 'Poetry';
+
+  @override
+  String get genreSelfHelp => 'Self-Help';
+
+  @override
+  String get genreBusiness => 'Business';
+
+  @override
+  String get genreNoir => 'Noir';
+
+  @override
+  String get genreMagicalRealism => 'Magical Realism';
 }

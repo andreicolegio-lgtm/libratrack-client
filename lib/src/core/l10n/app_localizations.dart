@@ -1585,6 +1585,354 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.'**
   String get validationPasswordRules;
+
+  /// No description provided for @typeAnime.
+  ///
+  /// In es, this message translates to:
+  /// **'Anime'**
+  String get typeAnime;
+
+  /// No description provided for @typeMovie.
+  ///
+  /// In es, this message translates to:
+  /// **'Película'**
+  String get typeMovie;
+
+  /// No description provided for @typeVideoGame.
+  ///
+  /// In es, this message translates to:
+  /// **'Videojuego'**
+  String get typeVideoGame;
+
+  /// No description provided for @typeManga.
+  ///
+  /// In es, this message translates to:
+  /// **'Manga'**
+  String get typeManga;
+
+  /// No description provided for @typeManhwa.
+  ///
+  /// In es, this message translates to:
+  /// **'Manhwa'**
+  String get typeManhwa;
+
+  /// No description provided for @typeBook.
+  ///
+  /// In es, this message translates to:
+  /// **'Libro'**
+  String get typeBook;
+
+  /// No description provided for @typeSeries.
+  ///
+  /// In es, this message translates to:
+  /// **'Serie'**
+  String get typeSeries;
+
+  /// No description provided for @genreAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Acción'**
+  String get genreAction;
+
+  /// No description provided for @genreAdventure.
+  ///
+  /// In es, this message translates to:
+  /// **'Aventura'**
+  String get genreAdventure;
+
+  /// No description provided for @genreComedy.
+  ///
+  /// In es, this message translates to:
+  /// **'Comedia'**
+  String get genreComedy;
+
+  /// No description provided for @genreDrama.
+  ///
+  /// In es, this message translates to:
+  /// **'Drama'**
+  String get genreDrama;
+
+  /// No description provided for @genreFantasy.
+  ///
+  /// In es, this message translates to:
+  /// **'Fantasía'**
+  String get genreFantasy;
+
+  /// No description provided for @genreHorror.
+  ///
+  /// In es, this message translates to:
+  /// **'Terror'**
+  String get genreHorror;
+
+  /// No description provided for @genreMystery.
+  ///
+  /// In es, this message translates to:
+  /// **'Misterio'**
+  String get genreMystery;
+
+  /// No description provided for @genreRomance.
+  ///
+  /// In es, this message translates to:
+  /// **'Romance'**
+  String get genreRomance;
+
+  /// No description provided for @genreSciFi.
+  ///
+  /// In es, this message translates to:
+  /// **'Ciencia Ficción'**
+  String get genreSciFi;
+
+  /// No description provided for @genreSliceOfLife.
+  ///
+  /// In es, this message translates to:
+  /// **'Recuentos de la vida'**
+  String get genreSliceOfLife;
+
+  /// No description provided for @genrePsychological.
+  ///
+  /// In es, this message translates to:
+  /// **'Psicológico'**
+  String get genrePsychological;
+
+  /// No description provided for @genreThriller.
+  ///
+  /// In es, this message translates to:
+  /// **'Thriller'**
+  String get genreThriller;
+
+  /// No description provided for @genreHistorical.
+  ///
+  /// In es, this message translates to:
+  /// **'Histórico'**
+  String get genreHistorical;
+
+  /// No description provided for @genreCrime.
+  ///
+  /// In es, this message translates to:
+  /// **'Crimen'**
+  String get genreCrime;
+
+  /// No description provided for @genreFamily.
+  ///
+  /// In es, this message translates to:
+  /// **'Familia'**
+  String get genreFamily;
+
+  /// No description provided for @genreWar.
+  ///
+  /// In es, this message translates to:
+  /// **'Guerra'**
+  String get genreWar;
+
+  /// No description provided for @genreCyberpunk.
+  ///
+  /// In es, this message translates to:
+  /// **'Cyberpunk'**
+  String get genreCyberpunk;
+
+  /// No description provided for @genrePostApocalyptic.
+  ///
+  /// In es, this message translates to:
+  /// **'Post-apocalíptico'**
+  String get genrePostApocalyptic;
+
+  /// No description provided for @genreShonen.
+  ///
+  /// In es, this message translates to:
+  /// **'Shonen'**
+  String get genreShonen;
+
+  /// No description provided for @genreShojo.
+  ///
+  /// In es, this message translates to:
+  /// **'Shojo'**
+  String get genreShojo;
+
+  /// No description provided for @genreSeinen.
+  ///
+  /// In es, this message translates to:
+  /// **'Seinen'**
+  String get genreSeinen;
+
+  /// No description provided for @genreJosei.
+  ///
+  /// In es, this message translates to:
+  /// **'Josei'**
+  String get genreJosei;
+
+  /// No description provided for @genreIsekai.
+  ///
+  /// In es, this message translates to:
+  /// **'Isekai'**
+  String get genreIsekai;
+
+  /// No description provided for @genreMecha.
+  ///
+  /// In es, this message translates to:
+  /// **'Mecha'**
+  String get genreMecha;
+
+  /// No description provided for @genreHarem.
+  ///
+  /// In es, this message translates to:
+  /// **'Harem'**
+  String get genreHarem;
+
+  /// No description provided for @genreEcchi.
+  ///
+  /// In es, this message translates to:
+  /// **'Ecchi'**
+  String get genreEcchi;
+
+  /// No description provided for @genreYaoi.
+  ///
+  /// In es, this message translates to:
+  /// **'Yaoi'**
+  String get genreYaoi;
+
+  /// No description provided for @genreYuri.
+  ///
+  /// In es, this message translates to:
+  /// **'Yuri'**
+  String get genreYuri;
+
+  /// No description provided for @genreMartialArts.
+  ///
+  /// In es, this message translates to:
+  /// **'Artes Marciales'**
+  String get genreMartialArts;
+
+  /// No description provided for @genreSchool.
+  ///
+  /// In es, this message translates to:
+  /// **'Escolar'**
+  String get genreSchool;
+
+  /// No description provided for @genreRPG.
+  ///
+  /// In es, this message translates to:
+  /// **'RPG'**
+  String get genreRPG;
+
+  /// No description provided for @genreShooter.
+  ///
+  /// In es, this message translates to:
+  /// **'Shooter'**
+  String get genreShooter;
+
+  /// No description provided for @genrePlatformer.
+  ///
+  /// In es, this message translates to:
+  /// **'Plataformas'**
+  String get genrePlatformer;
+
+  /// No description provided for @genreStrategy.
+  ///
+  /// In es, this message translates to:
+  /// **'Estrategia'**
+  String get genreStrategy;
+
+  /// No description provided for @genrePuzzle.
+  ///
+  /// In es, this message translates to:
+  /// **'Puzzle'**
+  String get genrePuzzle;
+
+  /// No description provided for @genreFighting.
+  ///
+  /// In es, this message translates to:
+  /// **'Lucha'**
+  String get genreFighting;
+
+  /// No description provided for @genreSports.
+  ///
+  /// In es, this message translates to:
+  /// **'Deportes'**
+  String get genreSports;
+
+  /// No description provided for @genreRacing.
+  ///
+  /// In es, this message translates to:
+  /// **'Carreras'**
+  String get genreRacing;
+
+  /// No description provided for @genreOpenWorld.
+  ///
+  /// In es, this message translates to:
+  /// **'Mundo Abierto'**
+  String get genreOpenWorld;
+
+  /// No description provided for @genreRoguelike.
+  ///
+  /// In es, this message translates to:
+  /// **'Roguelike'**
+  String get genreRoguelike;
+
+  /// No description provided for @genreMOBA.
+  ///
+  /// In es, this message translates to:
+  /// **'MOBA'**
+  String get genreMOBA;
+
+  /// No description provided for @genreBattleRoyale.
+  ///
+  /// In es, this message translates to:
+  /// **'Battle Royale'**
+  String get genreBattleRoyale;
+
+  /// No description provided for @genreSimulator.
+  ///
+  /// In es, this message translates to:
+  /// **'Simulador'**
+  String get genreSimulator;
+
+  /// No description provided for @genreSurvivalHorror.
+  ///
+  /// In es, this message translates to:
+  /// **'Terror de supervivencia'**
+  String get genreSurvivalHorror;
+
+  /// No description provided for @genreBiography.
+  ///
+  /// In es, this message translates to:
+  /// **'Biografía'**
+  String get genreBiography;
+
+  /// No description provided for @genreEssay.
+  ///
+  /// In es, this message translates to:
+  /// **'Ensayo'**
+  String get genreEssay;
+
+  /// No description provided for @genrePoetry.
+  ///
+  /// In es, this message translates to:
+  /// **'Poesía'**
+  String get genrePoetry;
+
+  /// No description provided for @genreSelfHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'Autoayuda'**
+  String get genreSelfHelp;
+
+  /// No description provided for @genreBusiness.
+  ///
+  /// In es, this message translates to:
+  /// **'Negocios'**
+  String get genreBusiness;
+
+  /// No description provided for @genreNoir.
+  ///
+  /// In es, this message translates to:
+  /// **'Novela Negra'**
+  String get genreNoir;
+
+  /// No description provided for @genreMagicalRealism.
+  ///
+  /// In es, this message translates to:
+  /// **'Realismo Mágico'**
+  String get genreMagicalRealism;
 }
 
 class _AppLocalizationsDelegate

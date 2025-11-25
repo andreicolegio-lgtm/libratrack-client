@@ -12,6 +12,7 @@ import '../../model/tipo.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/error_translator.dart';
 import '../../core/utils/api_exceptions.dart';
+import '../../core/widgets/genre_selector_widget.dart';
 
 class PropuestaEditScreen extends StatefulWidget {
   final Propuesta propuesta;
@@ -275,15 +276,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
               const SizedBox(height: 16),
               _buildTipoDropdown(l10n),
               const SizedBox(height: 16),
-              _buildInputField(
-                context,
-                l10n: l10n,
-                controller: _generosController,
-                labelText: l10n.proposalFormGenresLabel,
-                validator: (String? value) => (value == null || value.isEmpty)
-                    ? l10n.validationGenresRequired
-                    : null,
-              ),
+              _buildGenerosField(l10n),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24.0),
                 child: Divider(),
@@ -530,6 +523,21 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
       ),
+    );
+  }
+
+  Widget _buildGenerosField(AppLocalizations l10n) {
+    return GenreSelectorWidget(
+      selectedTypes: _tipoSeleccionado != null
+          ? [_tipos.firstWhere((tipo) => tipo.nombre == _tipoSeleccionado)]
+          : [],
+      initialGenres:
+          _generosController.text.split(',').map((e) => e.trim()).toList(),
+      onChanged: (List<String> updatedGenres) {
+        setState(() {
+          _generosController.text = updatedGenres.join(', ');
+        });
+      },
     );
   }
 }

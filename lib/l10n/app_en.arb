@@ -1018,5 +1018,13 @@
     "episodesPerSeason": "Episodes per Season",
     "@episodesPerSeason": {
         "description": "Label for episodes per season input field."
+    },
+    "snackbarFavoritoAdded": "Added to favorites",
+    "@snackbarFavoritoAdded": {
+        "description": "Message shown when an item is added to favorites"
+    },
+    "snackbarFavoritoRemoved": "Removed from favorites",
+    "@snackbarFavoritoRemoved": {
+        "description": "Message shown when an item is removed from favorites"
     }
 }

@@ -29,7 +29,7 @@ class GenreSelectorWidgetState extends State<GenreSelectorWidget> {
     _selectedGenres =
         widget.initialGenres.where((genre) => genre.isNotEmpty).toSet();
 
-    // Derive custom genres without modifying selected genres
+    // Filter out duplicates: Ensure _customGenres only contains non-official genres
     _customGenres = _selectedGenres.difference(availableGenres);
   }
 
@@ -75,7 +75,9 @@ class GenreSelectorWidgetState extends State<GenreSelectorWidget> {
         }),
 
         // Custom Chips
-        ..._customGenres.map((genre) {
+        ..._customGenres
+            .where((genre) => !availableGenres.contains(genre))
+            .map((genre) {
           return InputChip(
             label: Text(genre),
             backgroundColor: Colors.orange,

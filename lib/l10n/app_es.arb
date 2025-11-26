@@ -1018,5 +1018,13 @@
     "episodesPerSeason": "Episodios por Temporada",
     "@episodesPerSeason": {
         "description": "Etiqueta para el campo de entrada de episodios por temporada."
+    },
+    "snackbarFavoritoAdded": "Añadido a favoritos",
+    "@snackbarFavoritoAdded": {
+        "description": "Mensaje mostrado cuando un elemento se añade a favoritos"
+    },
+    "snackbarFavoritoRemoved": "Eliminado de favoritos",
+    "@snackbarFavoritoRemoved": {
+        "description": "Mensaje mostrado cuando un elemento se elimina de favoritos"
     }
 }

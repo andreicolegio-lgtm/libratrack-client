@@ -136,12 +136,30 @@ class _SearchScreenState extends State<SearchScreen> {
         _isLoadingMore = true;
       });
     }
+
+    // Convertir IDs a Nombres para el Backend
+    final List<String> typeNames = _tipos
+        .where((t) => _selectedTypeIds.contains(t.id))
+        .map((t) => t.nombre)
+        .toList();
+
+    // Nota: Para géneros, mapeamos los IDs seleccionados a sus nombres reales
+    // Usamos _getVisibleGenres para asegurar que tenemos el objeto Genero completo
+    final Set<Genero> visibleGenres = _getVisibleGenres();
+    final List<String> genreNames = visibleGenres
+        .where((g) => _selectedGenreIds.contains(g.id))
+        .map((g) => g.nombre)
+        .toList();
+
     try {
       final PaginatedResponse<Elemento> respuesta =
           await _elementoService.searchElementos(
         search: _searchController.text.isEmpty ? null : _searchController.text,
-        tipo: _selectedTypeIds.isEmpty ? null : _selectedTypeIds.join(','),
-        genero: _selectedGenreIds.isEmpty ? null : _selectedGenreIds.join(','),
+        // Enviamos listas separadas por comas (Backend compatible workaround)
+        // OJO: Si el backend espera &types=A&types=B, el Service necesitaría actualización.
+        // Por ahora usamos coma que es el estándar para 'IN' queries simples.
+        tipo: typeNames.isEmpty ? null : typeNames.join(','),
+        genero: genreNames.isEmpty ? null : genreNames.join(','),
         page: _currentPage,
       );
 
@@ -197,6 +215,98 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
+  Set<Genero> _getVisibleGenres() {
+    final Set<Genero> visibleGenres = {};
+    // Si no hay tipos seleccionados, técnicamente no mostramos géneros (según requerimiento)
+    // O mostramos todos si quisiéramos, pero la instrucción dice "Only show genres that belong..."
+    if (_selectedTypeIds.isEmpty) {
+      return {};
+    }
+
+    for (final Tipo tipo in _tipos) {
+      if (_selectedTypeIds.contains(tipo.id)) {
+        visibleGenres.addAll(tipo.validGenres);
+      }
+    }
+    return visibleGenres;
+  }
+
+  // --- MODALS LOGIC ---
+
+  void _openTypesModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext ctx) {
+        return _MultiSelectModal(
+          title: 'Filter by Types', // Use l10n in real app
+          items: _tipos,
+          selectedIds: Set.from(_selectedTypeIds),
+          labelBuilder: (item) =>
+              ContentTranslator.translateType(context, (item as Tipo).nombre),
+          idExtractor: (item) => (item as Tipo).id,
+          onApply: (Set<int> newSelection) {
+            setState(() {
+              _selectedTypeIds.clear();
+              _selectedTypeIds.addAll(newSelection);
+              // Limpiar géneros que ya no son válidos
+              final validGenres = _getVisibleGenres();
+              _selectedGenreIds
+                  .removeWhere((id) => !validGenres.any((g) => g.id == id));
+            });
+            _reiniciarBusqueda();
+          },
+        );
+      },
+    );
+  }
+
+  void _openGenresModal() {
+    final Set<Genero> visibleGenres = _getVisibleGenres();
+
+    if (visibleGenres.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a Type first to see available Genres.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Ordenar alfabéticamente para mejor UX
+    final List<Genero> sortedGenres = visibleGenres.toList()
+      ..sort((a, b) => a.nombre.compareTo(b.nombre));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext ctx) {
+        return _MultiSelectModal(
+          title: 'Filter by Genres',
+          items: sortedGenres,
+          selectedIds: Set.from(_selectedGenreIds),
+          labelBuilder: (item) => ContentTranslator.translateGenre(
+              context, (item as Genero).nombre),
+          idExtractor: (item) => (item as Genero).id,
+          onApply: (Set<int> newSelection) {
+            setState(() {
+              _selectedGenreIds.clear();
+              _selectedGenreIds.addAll(newSelection);
+            });
+            _reiniciarBusqueda();
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
@@ -233,46 +343,46 @@ class _SearchScreenState extends State<SearchScreen> {
           FutureBuilder<void>(
             future: _filtrosFuture,
             builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+              // Loading state
               if (snapshot.connectionState == ConnectionState.waiting &&
                   _tipos.isEmpty) {
-                return const Center(
-                    child: Padding(
+                return const Padding(
                   padding: EdgeInsets.all(16.0),
-                  child: CircularProgressIndicator(),
-                ));
-              }
-              if (snapshot.hasError && _tipos.isEmpty) {
-                return Center(
-                    child: Text(
-                        l10n.errorLoadingFilters(snapshot.error.toString()),
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(color: Colors.red)));
+                  child: LinearProgressIndicator(),
+                );
               }
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                    child: Text(l10n.searchExploreType,
-                        style: Theme.of(context).textTheme.titleLarge),
-                  ),
-                  _buildTypeFilterChips(),
-                  if (_selectedTypeIds.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                      child: Text(l10n.searchExploreGenre,
-                          style: Theme.of(context).textTheme.titleLarge),
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
+                  children: [
+                    // Botón de TIPOS
+                    Expanded(
+                      child: _FilterButton(
+                        label: 'Types', // TODO: Add to l10n
+                        count: _selectedTypeIds.length,
+                        onPressed: _openTypesModal,
+                        icon: Icons.category,
+                      ),
                     ),
-                  if (_selectedTypeIds.isNotEmpty) _buildGenreFilterChips(),
-                ],
+                    const SizedBox(width: 12),
+                    // Botón de GÉNEROS
+                    Expanded(
+                      child: _FilterButton(
+                        label: 'Genres', // TODO: Add to l10n
+                        count: _selectedGenreIds.length,
+                        onPressed: _openGenresModal,
+                        icon: Icons.movie_filter,
+                        isDisabled: _selectedTypeIds.isEmpty,
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           ),
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.0),
+            padding: EdgeInsets.symmetric(vertical: 4.0),
             child: Divider(),
           ),
           Padding(
@@ -453,59 +563,200 @@ class _SearchScreenState extends State<SearchScreen> {
       labelPadding: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
+}
 
-  Widget _buildTypeFilterChips() {
-    return Wrap(
-      spacing: 8.0,
-      children: _tipos.map((Tipo tipo) {
-        final bool isSelected = _selectedTypeIds.contains(tipo.id);
-        return FilterChip(
-          label: Text(ContentTranslator.translateType(context, tipo.nombre)),
-          selected: isSelected,
-          onSelected: (bool selected) {
-            setState(() {
-              if (selected) {
-                _selectedTypeIds.add(tipo.id);
-              } else {
-                _selectedTypeIds.remove(tipo.id);
-              }
-            });
-          },
-        );
-      }).toList(),
+// --- WIDGETS PRIVADOS PARA EL REFACTORING ---
+
+class _FilterButton extends StatelessWidget {
+  final String label;
+  final int count;
+  final VoidCallback onPressed;
+  final IconData icon;
+  final bool isDisabled;
+
+  const _FilterButton({
+    required this.label,
+    required this.count,
+    required this.onPressed,
+    required this.icon,
+    this.isDisabled = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isActive = count > 0;
+
+    return ElevatedButton(
+      onPressed: isDisabled ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor:
+            isActive ? colorScheme.primaryContainer : colorScheme.surface,
+        foregroundColor:
+            isActive ? colorScheme.onPrimaryContainer : colorScheme.onSurface,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        elevation: 0,
+        side: BorderSide(
+          color: isActive ? colorScheme.primary : Colors.grey.withAlpha(50),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          if (isActive) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  color: colorScheme.onPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          ],
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildGenreFilterChips() {
-    final Set<Genero> visibleGenres = _getVisibleGenres();
-    return Wrap(
-      spacing: 8.0,
-      children: visibleGenres.map((Genero genero) {
-        final bool isSelected = _selectedGenreIds.contains(genero.id);
-        return FilterChip(
-          label: Text(ContentTranslator.translateGenre(context, genero.nombre)),
-          selected: isSelected,
-          onSelected: (bool selected) {
-            setState(() {
-              if (selected) {
-                _selectedGenreIds.add(genero.id);
-              } else {
-                _selectedGenreIds.remove(genero.id);
-              }
-            });
-          },
-        );
-      }).toList(),
-    );
+class _MultiSelectModal extends StatefulWidget {
+  final String title;
+  final List<dynamic> items;
+  final Set<int> selectedIds;
+  final String Function(dynamic) labelBuilder;
+  final int Function(dynamic) idExtractor;
+  final Function(Set<int>) onApply;
+
+  const _MultiSelectModal({
+    required this.title,
+    required this.items,
+    required this.selectedIds,
+    required this.labelBuilder,
+    required this.idExtractor,
+    required this.onApply,
+  });
+
+  @override
+  State<_MultiSelectModal> createState() => _MultiSelectModalState();
+}
+
+class _MultiSelectModalState extends State<_MultiSelectModal> {
+  late Set<int> _tempSelectedIds;
+
+  @override
+  void initState() {
+    super.initState();
+    _tempSelectedIds = Set.from(widget.selectedIds);
   }
 
-  Set<Genero> _getVisibleGenres() {
-    final Set<Genero> visibleGenres = {};
-    for (final Tipo tipo in _tipos) {
-      if (_selectedTypeIds.contains(tipo.id)) {
-        visibleGenres.addAll(tipo.validGenres);
-      }
-    }
-    return visibleGenres;
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (_, controller) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.title,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _tempSelectedIds.clear();
+                      });
+                    },
+                    child: const Text('Clear'),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: GridView.builder(
+                controller: controller,
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 150,
+                  childAspectRatio: 2.5,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemCount: widget.items.length,
+                itemBuilder: (context, index) {
+                  final item = widget.items[index];
+                  final id = widget.idExtractor(item);
+                  final label = widget.labelBuilder(item);
+                  final isSelected = _tempSelectedIds.contains(id);
+
+                  return FilterChip(
+                    label: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isSelected ? Colors.white : null,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    selected: isSelected,
+                    onSelected: (bool selected) {
+                      setState(() {
+                        if (selected) {
+                          _tempSelectedIds.add(id);
+                        } else {
+                          _tempSelectedIds.remove(id);
+                        }
+                      });
+                    },
+                    showCheckmark: false,
+                    selectedColor: Theme.of(context).colorScheme.primary,
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  widget.onApply(_tempSelectedIds);
+                  Navigator.pop(context);
+                },
+                child: const Text('Apply Filter'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

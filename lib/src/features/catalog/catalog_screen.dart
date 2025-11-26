@@ -25,22 +25,6 @@ class _CatalogScreenState extends State<CatalogScreen>
   String? _loadingError;
   List<CatalogoEntrada> _catalogoCompleto = <CatalogoEntrada>[];
 
-  final List<EstadoPersonal> _estados = <EstadoPersonal>[
-    EstadoPersonal.enProgreso,
-    EstadoPersonal.pendiente,
-    EstadoPersonal.terminado,
-    EstadoPersonal.abandonado
-  ];
-
-  final List<Tab> _tabs = const [
-    Tab(text: 'All'),
-    Tab(text: 'Favorites'),
-    Tab(text: 'In Progress'),
-    Tab(text: 'Pending'),
-    Tab(text: 'Finished'),
-    Tab(text: 'Dropped'),
-  ];
-
   bool _isDataLoaded = false;
 
   @override
@@ -92,15 +76,32 @@ class _CatalogScreenState extends State<CatalogScreen>
     }
   }
 
-  List<CatalogoEntrada> _filterCatalogo(String tab) {
-    if (_estados.any((estado) => estado.name == tab)) {
-      return _catalogoCompleto
-          .where((item) => item.estadoPersonal == tab.toUpperCase())
-          .toList();
-    }
-    switch (tab) {
-      case 'Favorites':
+  List<CatalogoEntrada> _filterCatalogo(int index) {
+    switch (index) {
+      case 0: // All
+        return _catalogoCompleto;
+      case 1: // Favorites
         return _catalogoCompleto.where((item) => item.esFavorito).toList();
+      case 2: // In Progress
+        return _catalogoCompleto
+            .where((item) =>
+                item.estadoPersonal == EstadoPersonal.enProgreso.apiValue)
+            .toList();
+      case 3: // Pending
+        return _catalogoCompleto
+            .where((item) =>
+                item.estadoPersonal == EstadoPersonal.pendiente.apiValue)
+            .toList();
+      case 4: // Finished
+        return _catalogoCompleto
+            .where((item) =>
+                item.estadoPersonal == EstadoPersonal.terminado.apiValue)
+            .toList();
+      case 5: // Dropped
+        return _catalogoCompleto
+            .where((item) =>
+                item.estadoPersonal == EstadoPersonal.abandonado.apiValue)
+            .toList();
       default:
         return _catalogoCompleto;
     }
@@ -110,8 +111,18 @@ class _CatalogScreenState extends State<CatalogScreen>
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
+    // Definimos las pestañas dentro del build para usar l10n correctamente
+    final List<Tab> tabs = [
+      Tab(text: l10n.adminPanelFilterAll), // All / Todos
+      const Tab(text: 'Favorites'), // TODO: Añadir clave l10n.catalogFavorites
+      Tab(text: l10n.catalogInProgress),
+      Tab(text: l10n.catalogPending),
+      Tab(text: l10n.catalogFinished),
+      Tab(text: l10n.catalogDropped),
+    ];
+
     return DefaultTabController(
-      length: _tabs.length,
+      length: tabs.length,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.catalogTitle,
@@ -123,7 +134,7 @@ class _CatalogScreenState extends State<CatalogScreen>
               isScrollable: true,
               tabAlignment: TabAlignment.center,
               physics: const BouncingScrollPhysics(),
-              tabs: _tabs,
+              tabs: tabs,
               labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
               indicatorColor: Theme.of(context).colorScheme.primary,
               labelColor: Theme.of(context).colorScheme.primary,
@@ -131,12 +142,13 @@ class _CatalogScreenState extends State<CatalogScreen>
             ),
           ),
         ),
-        body: _buildBody(context, l10n),
+        body: _buildBody(context, l10n, tabs),
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, AppLocalizations l10n) {
+  Widget _buildBody(
+      BuildContext context, AppLocalizations l10n, List<Tab> tabs) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -157,13 +169,14 @@ class _CatalogScreenState extends State<CatalogScreen>
     }
 
     return TabBarView(
-      children: _tabs.map((Tab tab) {
-        final List<CatalogoEntrada> filteredList = _filterCatalogo(tab.text!);
+      children: List.generate(tabs.length, (int index) {
+        final List<CatalogoEntrada> filteredList = _filterCatalogo(index);
 
         if (filteredList.isEmpty) {
+          final String tabName = tabs[index].text ?? '';
           return Center(
             child: Text(
-              l10n.catalogEmptyState(tab.text!),
+              l10n.catalogEmptyState(tabName),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -172,15 +185,16 @@ class _CatalogScreenState extends State<CatalogScreen>
 
         return ListView.builder(
           itemCount: filteredList.length,
-          itemBuilder: (BuildContext context, int index) {
-            final CatalogoEntrada item = filteredList[index];
+          itemBuilder: (BuildContext context, int listIndex) {
+            final CatalogoEntrada item = filteredList[listIndex];
             return CatalogEntryCard(
+              key: ValueKey(item.id), // Importante para rendimiento y estado
               entrada: item,
               onUpdate: _loadCatalog,
             );
           },
         );
-      }).toList(),
+      }),
     );
   }
 }

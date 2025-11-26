@@ -1037,4 +1037,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get episodesPerSeason => 'Episodes per Season';
+
+  @override
+  String get snackbarFavoritoAdded => 'Added to favorites';
+
+  @override
+  String get snackbarFavoritoRemoved => 'Removed from favorites';
 }

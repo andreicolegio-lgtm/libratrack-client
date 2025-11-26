@@ -44,6 +44,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   bool _isAdding = false;
   bool _isDeleting = false;
   bool _isLoadingStatusChange = false;
+  bool _isFavorito = false;
 
   List<Resena> _resenas = <Resena>[];
   bool _haResenado = false;
@@ -259,6 +260,39 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
     if (seHaActualizado == true && mounted) {
       _loadScreenData();
+    }
+  }
+
+  Future<void> _handleToggleFavorito() async {
+    setState(() {
+      _isFavorito = !_isFavorito;
+    });
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    try {
+      await _catalogService.toggleFavorite(widget.elementoId);
+      SnackBarHelper.showTopSnackBar(
+        context,
+        _isFavorito ? l10n.snackbarFavoritoAdded : l10n.snackbarFavoritoRemoved,
+        isError: false,
+      );
+    } on ApiException catch (e) {
+      setState(() {
+        _isFavorito = !_isFavorito; // Revert state on error
+      });
+      SnackBarHelper.showTopSnackBar(
+        context,
+        ErrorTranslator.translate(context, e.message),
+        isError: true,
+      );
+    } catch (e) {
+      setState(() {
+        _isFavorito = !_isFavorito; // Revert state on error
+      });
+      SnackBarHelper.showTopSnackBar(
+        context,
+        l10n.errorUnexpected(e.toString()),
+        isError: true,
+      );
     }
   }
 
@@ -587,15 +621,27 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         onPressed: null,
       );
     }
-    return ElevatedButton.icon(
-      icon: const Icon(Icons.add),
-      label: Text(l10n.elementDetailAddButton),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, 50),
-      ),
-      onPressed: _isAnyLoading() ? null : _handleAddElemento,
+    return Column(
+      children: [
+        ElevatedButton.icon(
+          icon: const Icon(Icons.add),
+          label: Text(l10n.elementDetailAddButton),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryColor,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 50),
+          ),
+          onPressed: _isAnyLoading() ? null : _handleAddElemento,
+        ),
+        const SizedBox(height: 16),
+        IconButton(
+          icon: Icon(
+            _isFavorito ? Icons.star : Icons.star_border,
+            color: _isFavorito ? Colors.yellow : Colors.grey,
+          ),
+          onPressed: _handleToggleFavorito,
+        ),
+      ],
     );
   }
 

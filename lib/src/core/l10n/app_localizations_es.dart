@@ -1056,4 +1056,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get episodesPerSeason => 'Episodios por Temporada';
+
+  @override
+  String get snackbarFavoritoAdded => 'Añadido a favoritos';
+
+  @override
+  String get snackbarFavoritoRemoved => 'Eliminado de favoritos';
 }

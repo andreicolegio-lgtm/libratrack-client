@@ -61,6 +61,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     _episodiosPorTemporada =
         _parseEpisodiosPorTemporada(_entrada.elementoEpisodiosPorTemporada);
 
+    // Fix 3: Init all controllers properly to ensure Book/Manga fields are ready
     _temporadaController.text = (_entrada.temporadaActual ?? 1).toString();
     _unidadController.text = (_entrada.unidadActual ?? 0).toString();
     _capituloController.text = (_entrada.capituloActual ?? 0).toString();
@@ -119,6 +120,23 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     }
   }
 
+  /// Fix 1: Clamping Logic
+  /// If maxLimit is > 0, clamp between 0 and maxLimit.
+  /// If maxLimit is 0 or null (unknown), clamp between 0 and a high number (999999), effectively allowing any positive input.
+  void _addIfValid(Map<String, dynamic> body, String key, String text,
+      {int? maxLimit}) {
+    if (text.isEmpty) {
+      return;
+    }
+
+    int? value = int.tryParse(text);
+    if (value != null) {
+      int effectiveMax = (maxLimit != null && maxLimit > 0) ? maxLimit : 999999;
+      value = value.clamp(0, effectiveMax);
+      body[key] = value;
+    }
+  }
+
   Future<void> _handleSaveProgress() async {
     if (_isLoading) {
       return;
@@ -131,52 +149,47 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     final Map<String, dynamic> body = <String, dynamic>{};
-    final String tipo = _entrada.elementoTipoNombre.toLowerCase();
+    final String tipo = _entrada.elementoTipoNombre;
 
-    bool autoTerminado = false;
-    final int totalUnidades = _entrada.elementoTotalUnidades ?? 0;
-    final int totalPaginas = _entrada.elementoTotalPaginasLibro ?? 0;
-    final int totalTemps = _episodiosPorTemporada.length;
+    // 1. Populate Body with Smart Clamping
+    switch (tipo) {
+      case 'Book':
+        _addIfValid(body, 'paginaActual', _paginaController.text,
+            maxLimit: _entrada.elementoTotalPaginasLibro);
+        break;
 
-    if (tipo == 'serie') {
-      final int temp =
-          (int.tryParse(_temporadaController.text) ?? 1).clamp(1, totalTemps);
-      final int unid = (int.tryParse(_unidadController.text) ?? 0)
-          .clamp(0, totalTemps > 0 ? _episodiosPorTemporada[temp - 1] : 0);
-      body['temporadaActual'] = temp;
-      body['unidadActual'] = unid;
+      case 'Manga':
+      case 'Manhwa':
+        _addIfValid(body, 'capituloActual', _capituloController.text,
+            maxLimit: _entrada.elementoTotalCapitulosLibro);
+        break;
 
-      if (totalTemps > 0 &&
-          temp == totalTemps &&
-          unid == _episodiosPorTemporada[totalTemps - 1]) {
-        autoTerminado = true;
-      }
-    } else if (tipo == 'libro') {
-      final int cap = int.tryParse(_capituloController.text) ?? 0;
-      final int pag =
-          (int.tryParse(_paginaController.text) ?? 0).clamp(0, totalPaginas);
-      body['capituloActual'] = cap;
-      body['paginaActual'] = pag;
+      case 'Anime':
+        _addIfValid(body, 'unidadActual', _unidadController.text,
+            maxLimit: _entrada.elementoTotalUnidades);
+        break;
 
-      if (totalPaginas > 0 && pag == totalPaginas) {
-        autoTerminado = true;
-      }
-    } else if (tipo == 'anime' || tipo == 'manga') {
-      final int unid =
-          (int.tryParse(_unidadController.text) ?? 0).clamp(0, totalUnidades);
-      body['unidadActual'] = unid;
+      case 'Series':
+        // Save Season
+        _addIfValid(body, 'temporadaActual', _temporadaController.text,
+            maxLimit: _episodiosPorTemporada.isNotEmpty
+                ? _episodiosPorTemporada.length
+                : null);
 
-      if (totalUnidades > 0 && unid == totalUnidades) {
-        autoTerminado = true;
-      }
+        // Save Episode based on potentially new Season input
+        int currentTemp = int.tryParse(_temporadaController.text) ??
+            (_entrada.temporadaActual ?? 1);
+        int? maxEps;
+        if (currentTemp > 0 && currentTemp <= _episodiosPorTemporada.length) {
+          maxEps = _episodiosPorTemporada[currentTemp - 1];
+        }
+        _addIfValid(body, 'unidadActual', _unidadController.text,
+            maxLimit: maxEps);
+        break;
     }
 
-    if (autoTerminado &&
-        _entrada.estadoPersonal != EstadoPersonal.terminado.apiValue) {
-      body['estadoPersonal'] = EstadoPersonal.terminado.apiValue;
-    } else if (_entrada.estadoPersonal == EstadoPersonal.pendiente.apiValue) {
-      body['estadoPersonal'] = EstadoPersonal.enProgreso.apiValue;
-    }
+    // Fix 2: Auto-Status Logic (Bidirectional)
+    _checkAutoStatus(body, tipo);
 
     try {
       await _catalogService.updateProgreso(
@@ -211,18 +224,86 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     }
   }
 
+  /// Logic to automatically switch between EN_PROGRESO and TERMINADO
+  void _checkAutoStatus(Map<String, dynamic> body, String tipo) {
+    String? newStatus;
+    final bool isCurrentlyFinished =
+        _entrada.estadoPersonal == EstadoPersonal.terminado.apiValue;
+
+    if (tipo == 'Book' && body.containsKey('paginaActual')) {
+      int current = body['paginaActual'];
+      int total = _entrada.elementoTotalPaginasLibro ?? 0;
+      if (total > 0) {
+        if (current >= total) {
+          newStatus = EstadoPersonal.terminado.apiValue;
+        } else if (isCurrentlyFinished && current < total) {
+          newStatus = EstadoPersonal.enProgreso.apiValue;
+        }
+      }
+    } else if ((tipo == 'Manga' || tipo == 'Manhwa') &&
+        body.containsKey('capituloActual')) {
+      int current = body['capituloActual'];
+      int total = _entrada.elementoTotalCapitulosLibro ?? 0;
+      if (total > 0) {
+        if (current >= total) {
+          newStatus = EstadoPersonal.terminado.apiValue;
+        } else if (isCurrentlyFinished && current < total) {
+          newStatus = EstadoPersonal.enProgreso.apiValue;
+        }
+      }
+    } else if (tipo == 'Anime' && body.containsKey('unidadActual')) {
+      int current = body['unidadActual'];
+      int total = _entrada.elementoTotalUnidades ?? 0;
+      if (total > 0) {
+        if (current >= total) {
+          newStatus = EstadoPersonal.terminado.apiValue;
+        } else if (isCurrentlyFinished && current < total) {
+          newStatus = EstadoPersonal.enProgreso.apiValue;
+        }
+      }
+    } else if (tipo == 'Series' &&
+        body.containsKey('temporadaActual') &&
+        body.containsKey('unidadActual')) {
+      int currentSeason = body['temporadaActual'];
+      int currentEp = body['unidadActual'];
+      int totalSeasons = _episodiosPorTemporada.length;
+
+      // If we have season data
+      if (totalSeasons > 0) {
+        // Logic: Finished if Season >= TotalSeasons AND Episode >= EpsInLastSeason
+        int epsInLast = _episodiosPorTemporada.last;
+        bool isFinishedCondition = (currentSeason > totalSeasons) ||
+            (currentSeason == totalSeasons && currentEp >= epsInLast);
+
+        if (isFinishedCondition) {
+          newStatus = EstadoPersonal.terminado.apiValue;
+        } else if (isCurrentlyFinished && !isFinishedCondition) {
+          newStatus = EstadoPersonal.enProgreso.apiValue;
+        }
+      }
+    }
+
+    if (newStatus != null) {
+      body['estadoPersonal'] = newStatus;
+    }
+  }
+
   Future<void> _handleEstadoChange(EstadoPersonal nuevoEstado) async {
     if (nuevoEstado == EstadoPersonal.terminado) {
-      final String tipo = _entrada.elementoTipoNombre.toLowerCase();
-      if (tipo == 'serie' && _episodiosPorTemporada.isNotEmpty) {
+      final String tipo = _entrada.elementoTipoNombre;
+      // Auto-fill max values locally for better UX before sending
+      if (tipo == 'Series' && _episodiosPorTemporada.isNotEmpty) {
         _temporadaController.text = _episodiosPorTemporada.length.toString();
         _unidadController.text = _episodiosPorTemporada.last.toString();
-      } else if (tipo == 'libro') {
+      } else if (tipo == 'Book') {
         _paginaController.text =
             (_entrada.elementoTotalPaginasLibro ?? 0).toString();
-      } else if (tipo == 'anime' || tipo == 'manga') {
+      } else if (tipo == 'Anime') {
         _unidadController.text =
             (_entrada.elementoTotalUnidades ?? 0).toString();
+      } else if (tipo == 'Manga' || tipo == 'Manhwa') {
+        _capituloController.text =
+            (_entrada.elementoTotalCapitulosLibro ?? 0).toString();
       }
     }
     await _handleUpdateEstado(nuevoEstado);
@@ -233,10 +314,10 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       return 1.0;
     }
 
-    final String tipo = _entrada.elementoTipoNombre.toLowerCase();
+    final String tipo = _entrada.elementoTipoNombre;
 
     try {
-      if (tipo == 'serie') {
+      if (tipo == 'Series') {
         if (_episodiosPorTemporada.isEmpty) {
           return 0.0;
         }
@@ -256,19 +337,26 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
         currentEps += (_entrada.unidadActual ?? 0);
 
         return (currentEps / totalEps).clamp(0.0, 1.0);
-      } else if (tipo == 'libro') {
+      } else if (tipo == 'Book') {
         int pagTotal = _entrada.elementoTotalPaginasLibro ?? 0;
         if (pagTotal <= 0) {
           return 0.0;
         }
         return ((_entrada.paginaActual ?? 0) / pagTotal).clamp(0.0, 1.0);
-      } else {
+      } else if (tipo == 'Manga' || tipo == 'Manhwa') {
+        int capTotal = _entrada.elementoTotalCapitulosLibro ?? 0;
+        if (capTotal <= 0) {
+          return 0.0;
+        }
+        return ((_entrada.capituloActual ?? 0) / capTotal).clamp(0.0, 1.0);
+      } else if (tipo == 'Anime') {
         int uniTotal = _entrada.elementoTotalUnidades ?? 0;
         if (uniTotal <= 0) {
           return 0.0;
         }
         return ((_entrada.unidadActual ?? 0) / uniTotal).clamp(0.0, 1.0);
       }
+      return 0.0;
     } catch (e) {
       return 0.0;
     }
@@ -295,12 +383,6 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     final Color fadedIconColor = onSurfaceColor.withAlpha(0x80);
     final AppLocalizations l10n = AppLocalizations.of(context)!;
 
-    final String tipo = _entrada.elementoTipoNombre.toLowerCase();
-    final bool mostrarProgresoUI = tipo == 'serie' ||
-        tipo == 'libro' ||
-        tipo == 'anime' ||
-        tipo == 'manga';
-
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -325,7 +407,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
                 _buildInfo(context, Theme.of(context)),
               ],
             ),
-            if (mostrarProgresoUI) _buildProgressSection(context, l10n, tipo),
+            _buildProgressSection(l10n),
             _buildActionButtons(context, l10n, isEditable),
           ],
         ),
@@ -384,21 +466,24 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     double progress = _progresoValue;
     String progressText = '';
 
-    final String tipo = _entrada.elementoTipoNombre.toLowerCase();
-    final int? totalPaginas = _entrada.elementoTotalPaginasLibro;
-    final int? totalUnidades = _entrada.elementoTotalUnidades;
-    final int pagActual = _entrada.paginaActual ?? 0;
-    final int unidadActual = _entrada.unidadActual ?? 0;
-
-    if (tipo == 'libro' && totalPaginas != null && totalPaginas > 0) {
-      progressText = '$pagActual / $totalPaginas';
-    } else if ((tipo == 'anime' || tipo == 'manga') &&
-        totalUnidades != null &&
-        totalUnidades > 0) {
-      progressText = '$unidadActual / $totalUnidades';
-    } else if (tipo == 'serie') {
+    final String tipo = _entrada.elementoTipoNombre;
+    // Display Logic for Progress Bar Text
+    if (tipo == 'Book') {
       progressText =
-          'T${_entrada.temporadaActual ?? 1} / E${_entrada.unidadActual ?? 0}';
+          '${_entrada.paginaActual ?? 0} / ${_entrada.elementoTotalPaginasLibro ?? "?"}';
+    } else if (tipo == 'Manga' || tipo == 'Manhwa') {
+      progressText =
+          '${_entrada.capituloActual ?? 0} / ${_entrada.elementoTotalCapitulosLibro ?? "?"}';
+    } else if (tipo == 'Anime') {
+      progressText =
+          '${_entrada.unidadActual ?? 0} / ${_entrada.elementoTotalUnidades ?? "?"}';
+    } else if (tipo == 'Series') {
+      progressText =
+          'S${_entrada.temporadaActual ?? 1} / E${_entrada.unidadActual ?? 0}';
+    }
+
+    if (tipo == 'Movie') {
+      return const SizedBox.shrink(); // Movies usually don't have progress bar
     }
 
     return Column(
@@ -419,55 +504,82 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     );
   }
 
-  Widget _buildProgressSection(
-      BuildContext context, AppLocalizations l10n, String tipo) {
+  Widget _buildProgressSection(AppLocalizations l10n) {
+    final String tipo = _entrada.elementoTipoNombre;
+
+    switch (tipo) {
+      case 'Book':
+        return _buildSingleInputRow(
+          _paginaController,
+          l10n.catalogCardBookPage,
+        );
+      case 'Manga':
+      case 'Manhwa':
+        return _buildSingleInputRow(
+          _capituloController,
+          l10n.catalogCardBookChapter,
+        );
+      case 'Anime':
+        return _buildSingleInputRow(
+          _unidadController,
+          l10n.elementDetailAnimeEpisodes, // Reusing localized string
+        );
+      case 'Series':
+        return _buildSeriesInputRow(l10n);
+      default:
+        // Movies and Games might not have quick edit progress
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildSingleInputRow(
+      TextEditingController controller, String labelText) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
         children: <Widget>[
-          if (tipo == 'serie')
-            Expanded(
-              child: _buildTextField(
-                  _temporadaController, l10n.catalogCardSeriesSeason(1),
-                  enabled: !_isLoading),
-            ),
-          if (tipo == 'serie') const SizedBox(width: 16),
-          if (tipo == 'serie' || tipo == 'anime' || tipo == 'manga')
-            Expanded(
-              child: _buildTextField(
-                  _unidadController,
-                  tipo == 'serie'
-                      ? l10n.catalogCardSeriesEpisode(1)
-                      : (tipo == 'anime'
-                          ? l10n.elementDetailAnimeEpisodes
-                          : l10n.elementDetailMangaChapters),
-                  enabled: !_isLoading),
-            ),
-          if (tipo == 'libro')
-            Expanded(
-              child: _buildTextField(
-                  _capituloController, l10n.catalogCardBookChapter,
-                  enabled: !_isLoading),
-            ),
-          if (tipo == 'libro') const SizedBox(width: 16),
-          if (tipo == 'libro')
-            Expanded(
-              child: _buildTextField(
-                  _paginaController, l10n.catalogCardBookPage,
-                  enabled: !_isLoading),
-            ),
+          Expanded(
+            child: _buildTextField(controller, labelText, enabled: !_isLoading),
+          ),
           const SizedBox(width: 16),
-          _isLoading
-              ? const SizedBox(
-                  width: 24, height: 24, child: CircularProgressIndicator())
-              : IconButton(
-                  icon: Icon(Icons.save,
-                      color: Theme.of(context).colorScheme.primary),
-                  onPressed: _handleSaveProgress,
-                ),
+          _buildSaveButton(),
         ],
       ),
     );
+  }
+
+  Widget _buildSeriesInputRow(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: _buildTextField(
+                _temporadaController, l10n.catalogCardSeriesSeason(1),
+                enabled: !_isLoading),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildTextField(
+                _unidadController, l10n.catalogCardSeriesEpisode(1),
+                enabled: !_isLoading),
+          ),
+          const SizedBox(width: 16),
+          _buildSaveButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return _isLoading
+        ? const SizedBox(
+            width: 24, height: 24, child: CircularProgressIndicator())
+        : IconButton(
+            icon:
+                Icon(Icons.save, color: Theme.of(context).colorScheme.primary),
+            onPressed: _handleSaveProgress,
+          );
   }
 
   Widget _buildTextField(TextEditingController controller, String label,

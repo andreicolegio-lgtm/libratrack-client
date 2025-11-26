@@ -1993,6 +1993,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Episodios por Temporada'**
   String get episodesPerSeason;
+
+  /// Mensaje mostrado cuando un elemento se añade a favoritos
+  ///
+  /// In es, this message translates to:
+  /// **'Añadido a favoritos'**
+  String get snackbarFavoritoAdded;
+
+  /// Mensaje mostrado cuando un elemento se elimina de favoritos
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminado de favoritos'**
+  String get snackbarFavoritoRemoved;
 }
 
 class _AppLocalizationsDelegate

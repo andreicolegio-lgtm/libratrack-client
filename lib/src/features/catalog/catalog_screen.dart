@@ -1,13 +1,13 @@
-import '../../core/utils/error_translator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/catalog_service.dart';
-import '../../model/catalogo_entrada.dart';
-import 'widgets/catalog_entry_card.dart';
-import '../../core/utils/api_exceptions.dart';
 import '../../core/services/auth_service.dart';
-import '../../core/l10n/app_localizations.dart';
+import '../../model/catalogo_entrada.dart';
 import '../../model/estado_personal.dart';
+import '../../core/utils/error_translator.dart';
+import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/api_exceptions.dart';
+import 'widgets/catalog_entry_card.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -21,11 +21,8 @@ class _CatalogScreenState extends State<CatalogScreen>
   late final CatalogService _catalogService;
   late final AuthService _authService;
 
-  bool _isLoading = true;
-  String? _loadingError;
-  List<CatalogoEntrada> _catalogoCompleto = <CatalogoEntrada>[];
-
   bool _isDataLoaded = false;
+  String? _loadingError;
 
   @override
   void initState() {
@@ -44,77 +41,72 @@ class _CatalogScreenState extends State<CatalogScreen>
   }
 
   Future<void> _loadCatalog() async {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-
+    final AppLocalizations l10n = AppLocalizations.of(context);
     try {
       await _catalogService.fetchCatalog();
-
       if (mounted) {
-        setState(() {
-          _catalogoCompleto = _catalogService.entradas;
-          _isLoading = false;
-        });
+        setState(() => _loadingError = null);
       }
     } on ApiException catch (e) {
-      if (mounted) {
-        if (e is UnauthorizedException) {
-          _authService.logout();
-        } else {
-          setState(() {
-            _loadingError = ErrorTranslator.translate(context, e.message);
-            _isLoading = false;
-          });
-        }
+      if (!mounted) {
+        return;
       }
-    } catch (e) {
-      if (mounted) {
+
+      if (e is UnauthorizedException) {
+        _authService.logout();
+      } else {
         setState(() {
-          _loadingError = l10n.errorLoadingCatalog(e.toString());
-          _isLoading = false;
+          _loadingError = ErrorTranslator.translate(context, e.message);
         });
       }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _loadingError = l10n.errorLoadingCatalog(e.toString());
+      });
     }
   }
 
-  List<CatalogoEntrada> _filterCatalogo(int index) {
-    switch (index) {
-      case 0: // All
-        return _catalogoCompleto;
-      case 1: // Favorites
-        return _catalogoCompleto.where((item) => item.esFavorito).toList();
-      case 2: // In Progress
-        return _catalogoCompleto
-            .where((item) =>
-                item.estadoPersonal == EstadoPersonal.enProgreso.apiValue)
+  List<CatalogoEntrada> _filterCatalogo(
+      int tabIndex, List<CatalogoEntrada> all) {
+    switch (tabIndex) {
+      case 0: // Todos
+        return all;
+      case 1: // Favoritos
+        return all.where((e) => e.esFavorito).toList();
+      case 2: // En Progreso
+        return all
+            .where(
+                (e) => e.estadoPersonal == EstadoPersonal.enProgreso.apiValue)
             .toList();
-      case 3: // Pending
-        return _catalogoCompleto
-            .where((item) =>
-                item.estadoPersonal == EstadoPersonal.pendiente.apiValue)
+      case 3: // Pendiente
+        return all
+            .where((e) => e.estadoPersonal == EstadoPersonal.pendiente.apiValue)
             .toList();
-      case 4: // Finished
-        return _catalogoCompleto
-            .where((item) =>
-                item.estadoPersonal == EstadoPersonal.terminado.apiValue)
+      case 4: // Terminado
+        return all
+            .where((e) => e.estadoPersonal == EstadoPersonal.terminado.apiValue)
             .toList();
-      case 5: // Dropped
-        return _catalogoCompleto
-            .where((item) =>
-                item.estadoPersonal == EstadoPersonal.abandonado.apiValue)
+      case 5: // Abandonado
+        return all
+            .where(
+                (e) => e.estadoPersonal == EstadoPersonal.abandonado.apiValue)
             .toList();
       default:
-        return _catalogoCompleto;
+        return all;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final AppLocalizations l10n = AppLocalizations.of(context);
 
-    // Definimos las pestañas dentro del build para usar l10n correctamente
+    // Definición de pestañas
     final List<Tab> tabs = [
-      Tab(text: l10n.adminPanelFilterAll), // All / Todos
-      const Tab(text: 'Favorites'), // TODO: Añadir clave l10n.catalogFavorites
+      Tab(text: l10n.adminPanelFilterAll),
+      const Tab(icon: Icon(Icons.star, size: 18), text: 'Favs'), // "Favorites"
       Tab(text: l10n.catalogInProgress),
       Tab(text: l10n.catalogPending),
       Tab(text: l10n.catalogFinished),
@@ -128,73 +120,126 @@ class _CatalogScreenState extends State<CatalogScreen>
           title: Text(l10n.catalogTitle,
               style: Theme.of(context).textTheme.titleLarge),
           centerTitle: true,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(48.0),
-            child: TabBar(
-              isScrollable: true,
-              tabAlignment: TabAlignment.center,
-              physics: const BouncingScrollPhysics(),
-              tabs: tabs,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 10.0),
-              indicatorColor: Theme.of(context).colorScheme.primary,
-              labelColor: Theme.of(context).colorScheme.primary,
-              unselectedLabelColor: Colors.grey[500],
-            ),
+          bottom: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            tabs: tabs,
+            indicatorSize: TabBarIndicatorSize.label,
+            dividerColor: Colors.transparent,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+            unselectedLabelStyle:
+                const TextStyle(fontWeight: FontWeight.normal),
           ),
         ),
-        body: _buildBody(context, l10n, tabs),
+        body: Consumer<CatalogService>(
+          builder: (context, catalogService, child) {
+            if (catalogService.isLoading && catalogService.entradas.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (_loadingError != null) {
+              return _buildErrorState(_loadingError!);
+            }
+
+            return TabBarView(
+              children: List.generate(tabs.length, (index) {
+                final filteredList =
+                    _filterCatalogo(index, catalogService.entradas);
+
+                if (filteredList.isEmpty) {
+                  return _buildEmptyState(l10n, index);
+                }
+
+                return RefreshIndicator(
+                  onRefresh: _loadCatalog,
+                  child: ListView.separated(
+                    key: PageStorageKey(
+                        'catalog_tab_$index'), // Preserva scroll por pestaña
+                    padding: const EdgeInsets.all(12),
+                    itemCount: filteredList.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) {
+                      return CatalogEntryCard(
+                        key: ValueKey(filteredList[i].id),
+                        entrada: filteredList[i],
+                        onUpdate: () {},
+                      );
+                    },
+                  ),
+                );
+              }),
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildBody(
-      BuildContext context, AppLocalizations l10n, List<Tab> tabs) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+  Widget _buildEmptyState(AppLocalizations l10n, int index) {
+    IconData icon;
+    String message;
+
+    switch (index) {
+      case 1: // Favoritos
+        icon = Icons.star_border;
+        message = 'Aún no tienes favoritos.';
+        break;
+      case 2: // En Progreso
+        icon = Icons.play_circle_outline;
+        message = 'No estás viendo nada actualmente.';
+        break;
+      case 3: // Pendiente
+        icon = Icons.schedule;
+        message = '¡Estás al día! Nada pendiente.';
+        break;
+      case 4: // Terminado
+        icon = Icons.check_circle_outline;
+        message = 'Aún no has terminado nada.';
+        break;
+      default:
+        icon = Icons.collections_bookmark_outlined;
+        message = 'Tu catálogo está vacío.';
     }
-    if (_loadingError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            _loadingError!,
-            textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: Colors.red),
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
-        ),
-      );
-    }
+        ],
+      ),
+    );
+  }
 
-    return TabBarView(
-      children: List.generate(tabs.length, (int index) {
-        final List<CatalogoEntrada> filteredList = _filterCatalogo(index);
-
-        if (filteredList.isEmpty) {
-          final String tabName = tabs[index].text ?? '';
-          return Center(
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              l10n.catalogEmptyState(tabName),
+              error,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: const TextStyle(color: Colors.red),
             ),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: filteredList.length,
-          itemBuilder: (BuildContext context, int listIndex) {
-            final CatalogoEntrada item = filteredList[listIndex];
-            return CatalogEntryCard(
-              key: ValueKey(item.id), // Importante para rendimiento y estado
-              entrada: item,
-              onUpdate: _loadCatalog,
-            );
-          },
-        );
-      }),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _loadCatalog,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Reintentar'),
+          )
+        ],
+      ),
     );
   }
 }

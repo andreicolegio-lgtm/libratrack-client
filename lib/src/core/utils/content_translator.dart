@@ -1,132 +1,149 @@
 import 'package:flutter/widgets.dart';
 import '../l10n/app_localizations.dart';
 
+/// Utilidad para traducir claves de contenido (Tipos, Géneros) que vienen del backend
+/// a los textos localizados de la aplicación.
 class ContentTranslator {
+  /// Traduce el nombre del Tipo de contenido (ej. "Anime" -> "Anime", "Movie" -> "Película").
   static String translateType(BuildContext context, String backendKey) {
+    final l10n = AppLocalizations.of(context);
+
     switch (backendKey) {
       case 'Anime':
-        return AppLocalizations.of(context)!.typeAnime;
+        return l10n.typeAnime;
       case 'Movie':
-        return AppLocalizations.of(context)!.typeMovie;
+        return l10n.typeMovie;
       case 'Video Game':
-        return AppLocalizations.of(context)!.typeVideoGame;
+        return l10n.typeVideoGame;
       case 'Manga':
-        return AppLocalizations.of(context)!.typeManga;
+        return l10n.typeManga;
       case 'Manhwa':
-        return AppLocalizations.of(context)!.typeManhwa;
+        return l10n.typeManhwa;
       case 'Book':
-        return AppLocalizations.of(context)!.typeBook;
+        return l10n.typeBook;
       case 'Series':
-        return AppLocalizations.of(context)!.typeSeries;
+        return l10n.typeSeries;
       default:
+        // Fallback: Devuelve la clave original si no hay traducción (ej. tipos nuevos)
         return backendKey;
     }
   }
 
+  /// Traduce el nombre del Género (ej. "Action" -> "Acción").
   static String translateGenre(BuildContext context, String backendKey) {
+    final l10n = AppLocalizations.of(context);
+
     switch (backendKey) {
+      // Generales
       case 'Action':
-        return AppLocalizations.of(context)!.genreAction;
+        return l10n.genreAction;
       case 'Adventure':
-        return AppLocalizations.of(context)!.genreAdventure;
+        return l10n.genreAdventure;
       case 'Comedy':
-        return AppLocalizations.of(context)!.genreComedy;
+        return l10n.genreComedy;
       case 'Drama':
-        return AppLocalizations.of(context)!.genreDrama;
+        return l10n.genreDrama;
       case 'Fantasy':
-        return AppLocalizations.of(context)!.genreFantasy;
+        return l10n.genreFantasy;
       case 'Horror':
-        return AppLocalizations.of(context)!.genreHorror;
+        return l10n.genreHorror;
       case 'Mystery':
-        return AppLocalizations.of(context)!.genreMystery;
+        return l10n.genreMystery;
       case 'Romance':
-        return AppLocalizations.of(context)!.genreRomance;
+        return l10n.genreRomance;
       case 'Sci-Fi':
-        return AppLocalizations.of(context)!.genreSciFi;
+        return l10n.genreSciFi;
       case 'Slice of Life':
-        return AppLocalizations.of(context)!.genreSliceOfLife;
+        return l10n.genreSliceOfLife;
       case 'Psychological':
-        return AppLocalizations.of(context)!.genrePsychological;
+        return l10n.genrePsychological;
       case 'Thriller':
-        return AppLocalizations.of(context)!.genreThriller;
+        return l10n.genreThriller;
       case 'Historical':
-        return AppLocalizations.of(context)!.genreHistorical;
+        return l10n.genreHistorical;
       case 'Crime':
-        return AppLocalizations.of(context)!.genreCrime;
+        return l10n.genreCrime;
       case 'Family':
-        return AppLocalizations.of(context)!.genreFamily;
+        return l10n.genreFamily;
       case 'War':
-        return AppLocalizations.of(context)!.genreWar;
+        return l10n.genreWar;
       case 'Cyberpunk':
-        return AppLocalizations.of(context)!.genreCyberpunk;
+        return l10n.genreCyberpunk;
       case 'Post-Apocalyptic':
-        return AppLocalizations.of(context)!.genrePostApocalyptic;
+        return l10n.genrePostApocalyptic;
+
+      // Asiáticos / Anime
       case 'Shonen':
-        return AppLocalizations.of(context)!.genreShonen;
+        return l10n.genreShonen;
       case 'Shojo':
-        return AppLocalizations.of(context)!.genreShojo;
+        return l10n.genreShojo;
       case 'Seinen':
-        return AppLocalizations.of(context)!.genreSeinen;
+        return l10n.genreSeinen;
       case 'Josei':
-        return AppLocalizations.of(context)!.genreJosei;
+        return l10n.genreJosei;
       case 'Isekai':
-        return AppLocalizations.of(context)!.genreIsekai;
+        return l10n.genreIsekai;
       case 'Mecha':
-        return AppLocalizations.of(context)!.genreMecha;
+        return l10n.genreMecha;
       case 'Harem':
-        return AppLocalizations.of(context)!.genreHarem;
+        return l10n.genreHarem;
       case 'Ecchi':
-        return AppLocalizations.of(context)!.genreEcchi;
+        return l10n.genreEcchi;
       case 'Yaoi':
-        return AppLocalizations.of(context)!.genreYaoi;
+        return l10n.genreYaoi;
       case 'Yuri':
-        return AppLocalizations.of(context)!.genreYuri;
+        return l10n.genreYuri;
       case 'Martial Arts':
-        return AppLocalizations.of(context)!.genreMartialArts;
+        return l10n.genreMartialArts;
       case 'School':
-        return AppLocalizations.of(context)!.genreSchool;
+        return l10n.genreSchool;
+
+      // Gaming
       case 'RPG':
-        return AppLocalizations.of(context)!.genreRPG;
+        return l10n.genreRPG;
       case 'Shooter':
-        return AppLocalizations.of(context)!.genreShooter;
+        return l10n.genreShooter;
       case 'Platformer':
-        return AppLocalizations.of(context)!.genrePlatformer;
+        return l10n.genrePlatformer;
       case 'Strategy':
-        return AppLocalizations.of(context)!.genreStrategy;
+        return l10n.genreStrategy;
       case 'Puzzle':
-        return AppLocalizations.of(context)!.genrePuzzle;
+        return l10n.genrePuzzle;
       case 'Fighting':
-        return AppLocalizations.of(context)!.genreFighting;
+        return l10n.genreFighting;
       case 'Sports':
-        return AppLocalizations.of(context)!.genreSports;
+        return l10n.genreSports;
       case 'Racing':
-        return AppLocalizations.of(context)!.genreRacing;
+        return l10n.genreRacing;
       case 'Open World':
-        return AppLocalizations.of(context)!.genreOpenWorld;
+        return l10n.genreOpenWorld;
       case 'Roguelike':
-        return AppLocalizations.of(context)!.genreRoguelike;
+        return l10n.genreRoguelike;
       case 'MOBA':
-        return AppLocalizations.of(context)!.genreMOBA;
+        return l10n.genreMOBA;
       case 'Battle Royale':
-        return AppLocalizations.of(context)!.genreBattleRoyale;
+        return l10n.genreBattleRoyale;
       case 'Simulator':
-        return AppLocalizations.of(context)!.genreSimulator;
+        return l10n.genreSimulator;
       case 'Survival Horror':
-        return AppLocalizations.of(context)!.genreSurvivalHorror;
+        return l10n.genreSurvivalHorror;
+
+      // Literarios
       case 'Biography':
-        return AppLocalizations.of(context)!.genreBiography;
+        return l10n.genreBiography;
       case 'Essay':
-        return AppLocalizations.of(context)!.genreEssay;
+        return l10n.genreEssay;
       case 'Poetry':
-        return AppLocalizations.of(context)!.genrePoetry;
+        return l10n.genrePoetry;
       case 'Self-Help':
-        return AppLocalizations.of(context)!.genreSelfHelp;
+        return l10n.genreSelfHelp;
       case 'Business':
-        return AppLocalizations.of(context)!.genreBusiness;
+        return l10n.genreBusiness;
       case 'Noir':
-        return AppLocalizations.of(context)!.genreNoir;
+        return l10n.genreNoir;
       case 'Magical Realism':
-        return AppLocalizations.of(context)!.genreMagicalRealism;
+        return l10n.genreMagicalRealism;
+
       default:
         return backendKey;
     }

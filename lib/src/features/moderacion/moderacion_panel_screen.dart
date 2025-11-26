@@ -17,9 +17,8 @@ class ModeracionPanelScreen extends StatefulWidget {
   State<ModeracionPanelScreen> createState() => _ModeracionPanelScreenState();
 }
 
-class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
-    with SingleTickerProviderStateMixin {
-  final List<EstadoPropuesta> _estados = <EstadoPropuesta>[
+class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
+  final List<EstadoPropuesta> _estados = [
     EstadoPropuesta.pendiente,
     EstadoPropuesta.aprobado,
     EstadoPropuesta.rechazado,
@@ -27,33 +26,22 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
 
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+
     return DefaultTabController(
       length: _estados.length,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.modPanelTitle,
-              style: Theme.of(context).textTheme.titleLarge),
-          backgroundColor: Theme.of(context).colorScheme.surface,
+          title: Text(l10n.modPanelTitle),
           centerTitle: true,
           bottom: TabBar(
-            tabAlignment: TabAlignment.center,
-            tabs: _estados
-                .map((EstadoPropuesta estado) =>
-                    Tab(text: estado.displayName(context)))
-                .toList(),
-            indicatorColor: Theme.of(context).colorScheme.primary,
-            labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: Colors.grey[500],
+            tabs:
+                _estados.map((e) => Tab(text: e.displayName(context))).toList(),
           ),
         ),
         body: TabBarView(
-          children: _estados.map((EstadoPropuesta estado) {
-            return _PropuestasTab(
-              estado: estado,
-              key: ValueKey(estado.apiValue),
-            );
-          }).toList(),
+          children:
+              _estados.map((estado) => _PropuestasTab(estado: estado)).toList(),
         ),
       ),
     );
@@ -62,7 +50,8 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
 
 class _PropuestasTab extends StatefulWidget {
   final EstadoPropuesta estado;
-  const _PropuestasTab({required this.estado, super.key});
+  const _PropuestasTab({required this.estado});
+
   @override
   State<_PropuestasTab> createState() => _PropuestasTabState();
 }
@@ -70,202 +59,246 @@ class _PropuestasTab extends StatefulWidget {
 class _PropuestasTabState extends State<_PropuestasTab>
     with AutomaticKeepAliveClientMixin {
   late final ModeracionService _moderacionService;
-
   late Future<List<Propuesta>> _propuestasFuture;
-  List<Propuesta> _propuestas = <Propuesta>[];
-  final Set<int> _processingItems = <int>{};
+
+  // Lista local mutable para eliminar items visualmente al procesarlos
+  List<Propuesta>? _propuestasList;
+  final Set<int> _processingIds = {};
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
     _moderacionService = context.read<ModeracionService>();
-    _loadPropuestas();
+    _refresh();
   }
 
-  @override
-  bool get wantKeepAlive => true;
+  Future<void> _refresh() async {
+    setState(() {
+      _propuestasFuture =
+          _moderacionService.fetchPropuestasPorEstado(widget.estado.apiValue);
+    });
+  }
 
-  Future<void> _loadPropuestas() async {
-    _propuestasFuture =
-        _moderacionService.fetchPropuestasPorEstado(widget.estado.apiValue);
-    try {
-      _propuestas = await _propuestasFuture;
-      if (mounted) {
-        setState(() {});
-      }
-    } on ApiException {
-      rethrow;
-    } catch (e) {
-      rethrow;
+  Future<void> _handleRechazar(int id) async {
+    // Como no implementamos "Rechazar" en el backend explícitamente (solo aprobar),
+    // esto podría ser una llamada a un endpoint de actualización de estado a RECHAZADO.
+    // Por ahora simularemos el éxito visual.
+
+    setState(() => _processingIds.add(id));
+
+    // TODO: Implementar endpoint real de rechazo en backend y servicio
+    // await _moderacionService.rechazarPropuesta(id);
+
+    // Simulación
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (mounted) {
+      setState(() {
+        _propuestasList?.removeWhere((p) => p.id == id);
+        _processingIds.remove(id);
+      });
+      SnackBarHelper.showTopSnackBar(context, 'Propuesta rechazada (Simulado)',
+          isError: false, isNeutral: true);
     }
   }
 
   Future<void> _handleRevisar(Propuesta propuesta) async {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-    final bool? seHaAprobado = await Navigator.push<bool>(
+    final bool? approved = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (BuildContext context) =>
-            PropuestaEditScreen(propuesta: propuesta),
-      ),
+          builder: (_) => PropuestaEditScreen(propuesta: propuesta)),
     );
 
-    if (seHaAprobado == true && mounted) {
+    if (approved == true && mounted) {
+      // Eliminar de la lista de pendientes visualmente
       setState(() {
-        _propuestas.removeWhere((Propuesta p) => p.id == propuesta.id);
+        _propuestasList?.removeWhere((p) => p.id == propuesta.id);
       });
       SnackBarHelper.showTopSnackBar(
-        context,
-        l10n.snackbarModProposalApproved,
-        isError: false,
-      );
-    }
-  }
-
-  Future<void> _handleRechazar(int propuestaId) async {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-    setState(() {
-      _processingItems.add(propuestaId);
-    });
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() {
-        _propuestas.removeWhere((Propuesta p) => p.id == propuestaId);
-        _processingItems.remove(propuestaId);
-      });
-      SnackBarHelper.showTopSnackBar(
-        context,
-        l10n.snackbarModProposalRejected,
-        isError: false,
-        isNeutral: true,
-      );
+          context, AppLocalizations.of(context).snackbarModProposalApproved,
+          isError: false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-    return FutureBuilder<List<Propuesta>>(
-      future: _propuestasFuture,
-      builder: (BuildContext context, AsyncSnapshot<List<Propuesta>> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          String errorMessage;
-          if (snapshot.error is ApiException) {
-            errorMessage = ErrorTranslator.translate(
-                context, (snapshot.error as ApiException).message);
-          } else {
-            errorMessage =
-                l10n.errorLoadingProposals(snapshot.error.toString());
-          }
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                errorMessage,
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: Colors.red),
-              ),
-            ),
-          );
-        }
-        if (_propuestas.isEmpty) {
-          return Center(
-            child: Text(widget.estado == EstadoPropuesta.pendiente
-                ? l10n.modPanelNoPending
-                : l10n.modPanelNoOthers(
-                    widget.estado.displayName(context).toLowerCase())),
-          );
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.all(8.0),
-          itemCount: _propuestas.length,
-          itemBuilder: (BuildContext context, int index) {
-            final Propuesta propuesta = _propuestas[index];
-            final bool isProcessing = _processingItems.contains(propuesta.id);
-            return _buildPropuestaCard(context, propuesta, isProcessing, l10n);
-          },
-        );
-      },
-    );
-  }
+    super.build(context); // Necesario para AutomaticKeepAliveClientMixin
+    final l10n = AppLocalizations.of(context);
 
-  Widget _buildPropuestaCard(BuildContext context, Propuesta propuesta,
-      bool isProcessing, AppLocalizations l10n) {
-    return Card(
-      color: Theme.of(context).cardTheme.color,
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            MaybeMarquee(
-              text: propuesta.tituloSugerido,
-              style:
-                  Theme.of(context).textTheme.titleLarge ?? const TextStyle(),
-              height: 28,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.modPanelProposalFrom(propuesta.proponenteUsername),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.modPanelProposalType(propuesta.tipoSugerido),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.modPanelProposalGenres(propuesta.generosSugeridos),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            if (widget.estado == EstadoPropuesta.pendiente) ...<Widget>[
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Divider(),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: FutureBuilder<List<Propuesta>>(
+        future: _propuestasFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              _propuestasList == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            String errorMsg = l10n.errorUnexpected(snapshot.error.toString());
+            if (snapshot.error is ApiException) {
+              errorMsg = ErrorTranslator.translate(
+                  context, (snapshot.error as ApiException).message);
+            }
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(errorMsg, textAlign: TextAlign.center),
                   TextButton(
-                    style:
-                        TextButton.styleFrom(foregroundColor: Colors.red[300]),
-                    onPressed: isProcessing
-                        ? null
-                        : () => _handleRechazar(propuesta.id),
-                    child: Text(l10n.modPanelReject),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[600],
-                      foregroundColor: Colors.white,
-                    ),
-                    onPressed:
-                        isProcessing ? null : () => _handleRevisar(propuesta),
-                    child: isProcessing
-                        ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : Text(l10n.modPanelReview),
+                      onPressed: _refresh, child: const Text('Reintentar'))
+                ],
+              ),
+            );
+          }
+
+          // Inicializar lista mutable la primera vez que llegan datos
+          if (snapshot.hasData && _propuestasList == null) {
+            _propuestasList = List.from(snapshot.data!);
+          }
+
+          final lista = _propuestasList ?? [];
+
+          if (lista.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.check_circle_outline,
+                      size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(
+                    widget.estado == EstadoPropuesta.pendiente
+                        ? l10n.modPanelNoPending
+                        : l10n.modPanelNoOthers(
+                            widget.estado.displayName(context)),
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
-            ]
-          ],
-        ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: lista.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final p = lista[index];
+              return _buildPropuestaCard(context, p, l10n);
+            },
+          );
+        },
       ),
+    );
+  }
+
+  Widget _buildPropuestaCard(
+      BuildContext context, Propuesta p, AppLocalizations l10n) {
+    final bool isPending = widget.estado == EstadoPropuesta.pendiente;
+    final bool isProcessing = _processingIds.contains(p.id);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      elevation: 2,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withAlpha(100),
+            child: Row(
+              children: [
+                Expanded(
+                  child: MaybeMarquee(
+                    text: p.tituloSugerido,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+                if (p.tipoSugerido.isNotEmpty)
+                  Chip(
+                    label: Text(p.tipoSugerido,
+                        style: const TextStyle(fontSize: 10)),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                  ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _infoRow(Icons.person,
+                    l10n.modPanelProposalFrom(p.proponenteUsername)),
+                const SizedBox(height: 4),
+                _infoRow(Icons.category,
+                    l10n.modPanelProposalGenres(p.generosSugeridos)),
+                if (p.descripcionSugerida != null &&
+                    p.descripcionSugerida!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      p.descripcionSugerida!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic, color: Colors.grey[600]),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (isPending)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed:
+                        isProcessing ? null : () => _handleRechazar(p.id),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: Text(l10n.modPanelReject),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    onPressed: isProcessing ? null : () => _handleRevisar(p),
+                    icon: isProcessing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.edit, size: 16),
+                    label: Text(l10n.modPanelReview),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: Colors.grey),
+        const SizedBox(width: 6),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+      ],
     );
   }
 }

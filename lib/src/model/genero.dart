@@ -1,16 +1,17 @@
+/// Representa una categoría temática (Acción, Aventura, etc.).
 class Genero {
   final int id;
   final String nombre;
 
-  Genero({
+  const Genero({
     required this.id,
     required this.nombre,
   });
 
   factory Genero.fromJson(Map<String, dynamic> json) {
     return Genero(
-      id: json['id'],
-      nombre: json['nombre'],
+      id: json['id'] as int,
+      nombre: json['nombre'] as String,
     );
   }
 
@@ -19,12 +20,12 @@ class Genero {
     if (identical(this, other)) {
       return true;
     }
-    if (other is! Genero) {
-      return false;
-    }
-    return id == other.id;
+    return other is Genero && other.id == id;
   }
 
   @override
   int get hashCode => id.hashCode;
+
+  @override
+  String toString() => 'Genero(id: $id, nombre: $nombre)';
 }

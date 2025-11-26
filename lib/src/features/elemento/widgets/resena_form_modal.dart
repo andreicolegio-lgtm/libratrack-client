@@ -37,7 +37,8 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
   }
 
   Future<void> _handleEnviarResena() async {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -48,10 +49,8 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-    final NavigatorState navContext = Navigator.of(context);
+    setState(() => _isLoading = true);
+    final navigator = Navigator.of(context);
 
     try {
       final Resena nuevaResena = await _resenaService.crearResena(
@@ -67,171 +66,130 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
 
       SnackBarHelper.showTopSnackBar(context, l10n.snackbarReviewPublished,
           isError: false);
-      navContext.pop(nuevaResena);
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
+      navigator.pop(
+          nuevaResena); // Devuelve la nueva reseña para actualizar la lista
+    } catch (e) {
+      _handleError(e, l10n);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
-      setState(() {
-        _isLoading = false;
-      });
+    }
+  }
+
+  void _handleError(Object e, AppLocalizations l10n) {
+    if (!mounted) {
+      return;
+    }
+
+    if (e is ApiException) {
       SnackBarHelper.showTopSnackBar(
         context,
         ErrorTranslator.translate(context, e.message),
         isError: true,
       );
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isLoading = false;
-      });
+    } else {
       SnackBarHelper.showTopSnackBar(
-          context, l10n.errorUnexpected(e.toString()),
-          isError: true);
+        context,
+        l10n.errorUnexpected(e.toString()),
+        isError: true,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 24,
-          right: 24,
-          top: 24,
-        ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text(
-                l10n.reviewModalTitle,
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center,
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 24,
+        right: 24,
+        top: 24,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              l10n.reviewModalTitle,
+              style: theme.textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24.0),
+
+            // Estrellas
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(5, (int index) {
+                  final int estrella = index + 1;
+                  return IconButton(
+                    icon: Icon(
+                      _valoracion >= estrella ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 40,
+                    ),
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            setState(() => _valoracion = estrella);
+                          },
+                  );
+                }),
               ),
-              const SizedBox(height: 24.0),
-              Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(5, (int index) {
-                    final int estrella = index + 1;
-                    return IconButton(
-                      icon: Icon(
-                        _valoracion >= estrella
-                            ? Icons.star
-                            : Icons.star_border,
-                        color: Colors.amber,
-                        size: 32,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _valoracion = estrella;
-                        });
-                      },
-                    );
-                  }),
-                ),
-              ),
-              const SizedBox(height: 24.0),
-              _buildInputField(
-                context,
-                l10n: l10n,
-                controller: _textoController,
+            ),
+            const SizedBox(height: 24.0),
+
+            // Texto
+            TextFormField(
+              controller: _textoController,
+              maxLines: 5,
+              enabled: !_isLoading,
+              style: theme.textTheme.bodyMedium,
+              decoration: InputDecoration(
                 labelText: l10n.reviewModalReviewLabel,
                 hintText: l10n.reviewModalReviewHint,
-                maxLines: 5,
-                validator: (String? value) {
-                  if (value != null && value.length > 2000) {
-                    return l10n.validationReviewMax2000;
-                  }
-                  return null;
-                },
+                alignLabelWithHint: true,
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor:
+                    theme.colorScheme.surfaceContainerHighest.withAlpha(77),
               ),
-              const SizedBox(height: 24.0),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-                onPressed: _isLoading ? null : _handleEnviarResena,
-                child: _isLoading
-                    ? _buildSmallSpinner()
-                    : Text(
-                        l10n.reviewModalSubmitButton,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(color: Colors.white),
-                      ),
+              validator: (value) {
+                if (value != null && value.length > 2000) {
+                  return l10n.validationReviewMax2000;
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24.0),
+
+            // Botón
+            FilledButton(
+              onPressed: _isLoading ? null : _handleEnviarResena,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
-              const SizedBox(height: 16),
-            ],
-          ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2))
+                  : Text(l10n.reviewModalSubmitButton),
+            ),
+            const SizedBox(height: 32),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildInputField(
-    BuildContext context, {
-    required AppLocalizations l10n,
-    required TextEditingController controller,
-    required String labelText,
-    String? hintText,
-    int maxLines = 1,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      validator: validator,
-      maxLines: maxLines,
-      style: Theme.of(context).textTheme.bodyMedium,
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        labelStyle: Theme.of(context).textTheme.labelLarge,
-        hintStyle: Theme.of(context)
-            .textTheme
-            .bodyMedium
-            ?.copyWith(color: Colors.grey[600]),
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSmallSpinner() {
-    return const SizedBox(
-      height: 20,
-      width: 20,
-      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
     );
   }
 }

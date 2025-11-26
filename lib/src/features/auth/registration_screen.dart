@@ -24,73 +24,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _showPasswordValidation = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  Future<void> _handleRegister() async {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    setState(() {
-      _isLoading = true;
-    });
-
-    final AuthService authService = context.read<AuthService>();
-    final NavigatorState navContext = Navigator.of(context);
-
-    try {
-      await authService.register(
-        _usernameController.text,
-        _emailController.text,
-        _passwordController.text,
-      );
-
-      if (mounted) {
-        navContext.popUntil((route) => route.isFirst);
-        SnackBarHelper.showTopSnackBar(
-          context,
-          l10n.snackbarRegisterSuccess,
-          isError: false,
-        );
-      }
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isLoading = false;
-      });
-
-      SnackBarHelper.showTopSnackBar(
-        context,
-        ErrorTranslator.translate(context, e.message),
-        isError: true,
-      );
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isLoading = false;
-      });
-
-      SnackBarHelper.showTopSnackBar(
-        context,
-        l10n.errorUnexpected(e.toString()),
-        isError: true,
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
   @override
   void initState() {
     super.initState();
+    // Mostrar reglas de validación solo cuando el campo de contraseña tiene el foco
     _passwordFocusNode.addListener(() {
-      if (!_passwordFocusNode.hasFocus) {
+      if (mounted) {
         setState(() {
-          _showPasswordValidation = false;
+          _showPasswordValidation = _passwordFocusNode.hasFocus;
         });
       }
     });
@@ -105,6 +46,63 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     super.dispose();
   }
 
+  Future<void> _handleRegister() async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Cerrar teclado
+    FocusScope.of(context).unfocus();
+
+    setState(() => _isLoading = true);
+
+    final AuthService authService = context.read<AuthService>();
+    final NavigatorState navContext = Navigator.of(context);
+
+    try {
+      await authService.register(
+        _usernameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      if (mounted) {
+        SnackBarHelper.showTopSnackBar(
+          context,
+          l10n.snackbarRegisterSuccess,
+          isError: false,
+        );
+        // Volver al login (o dejar que AuthWrapper redirija si el stack se limpia)
+        // Al hacer pop, volvemos a LoginScreen, y como AuthWrapper detecta
+        // autenticación, cambiará a HomeScreen automáticamente.
+        navContext.pop();
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        SnackBarHelper.showTopSnackBar(
+          context,
+          ErrorTranslator.translate(context, e.message),
+          isError: true,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackBarHelper.showTopSnackBar(
+          context,
+          l10n.errorUnexpected(e.toString()),
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  /// Genera las reglas de validación visual para la contraseña
   List<MapEntry<String, bool>> _getValidationRules(
       String password, AppLocalizations l10n) {
     return [
@@ -119,182 +117,219 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final Color primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back,
+              color: Theme.of(context).colorScheme.onSurface),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Text(
-                  l10n.appTitle,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineLarge
-                      ?.copyWith(fontSize: 48),
-                ),
-                const SizedBox(height: 64.0),
-                TextFormField(
-                  controller: _usernameController,
-                  decoration: InputDecoration(
-                    labelText: l10n.registerUsernameLabel,
-                    prefixIcon: const Icon(Icons.person_outline),
-                    border: const OutlineInputBorder(),
-                    errorMaxLines:
-                        2, // Allow error messages to wrap to the next line
+          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(
+                    l10n.registerTitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold, color: primaryColor),
                   ),
-                  textInputAction: TextInputAction.next,
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return l10n.validationUsernameRequired;
-                    }
-                    return null;
-                  },
-                  onTap: () {
-                    setState(() {
-                      _showPasswordValidation = false;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16.0),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: l10n.loginEmailLabel,
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: const OutlineInputBorder(),
-                    errorMaxLines:
-                        2, // Allow error messages to wrap to the next line
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return l10n.validationEmailRequired;
-                    }
-                    if (!value.contains('@')) {
-                      return l10n.validationEmailInvalid;
-                    }
-                    return null;
-                  },
-                  onTap: () {
-                    setState(() {
-                      _showPasswordValidation = false;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16.0),
-                TextFormField(
-                  controller: _passwordController,
-                  focusNode: _passwordFocusNode,
-                  decoration: InputDecoration(
-                    labelText: l10n.loginPasswordLabel,
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordObscured
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordObscured = !_isPasswordObscured;
-                        });
-                      },
+                  const SizedBox(height: 48.0),
+
+                  // Username
+                  TextFormField(
+                    controller: _usernameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.registerUsernameLabel,
+                      prefixIcon: const Icon(Icons.person_outline),
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
                     ),
-                    border: const OutlineInputBorder(),
-                    errorMaxLines:
-                        2, // Allow error messages to wrap to the next line
+                    textInputAction: TextInputAction.next,
+                    validator: (String? value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.validationUsernameRequired;
+                      }
+                      if (value.trim().length < 4) {
+                        return l10n.validationUsernameLength450;
+                      }
+                      return null;
+                    },
                   ),
-                  obscureText: _isPasswordObscured,
-                  textInputAction: TextInputAction.done,
-                  onTap: () {
-                    setState(() {
-                      _showPasswordValidation = true;
-                    });
-                  },
-                  onChanged: (value) {
-                    setState(() {});
-                  },
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return l10n.validationPasswordRequired;
-                    }
-                    if (!RegExp(
-                            r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$')
-                        .hasMatch(value)) {
-                      return l10n.validationPasswordComplexity;
-                    }
-                    return null;
-                  },
-                ),
-                // Real-time password validation feedback
-                if (_showPasswordValidation)
+                  const SizedBox(height: 16.0),
+
+                  // Email
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: l10n.loginEmailLabel,
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.validationEmailRequired;
+                      }
+                      if (!value.contains('@')) {
+                        return l10n.validationEmailInvalid;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Password
+                  TextFormField(
+                    controller: _passwordController,
+                    focusNode: _passwordFocusNode,
+                    decoration: InputDecoration(
+                      labelText: l10n.loginPasswordLabel,
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordObscured
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordObscured = !_isPasswordObscured;
+                          });
+                        },
+                      ),
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
+                    ),
+                    obscureText: _isPasswordObscured,
+                    textInputAction: TextInputAction.done,
+                    onChanged: (value) {
+                      // Reconstruir para actualizar validadores visuales
+                      setState(() {});
+                    },
+                    onFieldSubmitted: (_) => _handleRegister(),
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.validationPasswordRequired;
+                      }
+                      // Regex de complejidad del backend
+                      if (!RegExp(
+                              r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$')
+                          .hasMatch(value)) {
+                        return l10n.validationPasswordComplexity;
+                      }
+                      return null;
+                    },
+                  ),
+
+                  // Validadores visuales en tiempo real
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children:
-                          _getValidationRules(_passwordController.text, l10n)
-                              .map((entry) {
-                        return Row(
-                          children: [
-                            Icon(
-                              entry.value ? Icons.check_circle : Icons.cancel,
-                              color: entry.value ? Colors.green : Colors.red,
-                              size: 20,
+                    height: _showPasswordValidation ? null : 0,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children:
+                            _getValidationRules(_passwordController.text, l10n)
+                                .map((entry) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 4.0),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  entry.value
+                                      ? Icons.check_circle
+                                      : Icons.cancel_outlined,
+                                  color:
+                                      entry.value ? Colors.green : Colors.grey,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    entry.key,
+                                    style: TextStyle(
+                                      color: entry.value
+                                          ? Colors.green
+                                          : Colors.grey,
+                                      fontSize: 13,
+                                      decoration: entry.value
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              entry.key,
-                              style: TextStyle(
-                                color: entry.value ? Colors.green : Colors.red,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ),
-                const SizedBox(height: 32.0),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+
+                  const SizedBox(height: 32.0),
+
+                  // Botón Registrar
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      elevation: 2,
+                    ),
+                    onPressed: _isLoading ? null : _handleRegister,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2),
+                          )
+                        : Text(
+                            l10n.registerTitle,
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Volver al Login
+                  TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                          },
+                    child: Text(
+                      l10n.registerLoginPrompt,
+                      style: TextStyle(
+                          color: primaryColor, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  onPressed: _isLoading ? null : _handleRegister,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          l10n.registerTitle,
-                          style: const TextStyle(
-                              fontSize: 18, color: Colors.white),
-                        ),
-                ),
-                const SizedBox(height: 16.0),
-                TextButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () {
-                          Navigator.of(context).pop();
-                        },
-                  child: Text(
-                    l10n.registerLoginPrompt,
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.primary),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

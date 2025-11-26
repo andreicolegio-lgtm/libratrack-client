@@ -45,6 +45,32 @@ class AppLocalizationsEs extends AppLocalizations {
   String get registerLoginPrompt => '¿Ya tienes cuenta? Inicia sesión';
 
   @override
+  String get registrationSuccessAutoLogin =>
+      '¡Registro exitoso! Ahora has iniciado sesión automáticamente.';
+
+  @override
+  String get passwordRulesTitle => 'Reglas de Contraseña';
+
+  @override
+  String get passwordRulesContent =>
+      '\n• Mínimo 8 caracteres\n• Al menos 1 mayúscula\n• Al menos 1 minúscula\n• Al menos 1 número\n• Al menos 1 carácter especial (@\$!%*?&)\n';
+
+  @override
+  String get passwordRuleLength => 'Al menos 8 caracteres';
+
+  @override
+  String get passwordRuleUppercase => 'Al menos una mayúscula';
+
+  @override
+  String get passwordRuleLowercase => 'Al menos una minúscula';
+
+  @override
+  String get passwordRuleNumber => 'Al menos un número';
+
+  @override
+  String get passwordRuleSpecial => 'Al menos un carácter especial (@\$!%*?&)';
+
+  @override
   String get bottomNavCatalog => 'Catálogo';
 
   @override
@@ -74,6 +100,48 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get catalogCardState => 'Estado';
+
+  @override
+  String catalogCardSeriesSeason(int season) {
+    return 'T$season';
+  }
+
+  @override
+  String catalogCardSeriesEpisode(int episode) {
+    return 'Ep $episode';
+  }
+
+  @override
+  String get catalogCardBookChapter => 'Capítulo';
+
+  @override
+  String get catalogCardBookPage => 'Página';
+
+  @override
+  String catalogCardBookChapterTotal(int total) {
+    return 'Total: $total';
+  }
+
+  @override
+  String catalogCardBookPageTotal(int total) {
+    return 'Total: $total';
+  }
+
+  @override
+  String catalogCardUnitLabel(String label) {
+    return '$label:';
+  }
+
+  @override
+  String catalogCardUnitProgress(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String get catalogCardSaveChanges => 'Guardar Progreso';
+
+  @override
   String get searchExploreType => 'Explorar por Tipo';
 
   @override
@@ -88,393 +156,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get searchProposeButton => 'Proponer Elemento';
-
-  @override
-  String get profileUserData => 'Datos de Usuario';
-
-  @override
-  String get profileSaveButton => 'Guardar Cambios';
-
-  @override
-  String get profileChangePassword => 'Cambiar Contraseña';
-
-  @override
-  String get profileCurrentPassword => 'Contraseña actual';
-
-  @override
-  String get profileNewPassword => 'Nueva contraseña';
-
-  @override
-  String get profileModPanelButton => 'Panel de Moderación';
-
-  @override
-  String get profileAdminPanelButton => 'Panel de Administrador';
-
-  @override
-  String get profileLogoutButton => 'Cerrar Sesión';
-
-  @override
-  String get settingsTitle => 'Ajustes';
-
-  @override
-  String get settingsDarkMode => 'Modo Oscuro';
-
-  @override
-  String get settingsDarkModeOn => 'Activado';
-
-  @override
-  String get settingsDarkModeOff => 'Desactivado';
-
-  @override
-  String get settingsLanguage => 'Idioma';
-
-  @override
-  String get settingsLanguageSpanish => 'Español';
-
-  @override
-  String get settingsLanguageEnglish => 'Inglés';
-
-  @override
-  String get settingsSystemDefault => 'Sistema (Por defecto)';
-
-  @override
-  String get validationUsernameRequired =>
-      'El nombre de usuario es obligatorio.';
-
-  @override
-  String get validationUsernameLength450 =>
-      'El nombre de usuario debe tener entre 4 y 50 caracteres.';
-
-  @override
-  String get validationEmailRequired => 'El email es obligatorio.';
-
-  @override
-  String get validationEmailInvalid => 'Introduce un email válido.';
-
-  @override
-  String get validationPasswordRequired => 'La contraseña es obligatoria.';
-
-  @override
-  String get validationPasswordCurrentRequired =>
-      'La contraseña actual es obligatoria.';
-
-  @override
-  String get validationPasswordNewRequired =>
-      'La nueva contraseña es obligatoria.';
-
-  @override
-  String get validationPasswordMin8 =>
-      'La nueva contraseña debe tener al menos 8 caracteres.';
-
-  @override
-  String get validationElementIdRequired =>
-      'El ID del elemento no puede ser nulo.';
-
-  @override
-  String get validationRatingRequired => 'La valoración es obligatoria.';
-
-  @override
-  String get validationRatingMin1 => 'La valoración mínima es 1.';
-
-  @override
-  String get validationRatingMax5 => 'La valoración máxima es 5.';
-
-  @override
-  String get validationReviewMax2000 =>
-      'La reseña no puede exceder los 2000 caracteres.';
-
-  @override
-  String get validationTitleRequired => 'El título es obligatorio.';
-
-  @override
-  String get validationDescRequired => 'La descripción es obligatoria.';
-
-  @override
-  String get validationTypeRequired => 'El tipo es obligatorio.';
-
-  @override
-  String get validationGenresRequired => 'Los géneros son obligatorios.';
-
-  @override
-  String get validationGoogleTokenRequired =>
-      'El token de Google no puede estar vacío.';
-
-  @override
-  String get validationModStatusRequired =>
-      'Debe especificar el estado de moderador.';
-
-  @override
-  String get validationAdminStatusRequired =>
-      'Debe especificar el estado de administrador.';
-
-  @override
-  String get errorEmailAlreadyRegistered => 'El email ya está registrado.';
-
-  @override
-  String get errorUsernameAlreadyExists => 'El nombre de usuario ya existe.';
-
-  @override
-  String get errorPasswordIncorrect => 'La contraseña actual es incorrecta.';
-
-  @override
-  String get errorAlreadyReviewed => 'Ya has reseñado este elemento.';
-
-  @override
-  String get errorInvalidRatingRange => 'La valoración debe estar entre 1 y 5.';
-
-  @override
-  String get errorProposalAlreadyHandled =>
-      'Esta propuesta ya ha sido gestionada.';
-
-  @override
-  String get errorTypeEmpty => 'El Tipo sugerido no puede estar vacío.';
-
-  @override
-  String get errorGenresEmpty =>
-      'Los Géneros sugeridos no pueden estar vacíos.';
-
-  @override
-  String get errorGenreInvalid =>
-      'Se debe proporcionar al menos un género válido.';
-
-  @override
-  String get errorFileEmpty => 'El archivo está vacío.';
-
-  @override
-  String get errorAlreadyInCatalog => 'Este elemento ya está en tu catálogo.';
-
-  @override
-  String get errorValidation => 'Error de validación.';
-
-  @override
-  String get errorIllegalArgument => 'Argumento no válido.';
-
-  @override
-  String get errorInternalServerError =>
-      'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.';
-
-  @override
-  String get errorAccessDenied =>
-      'No tienes permiso para acceder a este recurso.';
-
-  @override
-  String get errorTokenExpired =>
-      'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.';
-
-  @override
-  String get errorTokenInvalid =>
-      'Token inválido. Por favor, inicia sesión de nuevo.';
-
-  @override
-  String get errorInvalidCredentials => 'Email o contraseña incorrectos.';
-
-  @override
-  String errorUnexpected(String error) {
-    return 'Error inesperado: $error';
-  }
-
-  @override
-  String errorLoadingFilters(String error) {
-    return 'Error al cargar filtros: $error';
-  }
-
-  @override
-  String errorLoadingElement(String error) {
-    return 'Error al cargar el elemento:\n$error';
-  }
-
-  @override
-  String errorLoadingElements(String error) {
-    return 'Error al cargar elementos: $error';
-  }
-
-  @override
-  String errorLoadingReviews(String error) {
-    return 'Error al cargar las reseñas: $error';
-  }
-
-  @override
-  String errorLoadingProposals(String error) {
-    return 'Error al cargar:\n$error';
-  }
-
-  @override
-  String errorLoadingUsers(String error) {
-    return 'Error: $error';
-  }
-
-  @override
-  String errorLoadingCatalog(String error) {
-    return 'Error: $error';
-  }
-
-  @override
-  String errorImagePick(String error) {
-    return 'Error al seleccionar imagen: $error';
-  }
-
-  @override
-  String errorImageUpload(String error) {
-    return 'Error al subir imagen: $error';
-  }
-
-  @override
-  String errorSaving(String error) {
-    return 'Error al guardar: $error';
-  }
-
-  @override
-  String errorUpdating(String error) {
-    return 'Error al actualizar: $error';
-  }
-
-  @override
-  String errorApproving(String error) {
-    return 'Error al aprobar: $error';
-  }
-
-  @override
-  String errorUpdatingRoles(String error) {
-    return 'Error al actualizar roles: $error';
-  }
-
-  @override
-  String get snackbarCloseButton => 'CERRAR';
-
-  @override
-  String get snackbarLoginGoogleCancel => 'Inicio de sesión cancelado.';
-
-  @override
-  String get snackbarRegisterSuccess =>
-      '¡Registro exitoso! Ahora has iniciado sesión automáticamente.';
-
-  @override
-  String get snackbarReviewPublished => '¡Reseña publicada!';
-
-  @override
-  String get snackbarReviewRatingRequired =>
-      'Por favor, selecciona una valoración (1-5 estrellas).';
-
-  @override
-  String get snackbarProposalSent =>
-      '¡Propuesta enviada con éxito! Gracias por tu contribución.';
-
-  @override
-  String get snackbarProfilePhotoUpdated => '¡Foto de perfil actualizada!';
-
-  @override
-  String get snackbarProfileNoChanges => 'No has realizado ningún cambio.';
-
-  @override
-  String get snackbarProfileUsernameUpdated =>
-      '¡Nombre de usuario actualizado!';
-
-  @override
-  String get snackbarProfilePasswordUpdated =>
-      '¡Contraseña actualizada con éxito!';
-
-  @override
-  String get snackbarCatalogAdded => '¡Añadido al catálogo!';
-
-  @override
-  String get snackbarCatalogRemoved => 'Elemento quitado del catálogo';
-
-  @override
-  String get snackbarCatalogStatusUpdated => 'Estado actualizado.';
-
-  @override
-  String get snackbarCatalogProgressSaved => 'Progreso guardado.';
-
-  @override
-  String get snackbarImageUploadSuccess => '¡Imagen subida!';
-
-  @override
-  String get snackbarImageUploadRequired =>
-      'Por favor, sube una imagen de portada.';
-
-  @override
-  String get snackbarImageUploadRequiredApproval =>
-      'Por favor, sube una imagen de portada antes de aprobar.';
-
-  @override
-  String get snackbarModProposalApproved => '¡Propuesta aprobada!';
-
-  @override
-  String get snackbarModProposalRejected => 'Propuesta rechazada (simulado).';
-
-  @override
-  String snackbarAdminRolesUpdated(String username) {
-    return 'Roles de $username actualizados.';
-  }
-
-  @override
-  String get snackbarAdminElementUpdated => '¡Elemento actualizado!';
-
-  @override
-  String get snackbarAdminElementCreated => '¡Elemento OFICIAL creado!';
-
-  @override
-  String get snackbarAdminStatusCommunity =>
-      'Elemento marcado como COMUNITARIO.';
-
-  @override
-  String get snackbarAdminStatusOfficial => '¡Elemento marcado como OFICIAL!';
-
-  @override
-  String get reviewModalTitle => 'Escribir Reseña';
-
-  @override
-  String get reviewModalReviewLabel => 'Reseña (opcional)';
-
-  @override
-  String get reviewModalReviewHint => 'Escribe tu opinión...';
-
-  @override
-  String get reviewModalSubmitButton => 'Publicar Reseña';
-
-  @override
-  String get proposalFormTitle => 'Proponer Elemento';
-
-  @override
-  String get proposalFormTitleLabel => 'Título Sugerido';
-
-  @override
-  String get proposalFormDescLabel => 'Descripción Breve';
-
-  @override
-  String get proposalFormTypeLabel => 'Tipo (Ej. Serie, Libro, Anime)';
-
-  @override
-  String get proposalFormGenresLabel => 'Géneros (separados por coma)';
-
-  @override
-  String get proposalFormProgressTitle => 'Datos de Progreso (Opcional)';
-
-  @override
-  String get proposalFormSeriesEpisodesLabel => 'Episodios por Temporada';
-
-  @override
-  String get proposalFormSeriesEpisodesHint => 'Ej. 10,8,12 (para T1, T2, T3)';
-
-  @override
-  String get proposalFormBookChaptersLabel => 'Total Capítulos (Libro)';
-
-  @override
-  String get proposalFormBookPagesLabel => 'Total Páginas (Libro)';
-
-  @override
-  String get proposalFormAnimeEpisodesLabel => 'Total Episodios (Anime)';
-
-  @override
-  String get proposalFormMangaChaptersLabel => 'Total Capítulos (Manga)';
-
-  @override
-  String proposalFormNoProgress(String tipo) {
-    return 'El tipo \"$tipo\" no requiere datos de progreso.';
-  }
-
-  @override
-  String get proposalFormSubmitButton => 'Enviar Propuesta';
 
   @override
   String get elementDetailSynopsis => 'Sinopsis';
@@ -546,6 +227,127 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get elementDetailNoElement => 'Elemento no encontrado.';
+
+  @override
+  String get contentStatusOfficial => 'OFICIAL';
+
+  @override
+  String get contentStatusCommunity => 'COMUNITARIO';
+
+  @override
+  String get reviewModalTitle => 'Escribir Reseña';
+
+  @override
+  String get reviewModalReviewLabel => 'Reseña (opcional)';
+
+  @override
+  String get reviewModalReviewHint => 'Escribe tu opinión...';
+
+  @override
+  String get reviewModalSubmitButton => 'Publicar Reseña';
+
+  @override
+  String reviewCardBy(String username) {
+    return 'Reseña de: $username';
+  }
+
+  @override
+  String get reviewCardNoText => 'Este usuario no ha escrito un texto.';
+
+  @override
+  String get profileUserData => 'Datos de Usuario';
+
+  @override
+  String get profileSaveButton => 'Guardar Cambios';
+
+  @override
+  String get profileChangePassword => 'Cambiar Contraseña';
+
+  @override
+  String get profileCurrentPassword => 'Contraseña actual';
+
+  @override
+  String get profileNewPassword => 'Nueva contraseña';
+
+  @override
+  String get profileModPanelButton => 'Panel de Moderación';
+
+  @override
+  String get profileAdminPanelButton => 'Panel de Administrador';
+
+  @override
+  String get profileLogoutButton => 'Cerrar Sesión';
+
+  @override
+  String get settingsTitle => 'Ajustes';
+
+  @override
+  String get settingsDarkMode => 'Modo Oscuro';
+
+  @override
+  String get settingsDarkModeOn => 'Activado';
+
+  @override
+  String get settingsDarkModeOff => 'Desactivado';
+
+  @override
+  String get settingsLanguage => 'Idioma';
+
+  @override
+  String get settingsLanguageSpanish => 'Español';
+
+  @override
+  String get settingsLanguageEnglish => 'Inglés';
+
+  @override
+  String get settingsSystemDefault => 'Sistema (Por defecto)';
+
+  @override
+  String get dialogCloseButton => 'Cerrar';
+
+  @override
+  String get proposalFormTitle => 'Proponer Elemento';
+
+  @override
+  String get proposalFormTitleLabel => 'Título Sugerido';
+
+  @override
+  String get proposalFormDescLabel => 'Descripción Breve';
+
+  @override
+  String get proposalFormTypeLabel => 'Tipo (Ej. Serie, Libro, Anime)';
+
+  @override
+  String get proposalFormGenresLabel => 'Géneros (separados por coma)';
+
+  @override
+  String get proposalFormProgressTitle => 'Datos de Progreso (Opcional)';
+
+  @override
+  String get proposalFormSeriesEpisodesLabel => 'Episodios por Temporada';
+
+  @override
+  String get proposalFormSeriesEpisodesHint => 'Ej. 10,8,12 (para T1, T2, T3)';
+
+  @override
+  String get proposalFormBookChaptersLabel => 'Total Capítulos (Libro)';
+
+  @override
+  String get proposalFormBookPagesLabel => 'Total Páginas (Libro)';
+
+  @override
+  String get proposalFormAnimeEpisodesLabel => 'Total Episodios (Anime)';
+
+  @override
+  String get proposalFormMangaChaptersLabel => 'Total Capítulos (Manga)';
+
+  @override
+  String proposalFormNoProgress(String tipo) {
+    return 'El tipo \"$tipo\" no requiere datos de progreso.';
+  }
+
+  @override
+  String get proposalFormSubmitButton => 'Enviar Propuesta';
 
   @override
   String get adminFormEditTitle => 'Editar Elemento';
@@ -689,82 +491,188 @@ class AppLocalizationsEs extends AppLocalizations {
   String get modEditSubmitButton => 'Guardar y Aprobar';
 
   @override
-  String get catalogCardState => 'Estado';
+  String get totalEpisodes => 'Total de Episodios';
 
   @override
-  String catalogCardSeriesSeason(int season) {
-    return 'T$season';
+  String get duration => 'Duración';
+
+  @override
+  String get totalChapters => 'Total de Capítulos';
+
+  @override
+  String get totalPages => 'Total de Páginas';
+
+  @override
+  String get episodesPerSeason => 'Episodios por Temporada';
+
+  @override
+  String get snackbarCloseButton => 'CERRAR';
+
+  @override
+  String get snackbarLoginGoogleCancel => 'Inicio de sesión cancelado.';
+
+  @override
+  String get snackbarRegisterSuccess =>
+      '¡Registro exitoso! Ahora has iniciado sesión automáticamente.';
+
+  @override
+  String get snackbarReviewPublished => '¡Reseña publicada!';
+
+  @override
+  String get snackbarReviewRatingRequired =>
+      'Por favor, selecciona una valoración (1-5 estrellas).';
+
+  @override
+  String get snackbarProposalSent =>
+      '¡Propuesta enviada con éxito! Gracias por tu contribución.';
+
+  @override
+  String get snackbarProfilePhotoUpdated => '¡Foto de perfil actualizada!';
+
+  @override
+  String get snackbarProfileNoChanges => 'No has realizado ningún cambio.';
+
+  @override
+  String get snackbarProfileUsernameUpdated =>
+      '¡Nombre de usuario actualizado!';
+
+  @override
+  String get snackbarProfilePasswordUpdated =>
+      '¡Contraseña actualizada con éxito!';
+
+  @override
+  String get snackbarCatalogAdded => '¡Añadido al catálogo!';
+
+  @override
+  String get snackbarCatalogRemoved => 'Elemento quitado del catálogo';
+
+  @override
+  String get snackbarCatalogStatusUpdated => 'Estado actualizado.';
+
+  @override
+  String get snackbarCatalogProgressSaved => 'Progreso guardado.';
+
+  @override
+  String get snackbarImageUploadSuccess => '¡Imagen subida!';
+
+  @override
+  String get snackbarImageUploadRequired =>
+      'Por favor, sube una imagen de portada.';
+
+  @override
+  String get snackbarImageUploadRequiredApproval =>
+      'Por favor, sube una imagen de portada antes de aprobar.';
+
+  @override
+  String get snackbarModProposalApproved => '¡Propuesta aprobada!';
+
+  @override
+  String get snackbarModProposalRejected => 'Propuesta rechazada (simulado).';
+
+  @override
+  String snackbarAdminRolesUpdated(String username) {
+    return 'Roles de $username actualizados.';
   }
 
   @override
-  String catalogCardSeriesEpisode(int episode) {
-    return 'Ep $episode';
-  }
+  String get snackbarAdminElementUpdated => '¡Elemento actualizado!';
 
   @override
-  String get catalogCardBookChapter => 'Capítulo';
+  String get snackbarAdminElementCreated => '¡Elemento OFICIAL creado!';
 
   @override
-  String get catalogCardBookPage => 'Página';
+  String get snackbarAdminStatusCommunity =>
+      'Elemento marcado como COMUNITARIO.';
 
   @override
-  String catalogCardBookChapterTotal(int total) {
-    return 'Total: $total';
-  }
+  String get snackbarAdminStatusOfficial => '¡Elemento marcado como OFICIAL!';
 
   @override
-  String catalogCardBookPageTotal(int total) {
-    return 'Total: $total';
-  }
+  String get snackbarFavoritoAdded => 'Añadido a favoritos';
 
   @override
-  String catalogCardUnitLabel(String label) {
-    return '$label:';
-  }
+  String get snackbarFavoritoRemoved => 'Eliminado de favoritos';
 
   @override
-  String catalogCardUnitProgress(int current, int total) {
-    return '$current / $total';
-  }
+  String get validationUsernameRequired =>
+      'El nombre de usuario es obligatorio.';
 
   @override
-  String get catalogCardSaveChanges => 'Guardar Progreso';
+  String get validationUsernameLength450 =>
+      'El nombre de usuario debe tener entre 4 y 50 caracteres.';
 
   @override
-  String get contentStatusOfficial => 'OFICIAL';
+  String get validationEmailRequired => 'El email es obligatorio.';
 
   @override
-  String get contentStatusCommunity => 'COMUNITARIO';
+  String get validationEmailInvalid => 'Introduce un email válido.';
 
   @override
-  String reviewCardBy(String username) {
-    return 'Reseña de: $username';
-  }
+  String get validationPasswordRequired => 'La contraseña es obligatoria.';
 
   @override
-  String get reviewCardNoText => 'Este usuario no ha escrito un texto.';
+  String get validationPasswordCurrentRequired =>
+      'La contraseña actual es obligatoria.';
 
   @override
-  String get errorGoogleTokenInvalid => 'Token de Google inválido.';
+  String get validationPasswordNewRequired =>
+      'La nueva contraseña es obligatoria.';
 
   @override
-  String get errorGoogleTokenError => 'Error al verificar el token de Google.';
+  String get validationPasswordMin8 =>
+      'La nueva contraseña debe tener al menos 8 caracteres.';
 
   @override
-  String get errorRefreshTokenRequired => 'Se requiere un token de refresco.';
+  String get validationPasswordComplexity =>
+      'La contraseña debe cumplir con los requisitos de complejidad.';
 
   @override
-  String get errorRefreshTokenNotFound => 'Token de refresco no encontrado.';
+  String get validationPasswordUnchanged => 'No has realizado ningún cambio.';
 
   @override
-  String get errorRefreshTokenExpired =>
-      'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.';
+  String get validationPasswordRules =>
+      'La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.';
 
   @override
-  String get errorProposalNotFound => 'Propuesta no encontrada.';
+  String get validationElementIdRequired =>
+      'El ID del elemento no puede ser nulo.';
 
   @override
-  String get errorNotInCatalog => 'Este elemento no está en tu catálogo.';
+  String get validationRatingRequired => 'La valoración es obligatoria.';
+
+  @override
+  String get validationRatingMin1 => 'La valoración mínima es 1.';
+
+  @override
+  String get validationRatingMax5 => 'La valoración máxima es 5.';
+
+  @override
+  String get validationReviewMax2000 =>
+      'La reseña no puede exceder los 2000 caracteres.';
+
+  @override
+  String get validationTitleRequired => 'El título es obligatorio.';
+
+  @override
+  String get validationDescRequired => 'La descripción es obligatoria.';
+
+  @override
+  String get validationTypeRequired => 'El tipo es obligatorio.';
+
+  @override
+  String get validationGenresRequired => 'Los géneros son obligatorios.';
+
+  @override
+  String get validationGoogleTokenRequired =>
+      'El token de Google no puede estar vacío.';
+
+  @override
+  String get validationModStatusRequired =>
+      'Debe especificar el estado de moderador.';
+
+  @override
+  String get validationAdminStatusRequired =>
+      'Debe especificar el estado de administrador.';
 
   @override
   String get validationSeasonMin1 => 'La temporada debe ser al menos 1.';
@@ -820,6 +728,89 @@ class AppLocalizationsEs extends AppLocalizations {
       'El comentario debe tener 500 caracteres o menos.';
 
   @override
+  String get errorEmailAlreadyRegistered => 'El email ya está registrado.';
+
+  @override
+  String get errorUsernameAlreadyExists => 'El nombre de usuario ya existe.';
+
+  @override
+  String get errorPasswordIncorrect => 'La contraseña actual es incorrecta.';
+
+  @override
+  String get errorAlreadyReviewed => 'Ya has reseñado este elemento.';
+
+  @override
+  String get errorInvalidRatingRange => 'La valoración debe estar entre 1 y 5.';
+
+  @override
+  String get errorProposalAlreadyHandled =>
+      'Esta propuesta ya ha sido gestionada.';
+
+  @override
+  String get errorTypeEmpty => 'El Tipo sugerido no puede estar vacío.';
+
+  @override
+  String get errorGenresEmpty =>
+      'Los Géneros sugeridos no pueden estar vacíos.';
+
+  @override
+  String get errorGenreInvalid =>
+      'Se debe proporcionar al menos un género válido.';
+
+  @override
+  String get errorFileEmpty => 'El archivo está vacío.';
+
+  @override
+  String get errorAlreadyInCatalog => 'Este elemento ya está en tu catálogo.';
+
+  @override
+  String get errorValidation => 'Error de validación.';
+
+  @override
+  String get errorIllegalArgument => 'Argumento no válido.';
+
+  @override
+  String get errorInternalServerError =>
+      'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.';
+
+  @override
+  String get errorAccessDenied =>
+      'No tienes permiso para acceder a este recurso.';
+
+  @override
+  String get errorTokenExpired =>
+      'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.';
+
+  @override
+  String get errorTokenInvalid =>
+      'Token inválido. Por favor, inicia sesión de nuevo.';
+
+  @override
+  String get errorInvalidCredentials => 'Email o contraseña incorrectos.';
+
+  @override
+  String get errorGoogleTokenInvalid => 'Token de Google inválido.';
+
+  @override
+  String get errorGoogleTokenError => 'Error al verificar el token de Google.';
+
+  @override
+  String get errorRefreshTokenRequired => 'Se requiere un token de refresco.';
+
+  @override
+  String get errorRefreshTokenNotFound => 'Token de refresco no encontrado.';
+
+  @override
+  String get errorRefreshTokenExpired =>
+      'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.';
+
+  @override
+  String get errorProposalNotFound => 'Propuesta no encontrada.';
+
+  @override
+  String get errorNotInCatalog => 'Este elemento no está en tu catálogo.';
+
+  @override
   String get errorReviewerNotFound => 'Revisor no encontrado.';
 
   @override
@@ -829,29 +820,74 @@ class AppLocalizationsEs extends AppLocalizations {
   String get errorUserNotFound => 'Usuario no encontrado.';
 
   @override
-  String get passwordRulesTitle => 'Reglas de Contraseña';
+  String errorUnexpected(String error) {
+    return 'Error inesperado: $error';
+  }
 
   @override
-  String get passwordRulesContent =>
-      '\n• Mínimo 8 caracteres\n• Al menos 1 mayúscula\n• Al menos 1 minúscula\n• Al menos 1 número\n• Al menos 1 carácter especial (@\$!%*?&)\n';
+  String errorLoadingFilters(String error) {
+    return 'Error al cargar filtros: $error';
+  }
 
   @override
-  String get dialogCloseButton => 'Cerrar';
+  String errorLoadingElement(String error) {
+    return 'Error al cargar el elemento:\n$error';
+  }
 
   @override
-  String get validationPasswordComplexity =>
-      'La contraseña debe cumplir con los requisitos de complejidad.';
+  String errorLoadingElements(String error) {
+    return 'Error al cargar elementos: $error';
+  }
 
   @override
-  String get validationPasswordUnchanged => 'No has realizado ningún cambio.';
+  String errorLoadingReviews(String error) {
+    return 'Error al cargar las reseñas: $error';
+  }
 
   @override
-  String get registrationSuccessAutoLogin =>
-      '¡Registro exitoso! Ahora has iniciado sesión automáticamente.';
+  String errorLoadingProposals(String error) {
+    return 'Error al cargar:\n$error';
+  }
 
   @override
-  String get validationPasswordRules =>
-      'La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.';
+  String errorLoadingUsers(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String errorLoadingCatalog(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String errorImagePick(String error) {
+    return 'Error al seleccionar imagen: $error';
+  }
+
+  @override
+  String errorImageUpload(String error) {
+    return 'Error al subir imagen: $error';
+  }
+
+  @override
+  String errorSaving(String error) {
+    return 'Error al guardar: $error';
+  }
+
+  @override
+  String errorUpdating(String error) {
+    return 'Error al actualizar: $error';
+  }
+
+  @override
+  String errorApproving(String error) {
+    return 'Error al aprobar: $error';
+  }
+
+  @override
+  String errorUpdatingRoles(String error) {
+    return 'Error al actualizar roles: $error';
+  }
 
   @override
   String get typeAnime => 'Anime';
@@ -1026,40 +1062,4 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get genreMagicalRealism => 'Realismo Mágico';
-
-  @override
-  String get passwordRuleLength => 'Al menos 8 caracteres';
-
-  @override
-  String get passwordRuleUppercase => 'Al menos una mayúscula';
-
-  @override
-  String get passwordRuleLowercase => 'Al menos una minúscula';
-
-  @override
-  String get passwordRuleNumber => 'Al menos un número';
-
-  @override
-  String get passwordRuleSpecial => 'Al menos un carácter especial (@\$!%*?&)';
-
-  @override
-  String get totalEpisodes => 'Total de Episodios';
-
-  @override
-  String get duration => 'Duración';
-
-  @override
-  String get totalChapters => 'Total de Capítulos';
-
-  @override
-  String get totalPages => 'Total de Páginas';
-
-  @override
-  String get episodesPerSeason => 'Episodios por Temporada';
-
-  @override
-  String get snackbarFavoritoAdded => 'Añadido a favoritos';
-
-  @override
-  String get snackbarFavoritoRemoved => 'Eliminado de favoritos';
 }

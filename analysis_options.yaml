@@ -9,6 +9,7 @@ analyzer:
   # para que el analizador no se queje de ellos.
   exclude:
     - "lib/src/core/l10n/**"
+    - "lib/l10n/**"
 
 # Aquí definimos nuestras reglas personalizadas (el Linter).
 linter:

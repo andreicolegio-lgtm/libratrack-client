@@ -1,46 +1,82 @@
 import 'package:flutter/material.dart';
 import '../utils/api_client.dart';
+import '../utils/api_exceptions.dart';
 import '../../model/elemento.dart';
-import '../../model/paginated_response.dart';
 import '../../model/elemento_relacion.dart';
+import '../../model/paginated_response.dart';
 
 class ElementoService with ChangeNotifier {
   final ApiClient _apiClient;
+
   ElementoService(this._apiClient);
 
-  Future<PaginatedResponse<Elemento>> searchElementos(
-      {int page = 0,
-      int size = 20,
-      String? search,
-      String? tipo,
-      String? genero}) async {
-    final Map<String, String> queryParams = <String, String>{
-      'page': page.toString(),
-      'size': size.toString(),
-      if (search != null && search.isNotEmpty) 'search': search,
-      if (tipo != null && tipo.isNotEmpty) 'tipo': tipo,
-      if (genero != null && genero.isNotEmpty) 'genero': genero,
-    };
+  /// Busca elementos con filtros y paginación.
+  Future<PaginatedResponse<Elemento>> searchElementos({
+    String? query,
+    List<String>? types,
+    List<String>? genres,
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      // Construcción manual de query params para manejar listas (ej. types=Anime,Manga)
+      // El backend espera strings separados por comas para listas simples en @RequestParam
+      final Map<String, String> params = {
+        'page': page.toString(),
+        'size': size.toString(),
+      };
 
-    final dynamic jsonResponse =
-        await _apiClient.get('elementos', queryParams: queryParams);
+      if (query != null && query.isNotEmpty) {
+        params['search'] = query;
+      }
 
-    return PaginatedResponse.fromJson(jsonResponse, Elemento.fromJson);
+      if (types != null && types.isNotEmpty) {
+        params['types'] = types.join(',');
+      }
+
+      if (genres != null && genres.isNotEmpty) {
+        params['genres'] = genres.join(',');
+      }
+
+      final response = await _apiClient.get('elementos', queryParams: params);
+
+      return PaginatedResponse.fromJson(
+        response,
+        Elemento.fromJson,
+      );
+    } catch (e) {
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw ApiException('Error buscando elementos: $e');
+    }
   }
 
-  Future<Elemento> getElementoById(int elementoId) async {
-    final dynamic jsonResponse = await _apiClient.get('elementos/$elementoId');
-    return Elemento.fromJson(jsonResponse);
+  /// Obtiene el detalle completo de un elemento por ID.
+  Future<Elemento> getElementoById(int id) async {
+    try {
+      final response = await _apiClient.get('elementos/$id');
+      return Elemento.fromJson(response);
+    } catch (e) {
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw ApiException('Error cargando elemento: $e');
+    }
   }
 
-  Future<List<ElementoRelacion>> getSimpleElementoList() async {
-    final dynamic jsonResponse = await _apiClient.get('elementos/all-simple');
-
-    final List<dynamic> list =
-        jsonResponse is List ? jsonResponse : <dynamic>[jsonResponse];
-
-    return list
-        .map((json) => ElementoRelacion.fromJson(json as Map<String, dynamic>))
-        .toList();
+  /// Obtiene una lista ligera de todos los elementos (ID, Título, Foto).
+  /// Útil para selectores de secuelas/precuelas en formularios admin.
+  Future<List<ElementoRelacion>> getSimpleList() async {
+    try {
+      final List<dynamic> response =
+          await _apiClient.get('elementos/all-simple');
+      return response.map((json) => ElementoRelacion.fromJson(json)).toList();
+    } catch (e) {
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw ApiException('Error cargando lista simple: $e');
+    }
   }
 }

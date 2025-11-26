@@ -67,8 +67,8 @@ abstract class AppLocalizations {
 
   final String localeName;
 
-  static AppLocalizations? of(BuildContext context) {
-    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
   static const LocalizationsDelegate<AppLocalizations> delegate =
@@ -98,1913 +98,1913 @@ abstract class AppLocalizations {
     Locale('es')
   ];
 
-  /// El título principal de la aplicación
+  /// The main title of the application
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'LibraTrack'**
   String get appTitle;
 
   /// No description provided for @loginTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Bienvenido a LibraTrack'**
+  /// In en, this message translates to:
+  /// **'Welcome to LibraTrack'**
   String get loginTitle;
 
   /// No description provided for @loginSubtitle.
   ///
-  /// In es, this message translates to:
-  /// **'Inicia sesión para continuar'**
+  /// In en, this message translates to:
+  /// **'Sign in to continue'**
   String get loginSubtitle;
 
-  /// Texto del botón en la pantalla de login
+  /// No description provided for @loginButton.
   ///
-  /// In es, this message translates to:
-  /// **'Iniciar Sesión'**
+  /// In en, this message translates to:
+  /// **'Sign In'**
   String get loginButton;
 
-  /// Etiqueta para el campo de texto de email
+  /// No description provided for @loginEmailLabel.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Email'**
   String get loginEmailLabel;
 
-  /// Etiqueta para el campo de texto de contraseña
+  /// No description provided for @loginPasswordLabel.
   ///
-  /// In es, this message translates to:
-  /// **'Contraseña'**
+  /// In en, this message translates to:
+  /// **'Password'**
   String get loginPasswordLabel;
 
   /// No description provided for @loginOr.
   ///
-  /// In es, this message translates to:
-  /// **'O'**
+  /// In en, this message translates to:
+  /// **'OR'**
   String get loginOr;
 
   /// No description provided for @loginGoogle.
   ///
-  /// In es, this message translates to:
-  /// **'Continuar con Google'**
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
   String get loginGoogle;
 
-  /// Texto del botón para ir a la pantalla de registro
+  /// No description provided for @loginRegisterPrompt.
   ///
-  /// In es, this message translates to:
-  /// **'¿No tienes cuenta? Regístrate'**
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? Register'**
   String get loginRegisterPrompt;
 
-  /// Texto del botón en la pantalla de registro
+  /// No description provided for @registerTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Registrarse'**
+  /// In en, this message translates to:
+  /// **'Register'**
   String get registerTitle;
 
-  /// Etiqueta para el campo de texto de nombre de usuario
+  /// No description provided for @registerUsernameLabel.
   ///
-  /// In es, this message translates to:
-  /// **'Nombre de Usuario'**
+  /// In en, this message translates to:
+  /// **'Username'**
   String get registerUsernameLabel;
 
-  /// Texto del botón para volver a la pantalla de login
+  /// No description provided for @registerLoginPrompt.
   ///
-  /// In es, this message translates to:
-  /// **'¿Ya tienes cuenta? Inicia sesión'**
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign In'**
   String get registerLoginPrompt;
 
-  /// Texto para la barra de navegación - Catálogo
+  /// No description provided for @registrationSuccessAutoLogin.
   ///
-  /// In es, this message translates to:
-  /// **'Catálogo'**
+  /// In en, this message translates to:
+  /// **'Registration successful! You are now logged in automatically.'**
+  String get registrationSuccessAutoLogin;
+
+  /// No description provided for @passwordRulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Password Rules'**
+  String get passwordRulesTitle;
+
+  /// No description provided for @passwordRulesContent.
+  ///
+  /// In en, this message translates to:
+  /// **'\n• Minimum 8 characters\n• At least 1 uppercase letter\n• At least 1 lowercase letter\n• At least 1 number\n• At least 1 special character (@\$!%*?&)\n'**
+  String get passwordRulesContent;
+
+  /// No description provided for @passwordRuleLength.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters'**
+  String get passwordRuleLength;
+
+  /// No description provided for @passwordRuleUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one uppercase letter'**
+  String get passwordRuleUppercase;
+
+  /// No description provided for @passwordRuleLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one lowercase letter'**
+  String get passwordRuleLowercase;
+
+  /// No description provided for @passwordRuleNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one number'**
+  String get passwordRuleNumber;
+
+  /// No description provided for @passwordRuleSpecial.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one special character (@\$!%*?&)'**
+  String get passwordRuleSpecial;
+
+  /// No description provided for @bottomNavCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog'**
   String get bottomNavCatalog;
 
-  /// Texto para la barra de navegación - Buscar
+  /// No description provided for @bottomNavSearch.
   ///
-  /// In es, this message translates to:
-  /// **'Buscar'**
+  /// In en, this message translates to:
+  /// **'Search'**
   String get bottomNavSearch;
 
-  /// Texto para la barra de navegación - Perfil
+  /// No description provided for @bottomNavProfile.
   ///
-  /// In es, this message translates to:
-  /// **'Perfil'**
+  /// In en, this message translates to:
+  /// **'Profile'**
   String get bottomNavProfile;
 
-  /// Título de la pantalla de Catálogo
+  /// No description provided for @catalogTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Mi Catálogo'**
+  /// In en, this message translates to:
+  /// **'My Catalog'**
   String get catalogTitle;
 
-  /// Pestaña del catálogo - En Progreso
+  /// No description provided for @catalogInProgress.
   ///
-  /// In es, this message translates to:
-  /// **'En Progreso'**
+  /// In en, this message translates to:
+  /// **'In Progress'**
   String get catalogInProgress;
 
-  /// Pestaña del catálogo - Pendiente
+  /// No description provided for @catalogPending.
   ///
-  /// In es, this message translates to:
-  /// **'Pendiente'**
+  /// In en, this message translates to:
+  /// **'Pending'**
   String get catalogPending;
 
-  /// Pestaña del catálogo - Terminado
+  /// No description provided for @catalogFinished.
   ///
-  /// In es, this message translates to:
-  /// **'Terminado'**
+  /// In en, this message translates to:
+  /// **'Finished'**
   String get catalogFinished;
 
-  /// Pestaña del catálogo - Abandonado
+  /// No description provided for @catalogDropped.
   ///
-  /// In es, this message translates to:
-  /// **'Abandonado'**
+  /// In en, this message translates to:
+  /// **'Dropped'**
   String get catalogDropped;
 
-  /// Texto que aparece si una pestaña del catálogo está vacía
+  /// No description provided for @catalogEmptyState.
   ///
-  /// In es, this message translates to:
-  /// **'No hay elementos en estado: {estado}'**
+  /// In en, this message translates to:
+  /// **'No items found in state: {estado}'**
   String catalogEmptyState(String estado);
-
-  /// Subtítulo en la pantalla de búsqueda
-  ///
-  /// In es, this message translates to:
-  /// **'Explorar por Tipo'**
-  String get searchExploreType;
-
-  /// Subtítulo en la pantalla de búsqueda
-  ///
-  /// In es, this message translates to:
-  /// **'Explorar por Género'**
-  String get searchExploreGenre;
-
-  /// Texto de ayuda en la barra de búsqueda
-  ///
-  /// In es, this message translates to:
-  /// **'Buscar por título...'**
-  String get searchFieldHint;
-
-  /// Texto si la búsqueda no devuelve resultados
-  ///
-  /// In es, this message translates to:
-  /// **'No se encontraron elementos con el filtro aplicado.'**
-  String get searchEmptyState;
-
-  /// Texto del botón flotante para proponer un elemento
-  ///
-  /// In es, this message translates to:
-  /// **'Proponer Elemento'**
-  String get searchProposeButton;
-
-  /// Subtítulo para la sección de datos de usuario
-  ///
-  /// In es, this message translates to:
-  /// **'Datos de Usuario'**
-  String get profileUserData;
-
-  /// Texto del botón para guardar cambios del perfil
-  ///
-  /// In es, this message translates to:
-  /// **'Guardar Cambios'**
-  String get profileSaveButton;
-
-  /// Subtítulo para la sección de cambio de contraseña
-  ///
-  /// In es, this message translates to:
-  /// **'Cambiar Contraseña'**
-  String get profileChangePassword;
-
-  /// Etiqueta para el campo de contraseña actual
-  ///
-  /// In es, this message translates to:
-  /// **'Contraseña actual'**
-  String get profileCurrentPassword;
-
-  /// Etiqueta para el campo de nueva contraseña
-  ///
-  /// In es, this message translates to:
-  /// **'Nueva contraseña'**
-  String get profileNewPassword;
-
-  /// Texto del botón para ir al panel de moderación
-  ///
-  /// In es, this message translates to:
-  /// **'Panel de Moderación'**
-  String get profileModPanelButton;
-
-  /// Texto del botón para ir al panel de administrador
-  ///
-  /// In es, this message translates to:
-  /// **'Panel de Administrador'**
-  String get profileAdminPanelButton;
-
-  /// Texto del botón para cerrar sesión
-  ///
-  /// In es, this message translates to:
-  /// **'Cerrar Sesión'**
-  String get profileLogoutButton;
-
-  /// Título de la pantalla de Ajustes
-  ///
-  /// In es, this message translates to:
-  /// **'Ajustes'**
-  String get settingsTitle;
-
-  /// Etiqueta para el interruptor de modo oscuro
-  ///
-  /// In es, this message translates to:
-  /// **'Modo Oscuro'**
-  String get settingsDarkMode;
-
-  /// Subtítulo del interruptor de modo oscuro (Activado)
-  ///
-  /// In es, this message translates to:
-  /// **'Activado'**
-  String get settingsDarkModeOn;
-
-  /// Subtítulo del interruptor de modo oscuro (Desactivado)
-  ///
-  /// In es, this message translates to:
-  /// **'Desactivado'**
-  String get settingsDarkModeOff;
-
-  /// Etiqueta para la selección de idioma
-  ///
-  /// In es, this message translates to:
-  /// **'Idioma'**
-  String get settingsLanguage;
-
-  /// Opción de idioma Español
-  ///
-  /// In es, this message translates to:
-  /// **'Español'**
-  String get settingsLanguageSpanish;
-
-  /// Opción de idioma Inglés
-  ///
-  /// In es, this message translates to:
-  /// **'Inglés'**
-  String get settingsLanguageEnglish;
-
-  /// No description provided for @settingsSystemDefault.
-  ///
-  /// In es, this message translates to:
-  /// **'Sistema (Por defecto)'**
-  String get settingsSystemDefault;
-
-  /// Error de validación para nombre de usuario vacío
-  ///
-  /// In es, this message translates to:
-  /// **'El nombre de usuario es obligatorio.'**
-  String get validationUsernameRequired;
-
-  /// Error de validación para longitud de nombre de usuario
-  ///
-  /// In es, this message translates to:
-  /// **'El nombre de usuario debe tener entre 4 y 50 caracteres.'**
-  String get validationUsernameLength450;
-
-  /// Error de validación para email vacío
-  ///
-  /// In es, this message translates to:
-  /// **'El email es obligatorio.'**
-  String get validationEmailRequired;
-
-  /// Error de validación para email con formato incorrecto
-  ///
-  /// In es, this message translates to:
-  /// **'Introduce un email válido.'**
-  String get validationEmailInvalid;
-
-  /// Error de validación para contraseña vacía
-  ///
-  /// In es, this message translates to:
-  /// **'La contraseña es obligatoria.'**
-  String get validationPasswordRequired;
-
-  /// Error de validación para contraseña actual vacía
-  ///
-  /// In es, this message translates to:
-  /// **'La contraseña actual es obligatoria.'**
-  String get validationPasswordCurrentRequired;
-
-  /// Error de validación para nueva contraseña vacía
-  ///
-  /// In es, this message translates to:
-  /// **'La nueva contraseña es obligatoria.'**
-  String get validationPasswordNewRequired;
-
-  /// Error de validación para contraseña corta
-  ///
-  /// In es, this message translates to:
-  /// **'La nueva contraseña debe tener al menos 8 caracteres.'**
-  String get validationPasswordMin8;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'El ID del elemento no puede ser nulo.'**
-  String get validationElementIdRequired;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'La valoración es obligatoria.'**
-  String get validationRatingRequired;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'La valoración mínima es 1.'**
-  String get validationRatingMin1;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'La valoración máxima es 5.'**
-  String get validationRatingMax5;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'La reseña no puede exceder los 2000 caracteres.'**
-  String get validationReviewMax2000;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'El título es obligatorio.'**
-  String get validationTitleRequired;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'La descripción es obligatoria.'**
-  String get validationDescRequired;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'El tipo es obligatorio.'**
-  String get validationTypeRequired;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'Los géneros son obligatorios.'**
-  String get validationGenresRequired;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'El token de Google no puede estar vacío.'**
-  String get validationGoogleTokenRequired;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'Debe especificar el estado de moderador.'**
-  String get validationModStatusRequired;
-
-  /// Error de validación
-  ///
-  /// In es, this message translates to:
-  /// **'Debe especificar el estado de administrador.'**
-  String get validationAdminStatusRequired;
-
-  /// Error: El email ya está registrado.
-  ///
-  /// In es, this message translates to:
-  /// **'El email ya está registrado.'**
-  String get errorEmailAlreadyRegistered;
-
-  /// Error: El nombre de usuario ya existe.
-  ///
-  /// In es, this message translates to:
-  /// **'El nombre de usuario ya existe.'**
-  String get errorUsernameAlreadyExists;
-
-  /// Error: La contraseña actual es incorrecta.
-  ///
-  /// In es, this message translates to:
-  /// **'La contraseña actual es incorrecta.'**
-  String get errorPasswordIncorrect;
-
-  /// Error: Ya has reseñado este elemento.
-  ///
-  /// In es, this message translates to:
-  /// **'Ya has reseñado este elemento.'**
-  String get errorAlreadyReviewed;
-
-  /// Error: La valoración debe estar entre 1 y 5.
-  ///
-  /// In es, this message translates to:
-  /// **'La valoración debe estar entre 1 y 5.'**
-  String get errorInvalidRatingRange;
-
-  /// Error: Propuesta ya gestionada.
-  ///
-  /// In es, this message translates to:
-  /// **'Esta propuesta ya ha sido gestionada.'**
-  String get errorProposalAlreadyHandled;
-
-  /// Error: Tipo vacío.
-  ///
-  /// In es, this message translates to:
-  /// **'El Tipo sugerido no puede estar vacío.'**
-  String get errorTypeEmpty;
-
-  /// Error: Géneros vacíos.
-  ///
-  /// In es, this message translates to:
-  /// **'Los Géneros sugeridos no pueden estar vacíos.'**
-  String get errorGenresEmpty;
-
-  /// Error: Género inválido.
-  ///
-  /// In es, this message translates to:
-  /// **'Se debe proporcionar al menos un género válido.'**
-  String get errorGenreInvalid;
-
-  /// Error: Archivo vacío.
-  ///
-  /// In es, this message translates to:
-  /// **'El archivo está vacío.'**
-  String get errorFileEmpty;
-
-  /// Error: Ya está en el catálogo.
-  ///
-  /// In es, this message translates to:
-  /// **'Este elemento ya está en tu catálogo.'**
-  String get errorAlreadyInCatalog;
-
-  /// Error: Error de validación.
-  ///
-  /// In es, this message translates to:
-  /// **'Error de validación.'**
-  String get errorValidation;
-
-  /// Error: Argumento no válido.
-  ///
-  /// In es, this message translates to:
-  /// **'Argumento no válido.'**
-  String get errorIllegalArgument;
-
-  /// Error: Error interno del servidor.
-  ///
-  /// In es, this message translates to:
-  /// **'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.'**
-  String get errorInternalServerError;
-
-  /// Error: Acceso denegado.
-  ///
-  /// In es, this message translates to:
-  /// **'No tienes permiso para acceder a este recurso.'**
-  String get errorAccessDenied;
-
-  /// Error: Token JWT caducado.
-  ///
-  /// In es, this message translates to:
-  /// **'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.'**
-  String get errorTokenExpired;
-
-  /// Error: Token JWT inválido.
-  ///
-  /// In es, this message translates to:
-  /// **'Token inválido. Por favor, inicia sesión de nuevo.'**
-  String get errorTokenInvalid;
-
-  /// Error: Credenciales de login inválidas.
-  ///
-  /// In es, this message translates to:
-  /// **'Email o contraseña incorrectos.'**
-  String get errorInvalidCredentials;
-
-  /// No description provided for @errorUnexpected.
-  ///
-  /// In es, this message translates to:
-  /// **'Error inesperado: {error}'**
-  String errorUnexpected(String error);
-
-  /// No description provided for @errorLoadingFilters.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al cargar filtros: {error}'**
-  String errorLoadingFilters(String error);
-
-  /// No description provided for @errorLoadingElement.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al cargar el elemento:\n{error}'**
-  String errorLoadingElement(String error);
-
-  /// No description provided for @errorLoadingElements.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al cargar elementos: {error}'**
-  String errorLoadingElements(String error);
-
-  /// No description provided for @errorLoadingReviews.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al cargar las reseñas: {error}'**
-  String errorLoadingReviews(String error);
-
-  /// No description provided for @errorLoadingProposals.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al cargar:\n{error}'**
-  String errorLoadingProposals(String error);
-
-  /// No description provided for @errorLoadingUsers.
-  ///
-  /// In es, this message translates to:
-  /// **'Error: {error}'**
-  String errorLoadingUsers(String error);
-
-  /// No description provided for @errorLoadingCatalog.
-  ///
-  /// In es, this message translates to:
-  /// **'Error: {error}'**
-  String errorLoadingCatalog(String error);
-
-  /// No description provided for @errorImagePick.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al seleccionar imagen: {error}'**
-  String errorImagePick(String error);
-
-  /// No description provided for @errorImageUpload.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al subir imagen: {error}'**
-  String errorImageUpload(String error);
-
-  /// No description provided for @errorSaving.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al guardar: {error}'**
-  String errorSaving(String error);
-
-  /// No description provided for @errorUpdating.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al actualizar: {error}'**
-  String errorUpdating(String error);
-
-  /// No description provided for @errorApproving.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al aprobar: {error}'**
-  String errorApproving(String error);
-
-  /// No description provided for @errorUpdatingRoles.
-  ///
-  /// In es, this message translates to:
-  /// **'Error al actualizar roles: {error}'**
-  String errorUpdatingRoles(String error);
-
-  /// No description provided for @snackbarCloseButton.
-  ///
-  /// In es, this message translates to:
-  /// **'CERRAR'**
-  String get snackbarCloseButton;
-
-  /// No description provided for @snackbarLoginGoogleCancel.
-  ///
-  /// In es, this message translates to:
-  /// **'Inicio de sesión cancelado.'**
-  String get snackbarLoginGoogleCancel;
-
-  /// No description provided for @snackbarRegisterSuccess.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Registro exitoso! Ahora has iniciado sesión automáticamente.'**
-  String get snackbarRegisterSuccess;
-
-  /// No description provided for @snackbarReviewPublished.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Reseña publicada!'**
-  String get snackbarReviewPublished;
-
-  /// No description provided for @snackbarReviewRatingRequired.
-  ///
-  /// In es, this message translates to:
-  /// **'Por favor, selecciona una valoración (1-5 estrellas).'**
-  String get snackbarReviewRatingRequired;
-
-  /// No description provided for @snackbarProposalSent.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Propuesta enviada con éxito! Gracias por tu contribución.'**
-  String get snackbarProposalSent;
-
-  /// No description provided for @snackbarProfilePhotoUpdated.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Foto de perfil actualizada!'**
-  String get snackbarProfilePhotoUpdated;
-
-  /// No description provided for @snackbarProfileNoChanges.
-  ///
-  /// In es, this message translates to:
-  /// **'No has realizado ningún cambio.'**
-  String get snackbarProfileNoChanges;
-
-  /// No description provided for @snackbarProfileUsernameUpdated.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Nombre de usuario actualizado!'**
-  String get snackbarProfileUsernameUpdated;
-
-  /// No description provided for @snackbarProfilePasswordUpdated.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Contraseña actualizada con éxito!'**
-  String get snackbarProfilePasswordUpdated;
-
-  /// No description provided for @snackbarCatalogAdded.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Añadido al catálogo!'**
-  String get snackbarCatalogAdded;
-
-  /// No description provided for @snackbarCatalogRemoved.
-  ///
-  /// In es, this message translates to:
-  /// **'Elemento quitado del catálogo'**
-  String get snackbarCatalogRemoved;
-
-  /// No description provided for @snackbarCatalogStatusUpdated.
-  ///
-  /// In es, this message translates to:
-  /// **'Estado actualizado.'**
-  String get snackbarCatalogStatusUpdated;
-
-  /// No description provided for @snackbarCatalogProgressSaved.
-  ///
-  /// In es, this message translates to:
-  /// **'Progreso guardado.'**
-  String get snackbarCatalogProgressSaved;
-
-  /// No description provided for @snackbarImageUploadSuccess.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Imagen subida!'**
-  String get snackbarImageUploadSuccess;
-
-  /// No description provided for @snackbarImageUploadRequired.
-  ///
-  /// In es, this message translates to:
-  /// **'Por favor, sube una imagen de portada.'**
-  String get snackbarImageUploadRequired;
-
-  /// No description provided for @snackbarImageUploadRequiredApproval.
-  ///
-  /// In es, this message translates to:
-  /// **'Por favor, sube una imagen de portada antes de aprobar.'**
-  String get snackbarImageUploadRequiredApproval;
-
-  /// No description provided for @snackbarModProposalApproved.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Propuesta aprobada!'**
-  String get snackbarModProposalApproved;
-
-  /// No description provided for @snackbarModProposalRejected.
-  ///
-  /// In es, this message translates to:
-  /// **'Propuesta rechazada (simulado).'**
-  String get snackbarModProposalRejected;
-
-  /// No description provided for @snackbarAdminRolesUpdated.
-  ///
-  /// In es, this message translates to:
-  /// **'Roles de {username} actualizados.'**
-  String snackbarAdminRolesUpdated(String username);
-
-  /// No description provided for @snackbarAdminElementUpdated.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Elemento actualizado!'**
-  String get snackbarAdminElementUpdated;
-
-  /// No description provided for @snackbarAdminElementCreated.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Elemento OFICIAL creado!'**
-  String get snackbarAdminElementCreated;
-
-  /// No description provided for @snackbarAdminStatusCommunity.
-  ///
-  /// In es, this message translates to:
-  /// **'Elemento marcado como COMUNITARIO.'**
-  String get snackbarAdminStatusCommunity;
-
-  /// No description provided for @snackbarAdminStatusOfficial.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Elemento marcado como OFICIAL!'**
-  String get snackbarAdminStatusOfficial;
-
-  /// No description provided for @reviewModalTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Escribir Reseña'**
-  String get reviewModalTitle;
-
-  /// No description provided for @reviewModalReviewLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Reseña (opcional)'**
-  String get reviewModalReviewLabel;
-
-  /// No description provided for @reviewModalReviewHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Escribe tu opinión...'**
-  String get reviewModalReviewHint;
-
-  /// No description provided for @reviewModalSubmitButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Publicar Reseña'**
-  String get reviewModalSubmitButton;
-
-  /// No description provided for @proposalFormTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Proponer Elemento'**
-  String get proposalFormTitle;
-
-  /// No description provided for @proposalFormTitleLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Título Sugerido'**
-  String get proposalFormTitleLabel;
-
-  /// No description provided for @proposalFormDescLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Descripción Breve'**
-  String get proposalFormDescLabel;
-
-  /// No description provided for @proposalFormTypeLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Tipo (Ej. Serie, Libro, Anime)'**
-  String get proposalFormTypeLabel;
-
-  /// No description provided for @proposalFormGenresLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Géneros (separados por coma)'**
-  String get proposalFormGenresLabel;
-
-  /// No description provided for @proposalFormProgressTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Datos de Progreso (Opcional)'**
-  String get proposalFormProgressTitle;
-
-  /// No description provided for @proposalFormSeriesEpisodesLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Episodios por Temporada'**
-  String get proposalFormSeriesEpisodesLabel;
-
-  /// No description provided for @proposalFormSeriesEpisodesHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Ej. 10,8,12 (para T1, T2, T3)'**
-  String get proposalFormSeriesEpisodesHint;
-
-  /// No description provided for @proposalFormBookChaptersLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Total Capítulos (Libro)'**
-  String get proposalFormBookChaptersLabel;
-
-  /// No description provided for @proposalFormBookPagesLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Total Páginas (Libro)'**
-  String get proposalFormBookPagesLabel;
-
-  /// No description provided for @proposalFormAnimeEpisodesLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Total Episodios (Anime)'**
-  String get proposalFormAnimeEpisodesLabel;
-
-  /// No description provided for @proposalFormMangaChaptersLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Total Capítulos (Manga)'**
-  String get proposalFormMangaChaptersLabel;
-
-  /// No description provided for @proposalFormNoProgress.
-  ///
-  /// In es, this message translates to:
-  /// **'El tipo \"{tipo}\" no requiere datos de progreso.'**
-  String proposalFormNoProgress(String tipo);
-
-  /// No description provided for @proposalFormSubmitButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Enviar Propuesta'**
-  String get proposalFormSubmitButton;
-
-  /// No description provided for @elementDetailSynopsis.
-  ///
-  /// In es, this message translates to:
-  /// **'Sinopsis'**
-  String get elementDetailSynopsis;
-
-  /// No description provided for @elementDetailProgressDetails.
-  ///
-  /// In es, this message translates to:
-  /// **'Detalles del Progreso'**
-  String get elementDetailProgressDetails;
-
-  /// No description provided for @elementDetailSeriesSeasons.
-  ///
-  /// In es, this message translates to:
-  /// **'Total Temporadas'**
-  String get elementDetailSeriesSeasons;
-
-  /// No description provided for @elementDetailSeriesEpisodes.
-  ///
-  /// In es, this message translates to:
-  /// **'Episodios'**
-  String get elementDetailSeriesEpisodes;
-
-  /// No description provided for @elementDetailBookChapters.
-  ///
-  /// In es, this message translates to:
-  /// **'Total Capítulos'**
-  String get elementDetailBookChapters;
-
-  /// No description provided for @elementDetailBookPages.
-  ///
-  /// In es, this message translates to:
-  /// **'Total Páginas'**
-  String get elementDetailBookPages;
-
-  /// No description provided for @elementDetailAnimeEpisodes.
-  ///
-  /// In es, this message translates to:
-  /// **'Total Episodios'**
-  String get elementDetailAnimeEpisodes;
-
-  /// No description provided for @elementDetailMangaChapters.
-  ///
-  /// In es, this message translates to:
-  /// **'Total Capítulos'**
-  String get elementDetailMangaChapters;
-
-  /// No description provided for @elementDetailPrequels.
-  ///
-  /// In es, this message translates to:
-  /// **'Precuelas'**
-  String get elementDetailPrequels;
-
-  /// No description provided for @elementDetailSequels.
-  ///
-  /// In es, this message translates to:
-  /// **'Secuelas'**
-  String get elementDetailSequels;
-
-  /// No description provided for @elementDetailReviews.
-  ///
-  /// In es, this message translates to:
-  /// **'Reseñas ({count})'**
-  String elementDetailReviews(int count);
-
-  /// No description provided for @elementDetailAlreadyReviewed.
-  ///
-  /// In es, this message translates to:
-  /// **'Ya has reseñado'**
-  String get elementDetailAlreadyReviewed;
-
-  /// No description provided for @elementDetailWriteReview.
-  ///
-  /// In es, this message translates to:
-  /// **'Escribir Reseña'**
-  String get elementDetailWriteReview;
-
-  /// No description provided for @elementDetailNoReviews.
-  ///
-  /// In es, this message translates to:
-  /// **'Aún no hay reseñas para este elemento.'**
-  String get elementDetailNoReviews;
-
-  /// No description provided for @elementDetailAddButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Añadir a Mi Catálogo'**
-  String get elementDetailAddButton;
-
-  /// No description provided for @elementDetailAddingButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Añadiendo...'**
-  String get elementDetailAddingButton;
-
-  /// No description provided for @elementDetailRemoveButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Quitar del catálogo'**
-  String get elementDetailRemoveButton;
-
-  /// No description provided for @elementDetailRemovingButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Eliminando...'**
-  String get elementDetailRemovingButton;
-
-  /// No description provided for @elementDetailAdminEdit.
-  ///
-  /// In es, this message translates to:
-  /// **'Editar'**
-  String get elementDetailAdminEdit;
-
-  /// No description provided for @elementDetailAdminMakeCommunity.
-  ///
-  /// In es, this message translates to:
-  /// **'Comunitarizar'**
-  String get elementDetailAdminMakeCommunity;
-
-  /// No description provided for @elementDetailAdminMakeOfficial.
-  ///
-  /// In es, this message translates to:
-  /// **'Oficializar'**
-  String get elementDetailAdminMakeOfficial;
-
-  /// No description provided for @elementDetailAdminLoading.
-  ///
-  /// In es, this message translates to:
-  /// **'...'**
-  String get elementDetailAdminLoading;
-
-  /// No description provided for @elementDetailNoElement.
-  ///
-  /// In es, this message translates to:
-  /// **'Elemento no encontrado.'**
-  String get elementDetailNoElement;
-
-  /// No description provided for @adminFormEditTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Editar Elemento'**
-  String get adminFormEditTitle;
-
-  /// No description provided for @adminFormCreateTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Crear Elemento Oficial'**
-  String get adminFormCreateTitle;
-
-  /// No description provided for @adminFormEditButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Guardar Cambios'**
-  String get adminFormEditButton;
-
-  /// No description provided for @adminFormCreateButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Crear Elemento'**
-  String get adminFormCreateButton;
-
-  /// No description provided for @adminFormImageTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Añadir portada'**
-  String get adminFormImageTitle;
-
-  /// No description provided for @adminFormImageGallery.
-  ///
-  /// In es, this message translates to:
-  /// **'Galería'**
-  String get adminFormImageGallery;
-
-  /// No description provided for @adminFormImageUpload.
-  ///
-  /// In es, this message translates to:
-  /// **'Subir'**
-  String get adminFormImageUpload;
-
-  /// No description provided for @adminFormImageUploading.
-  ///
-  /// In es, this message translates to:
-  /// **'Subiendo...'**
-  String get adminFormImageUploading;
-
-  /// No description provided for @adminFormTitleLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Título'**
-  String get adminFormTitleLabel;
-
-  /// No description provided for @adminFormDescLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Descripción'**
-  String get adminFormDescLabel;
-
-  /// No description provided for @adminFormTypeLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Tipo (Ej. Serie, Libro)'**
-  String get adminFormTypeLabel;
-
-  /// No description provided for @adminFormGenresLabel.
-  ///
-  /// In es, this message translates to:
-  /// **'Géneros (separados por coma)'**
-  String get adminFormGenresLabel;
-
-  /// No description provided for @adminFormProgressTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Datos de Progreso (Opcional)'**
-  String get adminFormProgressTitle;
-
-  /// No description provided for @adminFormSequelsTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Secuelas (Opcional)'**
-  String get adminFormSequelsTitle;
-
-  /// No description provided for @adminFormSequelsSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Elementos que van DESPUÉS de este.'**
-  String get adminFormSequelsSubtitle;
-
-  /// No description provided for @adminPanelSearchHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Buscar por nombre o email...'**
-  String get adminPanelSearchHint;
-
-  /// No description provided for @adminPanelFilterAll.
-  ///
-  /// In es, this message translates to:
-  /// **'Todos'**
-  String get adminPanelFilterAll;
-
-  /// No description provided for @adminPanelFilterMods.
-  ///
-  /// In es, this message translates to:
-  /// **'Moderadores'**
-  String get adminPanelFilterMods;
-
-  /// No description provided for @adminPanelFilterAdmins.
-  ///
-  /// In es, this message translates to:
-  /// **'Admins'**
-  String get adminPanelFilterAdmins;
-
-  /// No description provided for @adminPanelRoleMod.
-  ///
-  /// In es, this message translates to:
-  /// **'Moderador'**
-  String get adminPanelRoleMod;
-
-  /// No description provided for @adminPanelRoleAdmin.
-  ///
-  /// In es, this message translates to:
-  /// **'Administrador'**
-  String get adminPanelRoleAdmin;
-
-  /// No description provided for @adminPanelSaveButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Guardar Cambios'**
-  String get adminPanelSaveButton;
-
-  /// No description provided for @adminPanelCreateElement.
-  ///
-  /// In es, this message translates to:
-  /// **'Crear Elemento'**
-  String get adminPanelCreateElement;
-
-  /// No description provided for @adminPanelNoUsersFound.
-  ///
-  /// In es, this message translates to:
-  /// **'No se encontraron usuarios.'**
-  String get adminPanelNoUsersFound;
-
-  /// No description provided for @modPanelTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Panel de Moderación'**
-  String get modPanelTitle;
-
-  /// No description provided for @modPanelProposalFrom.
-  ///
-  /// In es, this message translates to:
-  /// **'Propuesto por: {username}'**
-  String modPanelProposalFrom(String username);
-
-  /// No description provided for @modPanelProposalType.
-  ///
-  /// In es, this message translates to:
-  /// **'Tipo: {type}'**
-  String modPanelProposalType(String type);
-
-  /// No description provided for @modPanelProposalGenres.
-  ///
-  /// In es, this message translates to:
-  /// **'Géneros: {genres}'**
-  String modPanelProposalGenres(String genres);
-
-  /// No description provided for @modPanelReject.
-  ///
-  /// In es, this message translates to:
-  /// **'Rechazar'**
-  String get modPanelReject;
-
-  /// No description provided for @modPanelReview.
-  ///
-  /// In es, this message translates to:
-  /// **'Revisar'**
-  String get modPanelReview;
-
-  /// No description provided for @modPanelNoPending.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Buen trabajo! No hay propuestas pendientes.'**
-  String get modPanelNoPending;
-
-  /// No description provided for @modPanelNoOthers.
-  ///
-  /// In es, this message translates to:
-  /// **'No hay propuestas {status}.'**
-  String modPanelNoOthers(String status);
-
-  /// No description provided for @modPanelStatusPending.
-  ///
-  /// In es, this message translates to:
-  /// **'Pendientes'**
-  String get modPanelStatusPending;
-
-  /// No description provided for @modPanelStatusApproved.
-  ///
-  /// In es, this message translates to:
-  /// **'Aprobadas'**
-  String get modPanelStatusApproved;
-
-  /// No description provided for @modPanelStatusRejected.
-  ///
-  /// In es, this message translates to:
-  /// **'Rechazadas'**
-  String get modPanelStatusRejected;
-
-  /// No description provided for @modEditTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Revisar Propuesta'**
-  String get modEditTitle;
-
-  /// No description provided for @modEditImageTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Sin portada'**
-  String get modEditImageTitle;
-
-  /// No description provided for @modEditProgressTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Datos de Progreso (¡Obligatorio!)'**
-  String get modEditProgressTitle;
-
-  /// No description provided for @modEditSeriesEpisodesRequired.
-  ///
-  /// In es, this message translates to:
-  /// **'Este campo es obligatorio para Series'**
-  String get modEditSeriesEpisodesRequired;
-
-  /// No description provided for @modEditBookChaptersRequired.
-  ///
-  /// In es, this message translates to:
-  /// **'Este campo es obligatorio para Libros'**
-  String get modEditBookChaptersRequired;
-
-  /// No description provided for @modEditBookPagesRequired.
-  ///
-  /// In es, this message translates to:
-  /// **'Este campo es obligatorio para Libros'**
-  String get modEditBookPagesRequired;
-
-  /// No description provided for @modEditUnitRequired.
-  ///
-  /// In es, this message translates to:
-  /// **'Este campo es obligatorio'**
-  String get modEditUnitRequired;
-
-  /// No description provided for @modEditSubmitButton.
-  ///
-  /// In es, this message translates to:
-  /// **'Guardar y Aprobar'**
-  String get modEditSubmitButton;
 
   /// No description provided for @catalogCardState.
   ///
-  /// In es, this message translates to:
-  /// **'Estado'**
+  /// In en, this message translates to:
+  /// **'Status'**
   String get catalogCardState;
 
   /// No description provided for @catalogCardSeriesSeason.
   ///
-  /// In es, this message translates to:
-  /// **'T{season}'**
+  /// In en, this message translates to:
+  /// **'S{season}'**
   String catalogCardSeriesSeason(int season);
 
   /// No description provided for @catalogCardSeriesEpisode.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Ep {episode}'**
   String catalogCardSeriesEpisode(int episode);
 
   /// No description provided for @catalogCardBookChapter.
   ///
-  /// In es, this message translates to:
-  /// **'Capítulo'**
+  /// In en, this message translates to:
+  /// **'Chapter'**
   String get catalogCardBookChapter;
 
   /// No description provided for @catalogCardBookPage.
   ///
-  /// In es, this message translates to:
-  /// **'Página'**
+  /// In en, this message translates to:
+  /// **'Page'**
   String get catalogCardBookPage;
 
   /// No description provided for @catalogCardBookChapterTotal.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Total: {total}'**
   String catalogCardBookChapterTotal(int total);
 
   /// No description provided for @catalogCardBookPageTotal.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Total: {total}'**
   String catalogCardBookPageTotal(int total);
 
   /// No description provided for @catalogCardUnitLabel.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'{label}:'**
   String catalogCardUnitLabel(String label);
 
   /// No description provided for @catalogCardUnitProgress.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'{current} / {total}'**
   String catalogCardUnitProgress(int current, int total);
 
   /// No description provided for @catalogCardSaveChanges.
   ///
-  /// In es, this message translates to:
-  /// **'Guardar Progreso'**
+  /// In en, this message translates to:
+  /// **'Save Progress'**
   String get catalogCardSaveChanges;
+
+  /// No description provided for @searchExploreType.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore by Type'**
+  String get searchExploreType;
+
+  /// No description provided for @searchExploreGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore by Genre'**
+  String get searchExploreGenre;
+
+  /// No description provided for @searchFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by title...'**
+  String get searchFieldHint;
+
+  /// No description provided for @searchEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'No elements were found with the applied filter.'**
+  String get searchEmptyState;
+
+  /// No description provided for @searchProposeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Propose Element'**
+  String get searchProposeButton;
+
+  /// No description provided for @elementDetailSynopsis.
+  ///
+  /// In en, this message translates to:
+  /// **'Synopsis'**
+  String get elementDetailSynopsis;
+
+  /// No description provided for @elementDetailProgressDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress Details'**
+  String get elementDetailProgressDetails;
+
+  /// No description provided for @elementDetailSeriesSeasons.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Seasons'**
+  String get elementDetailSeriesSeasons;
+
+  /// No description provided for @elementDetailSeriesEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes'**
+  String get elementDetailSeriesEpisodes;
+
+  /// No description provided for @elementDetailBookChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Chapters'**
+  String get elementDetailBookChapters;
+
+  /// No description provided for @elementDetailBookPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Pages'**
+  String get elementDetailBookPages;
+
+  /// No description provided for @elementDetailAnimeEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Episodes'**
+  String get elementDetailAnimeEpisodes;
+
+  /// No description provided for @elementDetailMangaChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Chapters'**
+  String get elementDetailMangaChapters;
+
+  /// No description provided for @elementDetailPrequels.
+  ///
+  /// In en, this message translates to:
+  /// **'Prequels'**
+  String get elementDetailPrequels;
+
+  /// No description provided for @elementDetailSequels.
+  ///
+  /// In en, this message translates to:
+  /// **'Sequels'**
+  String get elementDetailSequels;
+
+  /// No description provided for @elementDetailReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews ({count})'**
+  String elementDetailReviews(int count);
+
+  /// No description provided for @elementDetailAlreadyReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Already reviewed'**
+  String get elementDetailAlreadyReviewed;
+
+  /// No description provided for @elementDetailWriteReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Write Review'**
+  String get elementDetailWriteReview;
+
+  /// No description provided for @elementDetailNoReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no reviews for this item yet.'**
+  String get elementDetailNoReviews;
+
+  /// No description provided for @elementDetailAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to My Catalog'**
+  String get elementDetailAddButton;
+
+  /// No description provided for @elementDetailAddingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding...'**
+  String get elementDetailAddingButton;
+
+  /// No description provided for @elementDetailRemoveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from catalog'**
+  String get elementDetailRemoveButton;
+
+  /// No description provided for @elementDetailRemovingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing...'**
+  String get elementDetailRemovingButton;
+
+  /// No description provided for @elementDetailAdminEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get elementDetailAdminEdit;
+
+  /// No description provided for @elementDetailAdminMakeCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Make Community'**
+  String get elementDetailAdminMakeCommunity;
+
+  /// No description provided for @elementDetailAdminMakeOfficial.
+  ///
+  /// In en, this message translates to:
+  /// **'Make Official'**
+  String get elementDetailAdminMakeOfficial;
+
+  /// No description provided for @elementDetailAdminLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'...'**
+  String get elementDetailAdminLoading;
+
+  /// No description provided for @elementDetailNoElement.
+  ///
+  /// In en, this message translates to:
+  /// **'Element not found.'**
+  String get elementDetailNoElement;
 
   /// No description provided for @contentStatusOfficial.
   ///
-  /// In es, this message translates to:
-  /// **'OFICIAL'**
+  /// In en, this message translates to:
+  /// **'OFFICIAL'**
   String get contentStatusOfficial;
 
   /// No description provided for @contentStatusCommunity.
   ///
-  /// In es, this message translates to:
-  /// **'COMUNITARIO'**
+  /// In en, this message translates to:
+  /// **'COMMUNITY'**
   String get contentStatusCommunity;
+
+  /// No description provided for @reviewModalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write Review'**
+  String get reviewModalTitle;
+
+  /// No description provided for @reviewModalReviewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Review (optional)'**
+  String get reviewModalReviewLabel;
+
+  /// No description provided for @reviewModalReviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your opinion...'**
+  String get reviewModalReviewHint;
+
+  /// No description provided for @reviewModalSubmitButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish Review'**
+  String get reviewModalSubmitButton;
 
   /// No description provided for @reviewCardBy.
   ///
-  /// In es, this message translates to:
-  /// **'Reseña de: {username}'**
+  /// In en, this message translates to:
+  /// **'Review by: {username}'**
   String reviewCardBy(String username);
 
   /// No description provided for @reviewCardNoText.
   ///
-  /// In es, this message translates to:
-  /// **'Este usuario no ha escrito un texto.'**
+  /// In en, this message translates to:
+  /// **'This user did not write a text review.'**
   String get reviewCardNoText;
+
+  /// No description provided for @profileUserData.
+  ///
+  /// In en, this message translates to:
+  /// **'User Data'**
+  String get profileUserData;
+
+  /// No description provided for @profileSaveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get profileSaveButton;
+
+  /// No description provided for @profileChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get profileChangePassword;
+
+  /// No description provided for @profileCurrentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Password'**
+  String get profileCurrentPassword;
+
+  /// No description provided for @profileNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get profileNewPassword;
+
+  /// No description provided for @profileModPanelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderation Panel'**
+  String get profileModPanelButton;
+
+  /// No description provided for @profileAdminPanelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Panel'**
+  String get profileAdminPanelButton;
+
+  /// No description provided for @profileLogoutButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out'**
+  String get profileLogoutButton;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsDarkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get settingsDarkMode;
+
+  /// No description provided for @settingsDarkModeOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get settingsDarkModeOn;
+
+  /// No description provided for @settingsDarkModeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get settingsDarkModeOff;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @settingsLanguageSpanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get settingsLanguageSpanish;
+
+  /// No description provided for @settingsLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get settingsLanguageEnglish;
+
+  /// No description provided for @settingsSystemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System (Default)'**
+  String get settingsSystemDefault;
+
+  /// No description provided for @dialogCloseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get dialogCloseButton;
+
+  /// No description provided for @proposalFormTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Propose Element'**
+  String get proposalFormTitle;
+
+  /// No description provided for @proposalFormTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested Title'**
+  String get proposalFormTitleLabel;
+
+  /// No description provided for @proposalFormDescLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief Description'**
+  String get proposalFormDescLabel;
+
+  /// No description provided for @proposalFormTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type (e.g. Series, Book, Anime)'**
+  String get proposalFormTypeLabel;
+
+  /// No description provided for @proposalFormGenresLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Genres (comma separated)'**
+  String get proposalFormGenresLabel;
+
+  /// No description provided for @proposalFormProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress Data (Optional)'**
+  String get proposalFormProgressTitle;
+
+  /// No description provided for @proposalFormSeriesEpisodesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes per Season'**
+  String get proposalFormSeriesEpisodesLabel;
+
+  /// No description provided for @proposalFormSeriesEpisodesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 10,8,12 (for S1, S2, S3)'**
+  String get proposalFormSeriesEpisodesHint;
+
+  /// No description provided for @proposalFormBookChaptersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Chapters (Book)'**
+  String get proposalFormBookChaptersLabel;
+
+  /// No description provided for @proposalFormBookPagesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Pages (Book)'**
+  String get proposalFormBookPagesLabel;
+
+  /// No description provided for @proposalFormAnimeEpisodesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Episodes (Anime)'**
+  String get proposalFormAnimeEpisodesLabel;
+
+  /// No description provided for @proposalFormMangaChaptersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Chapters (Manga)'**
+  String get proposalFormMangaChaptersLabel;
+
+  /// No description provided for @proposalFormNoProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'The type \"{tipo}\" does not require progress data.'**
+  String proposalFormNoProgress(String tipo);
+
+  /// No description provided for @proposalFormSubmitButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Proposal'**
+  String get proposalFormSubmitButton;
+
+  /// No description provided for @adminFormEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Element'**
+  String get adminFormEditTitle;
+
+  /// No description provided for @adminFormCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Official Element'**
+  String get adminFormCreateTitle;
+
+  /// No description provided for @adminFormEditButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get adminFormEditButton;
+
+  /// No description provided for @adminFormCreateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Element'**
+  String get adminFormCreateButton;
+
+  /// No description provided for @adminFormImageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add cover'**
+  String get adminFormImageTitle;
+
+  /// No description provided for @adminFormImageGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get adminFormImageGallery;
+
+  /// No description provided for @adminFormImageUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get adminFormImageUpload;
+
+  /// No description provided for @adminFormImageUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading...'**
+  String get adminFormImageUploading;
+
+  /// No description provided for @adminFormTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get adminFormTitleLabel;
+
+  /// No description provided for @adminFormDescLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get adminFormDescLabel;
+
+  /// No description provided for @adminFormTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type (e.g. Series, Book)'**
+  String get adminFormTypeLabel;
+
+  /// No description provided for @adminFormGenresLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Genres (comma separated)'**
+  String get adminFormGenresLabel;
+
+  /// No description provided for @adminFormProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress Data (Optional)'**
+  String get adminFormProgressTitle;
+
+  /// No description provided for @adminFormSequelsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sequels (Optional)'**
+  String get adminFormSequelsTitle;
+
+  /// No description provided for @adminFormSequelsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Elements that come AFTER this one.'**
+  String get adminFormSequelsSubtitle;
+
+  /// No description provided for @adminPanelSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or email...'**
+  String get adminPanelSearchHint;
+
+  /// No description provided for @adminPanelFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get adminPanelFilterAll;
+
+  /// No description provided for @adminPanelFilterMods.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderators'**
+  String get adminPanelFilterMods;
+
+  /// No description provided for @adminPanelFilterAdmins.
+  ///
+  /// In en, this message translates to:
+  /// **'Admins'**
+  String get adminPanelFilterAdmins;
+
+  /// No description provided for @adminPanelRoleMod.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderator'**
+  String get adminPanelRoleMod;
+
+  /// No description provided for @adminPanelRoleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrator'**
+  String get adminPanelRoleAdmin;
+
+  /// No description provided for @adminPanelSaveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get adminPanelSaveButton;
+
+  /// No description provided for @adminPanelCreateElement.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Element'**
+  String get adminPanelCreateElement;
+
+  /// No description provided for @adminPanelNoUsersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found.'**
+  String get adminPanelNoUsersFound;
+
+  /// No description provided for @modPanelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderation Panel'**
+  String get modPanelTitle;
+
+  /// No description provided for @modPanelProposalFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposed by: {username}'**
+  String modPanelProposalFrom(String username);
+
+  /// No description provided for @modPanelProposalType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type: {type}'**
+  String modPanelProposalType(String type);
+
+  /// No description provided for @modPanelProposalGenres.
+  ///
+  /// In en, this message translates to:
+  /// **'Genres: {genres}'**
+  String modPanelProposalGenres(String genres);
+
+  /// No description provided for @modPanelReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get modPanelReject;
+
+  /// No description provided for @modPanelReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get modPanelReview;
+
+  /// No description provided for @modPanelNoPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Good job! No pending proposals.'**
+  String get modPanelNoPending;
+
+  /// No description provided for @modPanelNoOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'No {status} proposals.'**
+  String modPanelNoOthers(String status);
+
+  /// No description provided for @modPanelStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get modPanelStatusPending;
+
+  /// No description provided for @modPanelStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get modPanelStatusApproved;
+
+  /// No description provided for @modPanelStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get modPanelStatusRejected;
+
+  /// No description provided for @modEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Proposal'**
+  String get modEditTitle;
+
+  /// No description provided for @modEditImageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No cover'**
+  String get modEditImageTitle;
+
+  /// No description provided for @modEditProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress Data (Required!)'**
+  String get modEditProgressTitle;
+
+  /// No description provided for @modEditSeriesEpisodesRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required for Series'**
+  String get modEditSeriesEpisodesRequired;
+
+  /// No description provided for @modEditBookChaptersRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required for Books'**
+  String get modEditBookChaptersRequired;
+
+  /// No description provided for @modEditBookPagesRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required for Books'**
+  String get modEditBookPagesRequired;
+
+  /// No description provided for @modEditUnitRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get modEditUnitRequired;
+
+  /// No description provided for @modEditSubmitButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and Approve'**
+  String get modEditSubmitButton;
+
+  /// No description provided for @totalEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Episodes'**
+  String get totalEpisodes;
+
+  /// No description provided for @duration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get duration;
+
+  /// No description provided for @totalChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Chapters'**
+  String get totalChapters;
+
+  /// No description provided for @totalPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Pages'**
+  String get totalPages;
+
+  /// No description provided for @episodesPerSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes per Season'**
+  String get episodesPerSeason;
+
+  /// No description provided for @snackbarCloseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSE'**
+  String get snackbarCloseButton;
+
+  /// No description provided for @snackbarLoginGoogleCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in cancelled.'**
+  String get snackbarLoginGoogleCancel;
+
+  /// No description provided for @snackbarRegisterSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration successful! You are now logged in automatically.'**
+  String get snackbarRegisterSuccess;
+
+  /// No description provided for @snackbarReviewPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Review published!'**
+  String get snackbarReviewPublished;
+
+  /// No description provided for @snackbarReviewRatingRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a rating (1-5 stars).'**
+  String get snackbarReviewRatingRequired;
+
+  /// No description provided for @snackbarProposalSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposal sent successfully! Thank you for your contribution.'**
+  String get snackbarProposalSent;
+
+  /// No description provided for @snackbarProfilePhotoUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo updated!'**
+  String get snackbarProfilePhotoUpdated;
+
+  /// No description provided for @snackbarProfileNoChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t made any changes.'**
+  String get snackbarProfileNoChanges;
+
+  /// No description provided for @snackbarProfileUsernameUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Username updated!'**
+  String get snackbarProfileUsernameUpdated;
+
+  /// No description provided for @snackbarProfilePasswordUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Password updated successfully!'**
+  String get snackbarProfilePasswordUpdated;
+
+  /// No description provided for @snackbarCatalogAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to catalog!'**
+  String get snackbarCatalogAdded;
+
+  /// No description provided for @snackbarCatalogRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from catalog'**
+  String get snackbarCatalogRemoved;
+
+  /// No description provided for @snackbarCatalogStatusUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Status updated.'**
+  String get snackbarCatalogStatusUpdated;
+
+  /// No description provided for @snackbarCatalogProgressSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress saved.'**
+  String get snackbarCatalogProgressSaved;
+
+  /// No description provided for @snackbarImageUploadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Image uploaded!'**
+  String get snackbarImageUploadSuccess;
+
+  /// No description provided for @snackbarImageUploadRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please upload a cover image.'**
+  String get snackbarImageUploadRequired;
+
+  /// No description provided for @snackbarImageUploadRequiredApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Please upload a cover image before approving.'**
+  String get snackbarImageUploadRequiredApproval;
+
+  /// No description provided for @snackbarModProposalApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposal approved!'**
+  String get snackbarModProposalApproved;
+
+  /// No description provided for @snackbarModProposalRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposal rejected (simulated).'**
+  String get snackbarModProposalRejected;
+
+  /// No description provided for @snackbarAdminRolesUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Roles for {username} updated.'**
+  String snackbarAdminRolesUpdated(String username);
+
+  /// No description provided for @snackbarAdminElementUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Element updated!'**
+  String get snackbarAdminElementUpdated;
+
+  /// No description provided for @snackbarAdminElementCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'OFFICIAL element created!'**
+  String get snackbarAdminElementCreated;
+
+  /// No description provided for @snackbarAdminStatusCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Element marked as COMMUNITY.'**
+  String get snackbarAdminStatusCommunity;
+
+  /// No description provided for @snackbarAdminStatusOfficial.
+  ///
+  /// In en, this message translates to:
+  /// **'Element marked as OFFICIAL!'**
+  String get snackbarAdminStatusOfficial;
+
+  /// No description provided for @snackbarFavoritoAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to favorites'**
+  String get snackbarFavoritoAdded;
+
+  /// No description provided for @snackbarFavoritoRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from favorites'**
+  String get snackbarFavoritoRemoved;
+
+  /// No description provided for @validationUsernameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Username is required.'**
+  String get validationUsernameRequired;
+
+  /// No description provided for @validationUsernameLength450.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be between 4 and 50 characters.'**
+  String get validationUsernameLength450;
+
+  /// No description provided for @validationEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is required.'**
+  String get validationEmailRequired;
+
+  /// No description provided for @validationEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email.'**
+  String get validationEmailInvalid;
+
+  /// No description provided for @validationPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is required.'**
+  String get validationPasswordRequired;
+
+  /// No description provided for @validationPasswordCurrentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password is required.'**
+  String get validationPasswordCurrentRequired;
+
+  /// No description provided for @validationPasswordNewRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'New password is required.'**
+  String get validationPasswordNewRequired;
+
+  /// No description provided for @validationPasswordMin8.
+  ///
+  /// In en, this message translates to:
+  /// **'New password must be at least 8 characters.'**
+  String get validationPasswordMin8;
+
+  /// No description provided for @validationPasswordComplexity.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must meet complexity requirements.'**
+  String get validationPasswordComplexity;
+
+  /// No description provided for @validationPasswordUnchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t made any changes.'**
+  String get validationPasswordUnchanged;
+
+  /// No description provided for @validationPasswordRules.
+  ///
+  /// In en, this message translates to:
+  /// **'The password must be at least 8 characters long, including an uppercase letter, a lowercase letter, a number, and a special character.'**
+  String get validationPasswordRules;
+
+  /// No description provided for @validationElementIdRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Element ID cannot be null.'**
+  String get validationElementIdRequired;
+
+  /// No description provided for @validationRatingRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating is required.'**
+  String get validationRatingRequired;
+
+  /// No description provided for @validationRatingMin1.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating must be at least 1.'**
+  String get validationRatingMin1;
+
+  /// No description provided for @validationRatingMax5.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating must be 5 or less.'**
+  String get validationRatingMax5;
+
+  /// No description provided for @validationReviewMax2000.
+  ///
+  /// In en, this message translates to:
+  /// **'Review cannot exceed 2000 characters.'**
+  String get validationReviewMax2000;
+
+  /// No description provided for @validationTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title is required.'**
+  String get validationTitleRequired;
+
+  /// No description provided for @validationDescRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Description is required.'**
+  String get validationDescRequired;
+
+  /// No description provided for @validationTypeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Type is required.'**
+  String get validationTypeRequired;
+
+  /// No description provided for @validationGenresRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Genres are required.'**
+  String get validationGenresRequired;
+
+  /// No description provided for @validationGoogleTokenRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Google token cannot be empty.'**
+  String get validationGoogleTokenRequired;
+
+  /// No description provided for @validationModStatusRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderator status must be specified.'**
+  String get validationModStatusRequired;
+
+  /// No description provided for @validationAdminStatusRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin status must be specified.'**
+  String get validationAdminStatusRequired;
+
+  /// No description provided for @validationSeasonMin1.
+  ///
+  /// In en, this message translates to:
+  /// **'Season must be at least 1.'**
+  String get validationSeasonMin1;
+
+  /// No description provided for @validationUnitMin0.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit must be at least 0.'**
+  String get validationUnitMin0;
+
+  /// No description provided for @validationChapterMin0.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter must be at least 0.'**
+  String get validationChapterMin0;
+
+  /// No description provided for @validationPageMin0.
+  ///
+  /// In en, this message translates to:
+  /// **'Page must be at least 0.'**
+  String get validationPageMin0;
+
+  /// No description provided for @validationTypeNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Type name is required.'**
+  String get validationTypeNameRequired;
+
+  /// No description provided for @validationTypeNameMax50.
+  ///
+  /// In en, this message translates to:
+  /// **'Type name must be 50 characters or less.'**
+  String get validationTypeNameMax50;
+
+  /// No description provided for @validationGenreNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre name is required.'**
+  String get validationGenreNameRequired;
+
+  /// No description provided for @validationGenreNameMax50.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre name must be 50 characters or less.'**
+  String get validationGenreNameMax50;
+
+  /// No description provided for @validationTitleMax255.
+  ///
+  /// In en, this message translates to:
+  /// **'Title must be 255 characters or less.'**
+  String get validationTitleMax255;
+
+  /// No description provided for @validationDescMax5000.
+  ///
+  /// In en, this message translates to:
+  /// **'Description must be 5000 characters or less.'**
+  String get validationDescMax5000;
+
+  /// No description provided for @validationEpisodesStringMax255.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes string is too long.'**
+  String get validationEpisodesStringMax255;
+
+  /// No description provided for @validationUnitsMin1.
+  ///
+  /// In en, this message translates to:
+  /// **'Total units must be at least 1.'**
+  String get validationUnitsMin1;
+
+  /// No description provided for @validationChaptersMin1.
+  ///
+  /// In en, this message translates to:
+  /// **'Total chapters must be at least 1.'**
+  String get validationChaptersMin1;
+
+  /// No description provided for @validationPagesMin1.
+  ///
+  /// In en, this message translates to:
+  /// **'Total pages must be at least 1.'**
+  String get validationPagesMin1;
+
+  /// No description provided for @validationCommentMax500.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment must be 500 characters or less.'**
+  String get validationCommentMax500;
+
+  /// No description provided for @errorEmailAlreadyRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is already registered.'**
+  String get errorEmailAlreadyRegistered;
+
+  /// No description provided for @errorUsernameAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Username already exists.'**
+  String get errorUsernameAlreadyExists;
+
+  /// No description provided for @errorPasswordIncorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password.'**
+  String get errorPasswordIncorrect;
+
+  /// No description provided for @errorAlreadyReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'You have already reviewed this item.'**
+  String get errorAlreadyReviewed;
+
+  /// No description provided for @errorInvalidRatingRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating must be between 1 and 5.'**
+  String get errorInvalidRatingRange;
+
+  /// No description provided for @errorProposalAlreadyHandled.
+  ///
+  /// In en, this message translates to:
+  /// **'This proposal has already been handled.'**
+  String get errorProposalAlreadyHandled;
+
+  /// No description provided for @errorTypeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Type cannot be empty.'**
+  String get errorTypeEmpty;
+
+  /// No description provided for @errorGenresEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Genres cannot be empty.'**
+  String get errorGenresEmpty;
+
+  /// No description provided for @errorGenreInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one valid genre must be provided.'**
+  String get errorGenreInvalid;
+
+  /// No description provided for @errorFileEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'File is empty.'**
+  String get errorFileEmpty;
+
+  /// No description provided for @errorAlreadyInCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'This item is already in your catalog.'**
+  String get errorAlreadyInCatalog;
+
+  /// No description provided for @errorValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Validation error.'**
+  String get errorValidation;
+
+  /// No description provided for @errorIllegalArgument.
+  ///
+  /// In en, this message translates to:
+  /// **'Illegal argument.'**
+  String get errorIllegalArgument;
+
+  /// No description provided for @errorInternalServerError.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred. Please try again later.'**
+  String get errorInternalServerError;
+
+  /// No description provided for @errorAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have permission to access this resource.'**
+  String get errorAccessDenied;
+
+  /// No description provided for @errorTokenExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired. Please log in again.'**
+  String get errorTokenExpired;
+
+  /// No description provided for @errorTokenInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid token. Please log in again.'**
+  String get errorTokenInvalid;
+
+  /// No description provided for @errorInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect email or password.'**
+  String get errorInvalidCredentials;
 
   /// No description provided for @errorGoogleTokenInvalid.
   ///
-  /// In es, this message translates to:
-  /// **'Token de Google inválido.'**
+  /// In en, this message translates to:
+  /// **'Invalid Google Token.'**
   String get errorGoogleTokenInvalid;
 
   /// No description provided for @errorGoogleTokenError.
   ///
-  /// In es, this message translates to:
-  /// **'Error al verificar el token de Google.'**
+  /// In en, this message translates to:
+  /// **'Error verifying Google Token.'**
   String get errorGoogleTokenError;
 
   /// No description provided for @errorRefreshTokenRequired.
   ///
-  /// In es, this message translates to:
-  /// **'Se requiere un token de refresco.'**
+  /// In en, this message translates to:
+  /// **'Refresh token is required.'**
   String get errorRefreshTokenRequired;
 
   /// No description provided for @errorRefreshTokenNotFound.
   ///
-  /// In es, this message translates to:
-  /// **'Token de refresco no encontrado.'**
+  /// In en, this message translates to:
+  /// **'Refresh token not found.'**
   String get errorRefreshTokenNotFound;
 
   /// No description provided for @errorRefreshTokenExpired.
   ///
-  /// In es, this message translates to:
-  /// **'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.'**
+  /// In en, this message translates to:
+  /// **'Your session has expired. Please log in again.'**
   String get errorRefreshTokenExpired;
 
   /// No description provided for @errorProposalNotFound.
   ///
-  /// In es, this message translates to:
-  /// **'Propuesta no encontrada.'**
+  /// In en, this message translates to:
+  /// **'Proposal not found.'**
   String get errorProposalNotFound;
 
   /// No description provided for @errorNotInCatalog.
   ///
-  /// In es, this message translates to:
-  /// **'Este elemento no está en tu catálogo.'**
+  /// In en, this message translates to:
+  /// **'This item is not in your catalog.'**
   String get errorNotInCatalog;
 
-  /// Error de validación: El valor mínimo de temporada es 1.
+  /// No description provided for @errorReviewerNotFound.
   ///
-  /// In es, this message translates to:
-  /// **'La temporada debe ser al menos 1.'**
-  String get validationSeasonMin1;
-
-  /// Error de validación: El valor mínimo de unidad es 0.
-  ///
-  /// In es, this message translates to:
-  /// **'La unidad debe ser al menos 0.'**
-  String get validationUnitMin0;
-
-  /// Error de validación: El valor mínimo de capítulo es 0.
-  ///
-  /// In es, this message translates to:
-  /// **'El capítulo debe ser al menos 0.'**
-  String get validationChapterMin0;
-
-  /// Error de validación: El valor mínimo de página es 0.
-  ///
-  /// In es, this message translates to:
-  /// **'La página debe ser al menos 0.'**
-  String get validationPageMin0;
-
-  /// Error de validación: El nombre del tipo no puede estar vacío.
-  ///
-  /// In es, this message translates to:
-  /// **'El nombre del tipo es obligatorio.'**
-  String get validationTypeNameRequired;
-
-  /// Error de validación: El nombre del tipo excede los 50 caracteres.
-  ///
-  /// In es, this message translates to:
-  /// **'El nombre del tipo debe tener 50 caracteres o menos.'**
-  String get validationTypeNameMax50;
-
-  /// Error de validación: El nombre del género no puede estar vacío.
-  ///
-  /// In es, this message translates to:
-  /// **'El nombre del género es obligatorio.'**
-  String get validationGenreNameRequired;
-
-  /// Error de validación: El nombre del género excede los 50 caracteres.
-  ///
-  /// In es, this message translates to:
-  /// **'El nombre del género debe tener 50 caracteres o menos.'**
-  String get validationGenreNameMax50;
-
-  /// Error de validación: El título excede los 255 caracteres.
-  ///
-  /// In es, this message translates to:
-  /// **'El título debe tener 255 caracteres o menos.'**
-  String get validationTitleMax255;
-
-  /// Error de validación: La descripción excede los 5000 caracteres.
-  ///
-  /// In es, this message translates to:
-  /// **'La descripción debe tener 5000 caracteres o menos.'**
-  String get validationDescMax5000;
-
-  /// Error de validación: La cadena de episodios excede los 255 caracteres.
-  ///
-  /// In es, this message translates to:
-  /// **'La cadena de episodios es demasiado larga.'**
-  String get validationEpisodesStringMax255;
-
-  /// Error de validación: El total mínimo de unidades es 1.
-  ///
-  /// In es, this message translates to:
-  /// **'El total de unidades debe ser al menos 1.'**
-  String get validationUnitsMin1;
-
-  /// Error de validación: El total mínimo de capítulos es 1.
-  ///
-  /// In es, this message translates to:
-  /// **'El total de capítulos debe ser al menos 1.'**
-  String get validationChaptersMin1;
-
-  /// Error de validación: El total mínimo de páginas es 1.
-  ///
-  /// In es, this message translates to:
-  /// **'El total de páginas debe ser al menos 1.'**
-  String get validationPagesMin1;
-
-  /// Error de validación: El comentario excede los 500 caracteres.
-  ///
-  /// In es, this message translates to:
-  /// **'El comentario debe tener 500 caracteres o menos.'**
-  String get validationCommentMax500;
-
-  /// Error: Revisor no encontrado.
-  ///
-  /// In es, this message translates to:
-  /// **'Revisor no encontrado.'**
+  /// In en, this message translates to:
+  /// **'Reviewer not found.'**
   String get errorReviewerNotFound;
 
-  /// Error: No se pudo guardar el archivo.
+  /// No description provided for @errorFileSave.
   ///
-  /// In es, this message translates to:
-  /// **'Error al guardar el archivo.'**
+  /// In en, this message translates to:
+  /// **'Error saving file.'**
   String get errorFileSave;
 
-  /// Error: Usuario no encontrado en el sistema.
+  /// No description provided for @errorUserNotFound.
   ///
-  /// In es, this message translates to:
-  /// **'Usuario no encontrado.'**
+  /// In en, this message translates to:
+  /// **'User not found.'**
   String get errorUserNotFound;
 
-  /// Título para el diálogo de reglas de contraseña.
+  /// No description provided for @errorUnexpected.
   ///
-  /// In es, this message translates to:
-  /// **'Reglas de Contraseña'**
-  String get passwordRulesTitle;
+  /// In en, this message translates to:
+  /// **'Unexpected error: {error}'**
+  String errorUnexpected(String error);
 
-  /// Contenido para el diálogo de reglas de contraseña.
+  /// No description provided for @errorLoadingFilters.
   ///
-  /// In es, this message translates to:
-  /// **'\n• Mínimo 8 caracteres\n• Al menos 1 mayúscula\n• Al menos 1 minúscula\n• Al menos 1 número\n• Al menos 1 carácter especial (@\$!%*?&)\n'**
-  String get passwordRulesContent;
+  /// In en, this message translates to:
+  /// **'Error loading filters: {error}'**
+  String errorLoadingFilters(String error);
 
-  /// Etiqueta para el botón de cerrar en diálogos.
+  /// No description provided for @errorLoadingElement.
   ///
-  /// In es, this message translates to:
-  /// **'Cerrar'**
-  String get dialogCloseButton;
+  /// In en, this message translates to:
+  /// **'Error loading element:\n{error}'**
+  String errorLoadingElement(String error);
 
-  /// Mensaje de validación para la complejidad de la contraseña.
+  /// No description provided for @errorLoadingElements.
   ///
-  /// In es, this message translates to:
-  /// **'La contraseña debe cumplir con los requisitos de complejidad.'**
-  String get validationPasswordComplexity;
+  /// In en, this message translates to:
+  /// **'Error loading elements: {error}'**
+  String errorLoadingElements(String error);
 
-  /// Mensaje mostrado cuando el usuario intenta guardar la misma contraseña que la actual
+  /// No description provided for @errorLoadingReviews.
   ///
-  /// In es, this message translates to:
-  /// **'No has realizado ningún cambio.'**
-  String get validationPasswordUnchanged;
+  /// In en, this message translates to:
+  /// **'Error loading reviews: {error}'**
+  String errorLoadingReviews(String error);
 
-  /// Mensaje mostrado después de un registro exitoso e inicio de sesión automático
+  /// No description provided for @errorLoadingProposals.
   ///
-  /// In es, this message translates to:
-  /// **'¡Registro exitoso! Ahora has iniciado sesión automáticamente.'**
-  String get registrationSuccessAutoLogin;
+  /// In en, this message translates to:
+  /// **'Error loading:\n{error}'**
+  String errorLoadingProposals(String error);
 
-  /// Reglas de validación para contraseñas
+  /// No description provided for @errorLoadingUsers.
   ///
-  /// In es, this message translates to:
-  /// **'La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.'**
-  String get validationPasswordRules;
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String errorLoadingUsers(String error);
+
+  /// No description provided for @errorLoadingCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String errorLoadingCatalog(String error);
+
+  /// No description provided for @errorImagePick.
+  ///
+  /// In en, this message translates to:
+  /// **'Error selecting image: {error}'**
+  String errorImagePick(String error);
+
+  /// No description provided for @errorImageUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Error uploading image: {error}'**
+  String errorImageUpload(String error);
+
+  /// No description provided for @errorSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving: {error}'**
+  String errorSaving(String error);
+
+  /// No description provided for @errorUpdating.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating: {error}'**
+  String errorUpdating(String error);
+
+  /// No description provided for @errorApproving.
+  ///
+  /// In en, this message translates to:
+  /// **'Error approving: {error}'**
+  String errorApproving(String error);
+
+  /// No description provided for @errorUpdatingRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating roles: {error}'**
+  String errorUpdatingRoles(String error);
 
   /// No description provided for @typeAnime.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Anime'**
   String get typeAnime;
 
   /// No description provided for @typeMovie.
   ///
-  /// In es, this message translates to:
-  /// **'Película'**
+  /// In en, this message translates to:
+  /// **'Movie'**
   String get typeMovie;
 
   /// No description provided for @typeVideoGame.
   ///
-  /// In es, this message translates to:
-  /// **'Videojuego'**
+  /// In en, this message translates to:
+  /// **'Video Game'**
   String get typeVideoGame;
 
   /// No description provided for @typeManga.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Manga'**
   String get typeManga;
 
   /// No description provided for @typeManhwa.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Manhwa'**
   String get typeManhwa;
 
   /// No description provided for @typeBook.
   ///
-  /// In es, this message translates to:
-  /// **'Libro'**
+  /// In en, this message translates to:
+  /// **'Book'**
   String get typeBook;
 
   /// No description provided for @typeSeries.
   ///
-  /// In es, this message translates to:
-  /// **'Serie'**
+  /// In en, this message translates to:
+  /// **'Series'**
   String get typeSeries;
 
   /// No description provided for @genreAction.
   ///
-  /// In es, this message translates to:
-  /// **'Acción'**
+  /// In en, this message translates to:
+  /// **'Action'**
   String get genreAction;
 
   /// No description provided for @genreAdventure.
   ///
-  /// In es, this message translates to:
-  /// **'Aventura'**
+  /// In en, this message translates to:
+  /// **'Adventure'**
   String get genreAdventure;
 
   /// No description provided for @genreComedy.
   ///
-  /// In es, this message translates to:
-  /// **'Comedia'**
+  /// In en, this message translates to:
+  /// **'Comedy'**
   String get genreComedy;
 
   /// No description provided for @genreDrama.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Drama'**
   String get genreDrama;
 
   /// No description provided for @genreFantasy.
   ///
-  /// In es, this message translates to:
-  /// **'Fantasía'**
+  /// In en, this message translates to:
+  /// **'Fantasy'**
   String get genreFantasy;
 
   /// No description provided for @genreHorror.
   ///
-  /// In es, this message translates to:
-  /// **'Terror'**
+  /// In en, this message translates to:
+  /// **'Horror'**
   String get genreHorror;
 
   /// No description provided for @genreMystery.
   ///
-  /// In es, this message translates to:
-  /// **'Misterio'**
+  /// In en, this message translates to:
+  /// **'Mystery'**
   String get genreMystery;
 
   /// No description provided for @genreRomance.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Romance'**
   String get genreRomance;
 
   /// No description provided for @genreSciFi.
   ///
-  /// In es, this message translates to:
-  /// **'Ciencia Ficción'**
+  /// In en, this message translates to:
+  /// **'Sci-Fi'**
   String get genreSciFi;
 
   /// No description provided for @genreSliceOfLife.
   ///
-  /// In es, this message translates to:
-  /// **'Recuentos de la vida'**
+  /// In en, this message translates to:
+  /// **'Slice of Life'**
   String get genreSliceOfLife;
 
   /// No description provided for @genrePsychological.
   ///
-  /// In es, this message translates to:
-  /// **'Psicológico'**
+  /// In en, this message translates to:
+  /// **'Psychological'**
   String get genrePsychological;
 
   /// No description provided for @genreThriller.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Thriller'**
   String get genreThriller;
 
   /// No description provided for @genreHistorical.
   ///
-  /// In es, this message translates to:
-  /// **'Histórico'**
+  /// In en, this message translates to:
+  /// **'Historical'**
   String get genreHistorical;
 
   /// No description provided for @genreCrime.
   ///
-  /// In es, this message translates to:
-  /// **'Crimen'**
+  /// In en, this message translates to:
+  /// **'Crime'**
   String get genreCrime;
 
   /// No description provided for @genreFamily.
   ///
-  /// In es, this message translates to:
-  /// **'Familia'**
+  /// In en, this message translates to:
+  /// **'Family'**
   String get genreFamily;
 
   /// No description provided for @genreWar.
   ///
-  /// In es, this message translates to:
-  /// **'Guerra'**
+  /// In en, this message translates to:
+  /// **'War'**
   String get genreWar;
 
   /// No description provided for @genreCyberpunk.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Cyberpunk'**
   String get genreCyberpunk;
 
   /// No description provided for @genrePostApocalyptic.
   ///
-  /// In es, this message translates to:
-  /// **'Post-apocalíptico'**
+  /// In en, this message translates to:
+  /// **'Post-Apocalyptic'**
   String get genrePostApocalyptic;
 
   /// No description provided for @genreShonen.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Shonen'**
   String get genreShonen;
 
   /// No description provided for @genreShojo.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Shojo'**
   String get genreShojo;
 
   /// No description provided for @genreSeinen.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Seinen'**
   String get genreSeinen;
 
   /// No description provided for @genreJosei.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Josei'**
   String get genreJosei;
 
   /// No description provided for @genreIsekai.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Isekai'**
   String get genreIsekai;
 
   /// No description provided for @genreMecha.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Mecha'**
   String get genreMecha;
 
   /// No description provided for @genreHarem.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Harem'**
   String get genreHarem;
 
   /// No description provided for @genreEcchi.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Ecchi'**
   String get genreEcchi;
 
   /// No description provided for @genreYaoi.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Yaoi'**
   String get genreYaoi;
 
   /// No description provided for @genreYuri.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Yuri'**
   String get genreYuri;
 
   /// No description provided for @genreMartialArts.
   ///
-  /// In es, this message translates to:
-  /// **'Artes Marciales'**
+  /// In en, this message translates to:
+  /// **'Martial Arts'**
   String get genreMartialArts;
 
   /// No description provided for @genreSchool.
   ///
-  /// In es, this message translates to:
-  /// **'Escolar'**
+  /// In en, this message translates to:
+  /// **'School'**
   String get genreSchool;
 
   /// No description provided for @genreRPG.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'RPG'**
   String get genreRPG;
 
   /// No description provided for @genreShooter.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Shooter'**
   String get genreShooter;
 
   /// No description provided for @genrePlatformer.
   ///
-  /// In es, this message translates to:
-  /// **'Plataformas'**
+  /// In en, this message translates to:
+  /// **'Platformer'**
   String get genrePlatformer;
 
   /// No description provided for @genreStrategy.
   ///
-  /// In es, this message translates to:
-  /// **'Estrategia'**
+  /// In en, this message translates to:
+  /// **'Strategy'**
   String get genreStrategy;
 
   /// No description provided for @genrePuzzle.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Puzzle'**
   String get genrePuzzle;
 
   /// No description provided for @genreFighting.
   ///
-  /// In es, this message translates to:
-  /// **'Lucha'**
+  /// In en, this message translates to:
+  /// **'Fighting'**
   String get genreFighting;
 
   /// No description provided for @genreSports.
   ///
-  /// In es, this message translates to:
-  /// **'Deportes'**
+  /// In en, this message translates to:
+  /// **'Sports'**
   String get genreSports;
 
   /// No description provided for @genreRacing.
   ///
-  /// In es, this message translates to:
-  /// **'Carreras'**
+  /// In en, this message translates to:
+  /// **'Racing'**
   String get genreRacing;
 
   /// No description provided for @genreOpenWorld.
   ///
-  /// In es, this message translates to:
-  /// **'Mundo Abierto'**
+  /// In en, this message translates to:
+  /// **'Open World'**
   String get genreOpenWorld;
 
   /// No description provided for @genreRoguelike.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Roguelike'**
   String get genreRoguelike;
 
   /// No description provided for @genreMOBA.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'MOBA'**
   String get genreMOBA;
 
   /// No description provided for @genreBattleRoyale.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Battle Royale'**
   String get genreBattleRoyale;
 
   /// No description provided for @genreSimulator.
   ///
-  /// In es, this message translates to:
-  /// **'Simulador'**
+  /// In en, this message translates to:
+  /// **'Simulator'**
   String get genreSimulator;
 
   /// No description provided for @genreSurvivalHorror.
   ///
-  /// In es, this message translates to:
-  /// **'Terror de supervivencia'**
+  /// In en, this message translates to:
+  /// **'Survival Horror'**
   String get genreSurvivalHorror;
 
   /// No description provided for @genreBiography.
   ///
-  /// In es, this message translates to:
-  /// **'Biografía'**
+  /// In en, this message translates to:
+  /// **'Biography'**
   String get genreBiography;
 
   /// No description provided for @genreEssay.
   ///
-  /// In es, this message translates to:
-  /// **'Ensayo'**
+  /// In en, this message translates to:
+  /// **'Essay'**
   String get genreEssay;
 
   /// No description provided for @genrePoetry.
   ///
-  /// In es, this message translates to:
-  /// **'Poesía'**
+  /// In en, this message translates to:
+  /// **'Poetry'**
   String get genrePoetry;
 
   /// No description provided for @genreSelfHelp.
   ///
-  /// In es, this message translates to:
-  /// **'Autoayuda'**
+  /// In en, this message translates to:
+  /// **'Self-Help'**
   String get genreSelfHelp;
 
   /// No description provided for @genreBusiness.
   ///
-  /// In es, this message translates to:
-  /// **'Negocios'**
+  /// In en, this message translates to:
+  /// **'Business'**
   String get genreBusiness;
 
   /// No description provided for @genreNoir.
   ///
-  /// In es, this message translates to:
-  /// **'Novela Negra'**
+  /// In en, this message translates to:
+  /// **'Noir'**
   String get genreNoir;
 
   /// No description provided for @genreMagicalRealism.
   ///
-  /// In es, this message translates to:
-  /// **'Realismo Mágico'**
+  /// In en, this message translates to:
+  /// **'Magical Realism'**
   String get genreMagicalRealism;
-
-  /// No description provided for @passwordRuleLength.
-  ///
-  /// In es, this message translates to:
-  /// **'Al menos 8 caracteres'**
-  String get passwordRuleLength;
-
-  /// No description provided for @passwordRuleUppercase.
-  ///
-  /// In es, this message translates to:
-  /// **'Al menos una mayúscula'**
-  String get passwordRuleUppercase;
-
-  /// No description provided for @passwordRuleLowercase.
-  ///
-  /// In es, this message translates to:
-  /// **'Al menos una minúscula'**
-  String get passwordRuleLowercase;
-
-  /// No description provided for @passwordRuleNumber.
-  ///
-  /// In es, this message translates to:
-  /// **'Al menos un número'**
-  String get passwordRuleNumber;
-
-  /// No description provided for @passwordRuleSpecial.
-  ///
-  /// In es, this message translates to:
-  /// **'Al menos un carácter especial (@\$!%*?&)'**
-  String get passwordRuleSpecial;
-
-  /// Etiqueta para el campo de entrada de episodios totales.
-  ///
-  /// In es, this message translates to:
-  /// **'Total de Episodios'**
-  String get totalEpisodes;
-
-  /// Etiqueta para el campo de entrada de duración.
-  ///
-  /// In es, this message translates to:
-  /// **'Duración'**
-  String get duration;
-
-  /// Etiqueta para el campo de entrada de capítulos totales.
-  ///
-  /// In es, this message translates to:
-  /// **'Total de Capítulos'**
-  String get totalChapters;
-
-  /// Etiqueta para el campo de entrada de páginas totales.
-  ///
-  /// In es, this message translates to:
-  /// **'Total de Páginas'**
-  String get totalPages;
-
-  /// Etiqueta para el campo de entrada de episodios por temporada.
-  ///
-  /// In es, this message translates to:
-  /// **'Episodios por Temporada'**
-  String get episodesPerSeason;
-
-  /// Mensaje mostrado cuando un elemento se añade a favoritos
-  ///
-  /// In es, this message translates to:
-  /// **'Añadido a favoritos'**
-  String get snackbarFavoritoAdded;
-
-  /// Mensaje mostrado cuando un elemento se elimina de favoritos
-  ///
-  /// In es, this message translates to:
-  /// **'Eliminado de favoritos'**
-  String get snackbarFavoritoRemoved;
 }
 
 class _AppLocalizationsDelegate

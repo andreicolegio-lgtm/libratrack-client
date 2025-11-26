@@ -14,7 +14,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _widgetOptions = <Widget>[
+  // Usamos IndexedStack, así que instanciamos las pantallas una sola vez.
+  // Esto preserva el estado (scroll, búsquedas) al cambiar de pestaña.
+  static const List<Widget> _pages = <Widget>[
     CatalogScreen(),
     SearchScreen(),
     ProfileScreen(),
@@ -27,37 +29,35 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    debugPrint('[HomeScreen] Loaded with _selectedIndex=$_selectedIndex');
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final AppLocalizations l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
+      // IndexedStack mantiene vivas las pantallas inactivas en el árbol de widgets
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.book),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: _onItemTapped,
+        destinations: <NavigationDestination>[
+          NavigationDestination(
+            icon: const Icon(Icons.collections_bookmark_outlined),
+            selectedIcon: const Icon(Icons.collections_bookmark),
             label: l10n.bottomNavCatalog,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.search),
+          NavigationDestination(
+            icon: const Icon(Icons.search_outlined),
+            selectedIcon: const Icon(Icons.search),
             label: l10n.bottomNavSearch,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person),
+          NavigationDestination(
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
             label: l10n.bottomNavProfile,
           ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue[300],
-        onTap: _onItemTapped,
       ),
     );
   }

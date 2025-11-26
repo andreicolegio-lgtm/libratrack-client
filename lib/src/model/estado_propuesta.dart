@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import '../core/l10n/app_localizations.dart';
 
+/// Estado de una solicitud de contenido en el panel de moderación.
 enum EstadoPropuesta {
   pendiente('PENDIENTE'),
   aprobado('APROBADO'),
   rechazado('RECHAZADO');
 
-  const EstadoPropuesta(this.apiValue);
   final String apiValue;
+  const EstadoPropuesta(this.apiValue);
+
+  static EstadoPropuesta fromString(String value) {
+    return EstadoPropuesta.values.firstWhere(
+      (e) => e.apiValue == value,
+      orElse: () => EstadoPropuesta.pendiente,
+    );
+  }
 
   String displayName(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    if (l10n == null) {
-      return apiValue;
-    }
 
     switch (this) {
       case EstadoPropuesta.pendiente:
@@ -25,8 +30,14 @@ enum EstadoPropuesta {
     }
   }
 
-  static EstadoPropuesta fromString(String apiValue) {
-    return EstadoPropuesta.values.firstWhere((e) => e.apiValue == apiValue,
-        orElse: () => EstadoPropuesta.pendiente);
+  Color get color {
+    switch (this) {
+      case EstadoPropuesta.pendiente:
+        return Colors.orange;
+      case EstadoPropuesta.aprobado:
+        return Colors.green;
+      case EstadoPropuesta.rechazado:
+        return Colors.red;
+    }
   }
 }

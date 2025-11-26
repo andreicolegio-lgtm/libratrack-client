@@ -1,26 +1,33 @@
 import 'package:flutter/material.dart';
 import '../core/l10n/app_localizations.dart';
-
 import 'elemento_relacion.dart';
 
+/// Representa un contenido audiovisual o literario en la aplicación.
+/// Coincide con el `ElementoResponseDTO` del backend.
 class Elemento {
   final int id;
   final String titulo;
   final String descripcion;
   final String? urlImagen;
-  final String tipo;
-  final String estadoContenido;
+  final String? fechaLanzamiento; // Formato YYYY-MM-DD
+  final String tipo; // Nombre del tipo (ej. Anime, Libro)
+  final String estadoContenido; // OFICIAL o COMUNITARIO
+  final String? estadoPublicacion; // EN_EMISION, FINALIZADO...
   final String creadorUsername;
   final List<String> generos;
+
+  // Detalles específicos
   final String? episodiosPorTemporada;
   final int? totalUnidades;
   final int? totalCapitulosLibro;
   final int? totalPaginasLibro;
-  final List<ElementoRelacion> precuelas;
-  final List<ElementoRelacion> secuelas;
   final String? duracion;
 
-  Elemento({
+  // Relaciones
+  final List<ElementoRelacion> precuelas;
+  final List<ElementoRelacion> secuelas;
+
+  const Elemento({
     required this.id,
     required this.titulo,
     required this.descripcion,
@@ -31,6 +38,8 @@ class Elemento {
     required this.precuelas,
     required this.secuelas,
     this.urlImagen,
+    this.fechaLanzamiento,
+    this.estadoPublicacion,
     this.episodiosPorTemporada,
     this.totalUnidades,
     this.totalCapitulosLibro,
@@ -39,44 +48,40 @@ class Elemento {
   });
 
   factory Elemento.fromJson(Map<String, dynamic> json) {
-    var generosList =
-        (json['generos'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-            <String>[];
-
-    var precuelasList = (json['precuelas'] as List<dynamic>?)
-            ?.map((e) => ElementoRelacion.fromJson(e))
-            .toList() ??
-        <ElementoRelacion>[];
-
-    var secuelasList = (json['secuelas'] as List<dynamic>?)
-            ?.map((e) => ElementoRelacion.fromJson(e))
-            .toList() ??
-        <ElementoRelacion>[];
-
     return Elemento(
-      id: json['id'],
-      titulo: json['titulo'],
-      descripcion: json['descripcion'],
-      urlImagen: json['urlImagen'],
-      tipo: json['tipoNombre'],
-      estadoContenido: json['estadoContenido'] ?? '',
-      creadorUsername: json['creadorUsername'],
-      generos: generosList,
-      episodiosPorTemporada: json['episodiosPorTemporada'],
-      totalUnidades: json['totalUnidades'],
-      totalCapitulosLibro: json['totalCapitulosLibro'],
-      totalPaginasLibro: json['totalPaginasLibro'],
-      precuelas: precuelasList,
-      secuelas: secuelasList,
+      id: json['id'] as int,
+      titulo: json['titulo'] as String,
+      descripcion: json['descripcion'] as String,
+      urlImagen: json['urlImagen'] as String?,
+      fechaLanzamiento: json['fechaLanzamiento'] as String?,
+      tipo: json['tipoNombre'] as String? ?? 'Desconocido', // Fallback seguro
+      estadoContenido: json['estadoContenido'] as String? ?? 'COMUNITARIO',
+      estadoPublicacion: json['estadoPublicacion'] as String?,
+      creadorUsername: json['creadorUsername'] as String? ?? 'Anónimo',
+      generos: (json['generos'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      episodiosPorTemporada: json['episodiosPorTemporada'] as String?,
+      totalUnidades: json['totalUnidades'] as int?,
+      totalCapitulosLibro: json['totalCapitulosLibro'] as int?,
+      totalPaginasLibro: json['totalPaginasLibro'] as int?,
       duracion: json['duracion'] as String?,
+      precuelas: (json['precuelas'] as List<dynamic>?)
+              ?.map((e) => ElementoRelacion.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      secuelas: (json['secuelas'] as List<dynamic>?)
+              ?.map((e) => ElementoRelacion.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
+  /// Devuelve el nombre localizado del estado del contenido.
+  /// Útil para mostrar "OFICIAL" o "COMUNITARIO" traducido en la UI.
   String estadoContenidoDisplay(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    if (l10n == null) {
-      return estadoContenido;
-    }
 
     if (estadoContenido == 'OFICIAL') {
       return l10n.contentStatusOfficial;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../model/resena.dart';
 import 'package:intl/intl.dart';
+import '../../../model/resena.dart';
 import '../../../core/l10n/app_localizations.dart';
 
 class ResenaCard extends StatelessWidget {
@@ -16,13 +16,15 @@ class ResenaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final String fechaFormateada =
         DateFormat('dd/MM/yyyy').format(resena.fechaCreacion);
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
-      color: Theme.of(context).colorScheme.surface,
+      color: theme.colorScheme.surfaceContainerLowest,
+      elevation: 1,
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -30,7 +32,7 @@ class ResenaCard extends StatelessWidget {
               children: <Widget>[
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   child: (resena.autorFotoPerfilUrl != null &&
                           resena.autorFotoPerfilUrl!.isNotEmpty)
                       ? ClipOval(
@@ -39,14 +41,16 @@ class ResenaCard extends StatelessWidget {
                             width: 40,
                             height: 40,
                             fit: BoxFit.cover,
-                            placeholder: (BuildContext context, String url) =>
-                                const CircularProgressIndicator(),
-                            errorWidget: (BuildContext context, String url,
-                                    Object error) =>
-                                const Icon(Icons.person, size: 20),
+                            placeholder: (context, url) =>
+                                const CircularProgressIndicator(strokeWidth: 2),
+                            errorWidget: (context, url, error) => Icon(
+                                Icons.person,
+                                size: 20,
+                                color: theme.colorScheme.onSurfaceVariant),
                           ),
                         )
-                      : const Icon(Icons.person, size: 20),
+                      : Icon(Icons.person,
+                          size: 20, color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -55,11 +59,13 @@ class ResenaCard extends StatelessWidget {
                     children: <Widget>[
                       Text(
                         l10n.reviewCardBy(resena.usernameAutor),
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         fechaFormateada,
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -67,24 +73,18 @@ class ResenaCard extends StatelessWidget {
                 _buildStarRating(resena.valoracion),
               ],
             ),
+            const SizedBox(height: 12),
             if (resena.textoResena != null && resena.textoResena!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 12.0),
-                child: Text(
-                  resena.textoResena!,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+              Text(
+                resena.textoResena!,
+                style: theme.textTheme.bodyMedium,
               )
             else
-              Padding(
-                padding: const EdgeInsets.only(top: 12.0),
-                child: Text(
-                  l10n.reviewCardNoText,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontStyle: FontStyle.italic),
-                ),
+              Text(
+                l10n.reviewCardNoText,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: theme.colorScheme.onSurfaceVariant),
               ),
           ],
         ),

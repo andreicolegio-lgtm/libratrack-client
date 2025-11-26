@@ -1,28 +1,33 @@
+/// Representa un ítem guardado en la biblioteca personal del usuario.
+/// Combina datos del progreso personal con datos resumen del elemento.
 class CatalogoEntrada {
   final int id;
-  final String estadoPersonal;
+  final String estadoPersonal; // PENDIENTE, EN_PROGRESO, etc.
   final DateTime agregadoEn;
+  final bool esFavorito;
 
+  // Progreso
   final int? temporadaActual;
   final int? unidadActual;
   final int? capituloActual;
   final int? paginaActual;
 
+  // Datos del Elemento (Flattened)
   final int elementoId;
   final String elementoTitulo;
   final String elementoTipoNombre;
   final String? elementoUrlImagen;
-
   final String? elementoEstadoPublicacion;
   final String? elementoEpisodiosPorTemporada;
+
+  // Totales del elemento para calcular barras de progreso
   final int? elementoTotalUnidades;
   final int? elementoTotalCapitulosLibro;
   final int? elementoTotalPaginasLibro;
 
   final int usuarioId;
-  final bool esFavorito;
 
-  CatalogoEntrada({
+  const CatalogoEntrada({
     required this.id,
     required this.estadoPersonal,
     required this.agregadoEn,
@@ -30,41 +35,53 @@ class CatalogoEntrada {
     required this.elementoTitulo,
     required this.elementoTipoNombre,
     required this.usuarioId,
+    this.esFavorito = false,
     this.temporadaActual,
     this.unidadActual,
     this.capituloActual,
     this.paginaActual,
+    this.elementoUrlImagen,
     this.elementoEstadoPublicacion,
     this.elementoEpisodiosPorTemporada,
     this.elementoTotalUnidades,
     this.elementoTotalCapitulosLibro,
     this.elementoTotalPaginasLibro,
-    this.elementoUrlImagen,
-    this.esFavorito = false,
   });
 
+  /// Crea una copia de esta instancia con los campos modificados.
   CatalogoEntrada copyWith({
+    int? id,
+    String? estadoPersonal,
+    DateTime? agregadoEn,
     bool? esFavorito,
+    int? temporadaActual,
+    int? unidadActual,
+    int? capituloActual,
+    int? paginaActual,
+    // Raramente cambiamos los datos del elemento en una actualización local,
+    // pero lo permitimos por flexibilidad.
   }) {
     return CatalogoEntrada(
-      id: id,
-      estadoPersonal: estadoPersonal,
-      agregadoEn: agregadoEn,
+      id: id ?? this.id,
+      estadoPersonal: estadoPersonal ?? this.estadoPersonal,
+      agregadoEn: agregadoEn ?? this.agregadoEn,
+      esFavorito: esFavorito ?? this.esFavorito,
+      temporadaActual: temporadaActual ?? this.temporadaActual,
+      unidadActual: unidadActual ?? this.unidadActual,
+      capituloActual: capituloActual ?? this.capituloActual,
+      paginaActual: paginaActual ?? this.paginaActual,
+
+      // Campos inmutables del elemento (se copian tal cual)
       elementoId: elementoId,
       elementoTitulo: elementoTitulo,
       elementoTipoNombre: elementoTipoNombre,
       usuarioId: usuarioId,
-      temporadaActual: temporadaActual,
-      unidadActual: unidadActual,
-      capituloActual: capituloActual,
-      paginaActual: paginaActual,
+      elementoUrlImagen: elementoUrlImagen,
       elementoEstadoPublicacion: elementoEstadoPublicacion,
       elementoEpisodiosPorTemporada: elementoEpisodiosPorTemporada,
       elementoTotalUnidades: elementoTotalUnidades,
       elementoTotalCapitulosLibro: elementoTotalCapitulosLibro,
       elementoTotalPaginasLibro: elementoTotalPaginasLibro,
-      elementoUrlImagen: elementoUrlImagen,
-      esFavorito: esFavorito ?? this.esFavorito,
     );
   }
 
@@ -73,6 +90,7 @@ class CatalogoEntrada {
       id: json['id'] as int,
       estadoPersonal: json['estadoPersonal'] as String,
       agregadoEn: DateTime.parse(json['agregadoEn'] as String),
+      esFavorito: json['esFavorito'] as bool? ?? false,
       temporadaActual: json['temporadaActual'] as int?,
       unidadActual: json['unidadActual'] as int?,
       capituloActual: json['capituloActual'] as int?,
@@ -88,7 +106,6 @@ class CatalogoEntrada {
       elementoTotalCapitulosLibro: json['elementoTotalCapitulosLibro'] as int?,
       elementoTotalPaginasLibro: json['elementoTotalPaginasLibro'] as int?,
       usuarioId: json['usuarioId'] as int,
-      esFavorito: (json['esFavorito'] as bool?) ?? false,
     );
   }
 }

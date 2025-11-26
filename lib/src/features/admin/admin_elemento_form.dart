@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
@@ -23,9 +22,7 @@ class AdminElementoFormScreen extends StatefulWidget {
 
   const AdminElementoFormScreen({super.key, this.elemento});
 
-  bool get isEditMode {
-    return elemento != null;
-  }
+  bool get isEditMode => elemento != null;
 
   @override
   State<AdminElementoFormScreen> createState() =>
@@ -38,12 +35,15 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   late final AdminService _adminService;
   late final ApiClient _apiClient;
   late final ElementoService _elementoService;
+  late final TipoService _tipoService;
 
   final ScrollController _scrollController = ScrollController();
 
   bool _isLoading = false;
   bool _isUploading = false;
+  bool _isDataLoaded = false;
 
+  // Controladores
   final TextEditingController _tituloController = TextEditingController();
   final TextEditingController _descripcionController = TextEditingController();
   final TextEditingController _generosController = TextEditingController();
@@ -60,25 +60,29 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   String? _tipoSeleccionado;
   List<Tipo> _tipos = [];
 
-  late Future<List<ElementoRelacion>> _elementosFuture;
-  List<ElementoRelacion> _allElementos = <ElementoRelacion>[];
-  final Set<int> _selectedSecuelaIds = <int>{};
+  // Relaciones (Secuelas/Precuelas)
+  List<ElementoRelacion> _allElementos = [];
+  final Set<int> _selectedSecuelaIds = {};
 
+  // Imagen
   XFile? _pickedImage;
   String? _uploadedImageUrl;
-
-  bool _isDataLoaded = false;
 
   @override
   void initState() {
     super.initState();
-
     _adminService = context.read<AdminService>();
     _apiClient = context.read<ApiClient>();
     _elementoService = context.read<ElementoService>();
+    _tipoService = context.read<TipoService>();
 
+    _initForm();
+  }
+
+  Future<void> _initForm() async {
+    // 1. Cargar datos iniciales si es edición
     if (widget.isEditMode) {
-      final Elemento e = widget.elemento!;
+      final e = widget.elemento!;
       _tituloController.text = e.titulo;
       _descripcionController.text = e.descripcion;
       _generosController.text = e.generos.join(', ');
@@ -87,47 +91,38 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       _totalCapitulosLibroController.text =
           e.totalCapitulosLibro?.toString() ?? '';
       _totalPaginasLibroController.text = e.totalPaginasLibro?.toString() ?? '';
-      _tipoSeleccionado = e.tipo; // Set the default type to the current type
+      _durationController.text = e.duracion ?? '';
+      _tipoSeleccionado = e.tipo;
       _uploadedImageUrl = e.urlImagen;
-
-      _selectedSecuelaIds.addAll(e.secuelas.map((ElementoRelacion s) => s.id));
+      _selectedSecuelaIds.addAll(e.secuelas.map((s) => s.id));
     }
 
-    _loadTipos().then((_) {
-      if (_tipoSeleccionado != null &&
-          !_tipos.any((tipo) => tipo.nombre == _tipoSeleccionado)) {
+    // 2. Cargar Tipos y Lista de Elementos (para secuelas)
+    try {
+      final results = await Future.wait([
+        _tipoService.fetchTipos('Error loading types'),
+        _elementoService.getSimpleList(),
+      ]);
+
+      if (mounted) {
         setState(() {
-          _tipoSeleccionado = null; // Reset if invalid
+          _tipos = results[0] as List<Tipo>;
+          _allElementos = results[1] as List<ElementoRelacion>;
+
+          // Validar que el tipo seleccionado exista
+          if (_tipoSeleccionado != null &&
+              !_tipos.any((t) => t.nombre == _tipoSeleccionado)) {
+            _tipoSeleccionado = null;
+          }
+          _isDataLoaded = true;
         });
       }
-    });
-  }
-
-  Future<void> _loadTipos() async {
-    final tipoService = context.read<TipoService>();
-    try {
-      final tipos = await tipoService.fetchTipos('Error loading types');
-      setState(() {
-        _tipos = tipos.toSet().toList(); // Ensure unique values
-      });
     } catch (e) {
-      // Handle error
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isDataLoaded) {
-      _elementosFuture = _elementoService.getSimpleElementoList();
-      _elementosFuture.then((List<ElementoRelacion> lista) {
-        if (mounted) {
-          setState(() {
-            _allElementos = lista;
-          });
-        }
-      });
-      _isDataLoaded = true;
+      debugPrint('Error inicializando formulario: $e');
+      // Podríamos mostrar un error aquí, pero el spinner se quedará cargando o la UI vacía
+      if (mounted) {
+        setState(() => _isDataLoaded = true);
+      }
     }
   }
 
@@ -145,15 +140,18 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     super.dispose();
   }
 
+  // --- Manejo de Imagen ---
+
   Future<void> _handlePickImage() async {
     final ImagePicker picker = ImagePicker();
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+
     try {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         setState(() {
           _pickedImage = image;
-          _uploadedImageUrl = null;
+          // No borramos _uploadedImageUrl todavía para mantener la preview anterior si falla la subida
         });
       }
     } catch (e) {
@@ -169,10 +167,10 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     if (_pickedImage == null) {
       return;
     }
-    setState(() {
-      _isUploading = true;
-    });
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+
+    setState(() => _isUploading = true);
+    final l10n = AppLocalizations.of(context);
+
     try {
       final dynamic data = await _apiClient.upload('uploads', _pickedImage!);
       final String url = data['url'];
@@ -180,74 +178,73 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       if (mounted) {
         setState(() {
           _uploadedImageUrl = url;
+          _pickedImage = null; // Limpiar selección local ya que se subió
           _isUploading = false;
         });
         SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadSuccess,
             isError: false);
       }
-    } on ApiException catch (e) {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-        SnackBarHelper.showTopSnackBar(
-            context, ErrorTranslator.translate(context, e.message),
-            isError: true);
-      }
     } catch (e) {
+      _handleError(e, l10n);
       if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-        SnackBarHelper.showTopSnackBar(
-            context, l10n.errorImageUpload(e.toString()),
-            isError: true);
+        setState(() => _isUploading = false);
       }
     }
   }
 
+  // --- Guardado ---
+
   Future<void> _handleGuardar() async {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    if (_uploadedImageUrl == null) {
+    if (_uploadedImageUrl == null && _pickedImage == null) {
       SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadRequired,
           isError: true);
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    // Si hay una imagen seleccionada pero no subida, avisar o subir automáticamente
+    if (_pickedImage != null) {
+      await _handleUploadImage();
+      if (_uploadedImageUrl == null) {
+        return; // Falló la subida
+      }
+    }
 
-    final NavigatorState navContext = Navigator.of(context);
+    setState(() => _isLoading = true);
+
+    if (!mounted) {
+      return; // Ensure the widget is still mounted
+    }
+    final navigator = Navigator.of(context);
 
     try {
-      final Map<String, dynamic> body = <String, dynamic>{
-        'titulo': _tituloController.text,
-        'descripcion': _descripcionController.text,
+      final Map<String, dynamic> body = {
+        'titulo': _tituloController.text.trim(),
+        'descripcion': _descripcionController.text.trim(),
         'tipoNombre': _tipoSeleccionado,
-        'generosNombres': _generosController.text,
+        'generosNombres': _generosController.text.trim(),
         'urlImagen': _uploadedImageUrl,
-        'episodiosPorTemporada': _episodiosPorTemporadaController.text.isEmpty
+        'episodiosPorTemporada':
+            _episodiosPorTemporadaController.text.trim().isEmpty
+                ? null
+                : _episodiosPorTemporadaController.text.trim(),
+        'totalUnidades': int.tryParse(_totalUnidadesController.text),
+        'totalCapitulosLibro':
+            int.tryParse(_totalCapitulosLibroController.text),
+        'totalPaginasLibro': int.tryParse(_totalPaginasLibroController.text),
+        'duracion': _durationController.text.trim().isEmpty
             ? null
-            : _episodiosPorTemporadaController.text,
-        'totalUnidades': _totalUnidadesController.text.isEmpty
-            ? null
-            : int.tryParse(_totalUnidadesController.text),
-        'totalCapitulosLibro': _totalCapitulosLibroController.text.isEmpty
-            ? null
-            : int.tryParse(_totalCapitulosLibroController.text),
-        'totalPaginasLibro': _totalPaginasLibroController.text.isEmpty
-            ? null
-            : int.tryParse(_totalPaginasLibroController.text),
+            : _durationController.text.trim(),
         'secuelaIds': _selectedSecuelaIds.toList(),
-        'duracion':
-            _durationController.text.isEmpty ? null : _durationController.text,
       };
-      body.removeWhere((String key, value) => value == null);
+
+      // Limpiar nulos
+      body.removeWhere((key, value) => value == null);
 
       if (widget.isEditMode) {
         await _adminService.updateElemento(widget.elemento!.id, body);
@@ -259,51 +256,53 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         return;
       }
 
-      final String successMessage = widget.isEditMode
+      final String msg = widget.isEditMode
           ? l10n.snackbarAdminElementUpdated
           : l10n.snackbarAdminElementCreated;
 
-      SnackBarHelper.showTopSnackBar(context, successMessage, isError: false);
-      navContext.pop(true);
-    } on ApiException catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        SnackBarHelper.showTopSnackBar(
-          context,
-          l10n.errorSaving(e.toString()),
-          isError: true,
-        );
-      }
+      SnackBarHelper.showTopSnackBar(context, msg, isError: false);
+      navigator.pop(true); // Retornar true para recargar lista
     } catch (e) {
+      _handleError(e, l10n);
+    } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        SnackBarHelper.showTopSnackBar(
-          context,
-          l10n.errorUnexpected(e.toString()),
-          isError: true,
-        );
+        setState(() => _isLoading = false);
       }
     }
   }
 
+  void _handleError(Object e, AppLocalizations l10n) {
+    if (!mounted) {
+      return;
+    }
+    String msg = l10n.errorUnexpected(e.toString());
+    if (e is ApiException) {
+      msg = ErrorTranslator.translate(context, e.message);
+    }
+    SnackBarHelper.showTopSnackBar(context, msg, isError: true);
+  }
+
+  // --- UI ---
+
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-    final String tituloPantalla =
+    final l10n = AppLocalizations.of(context);
+    final String title =
         widget.isEditMode ? l10n.adminFormEditTitle : l10n.adminFormCreateTitle;
-    final String botonGuardar = widget.isEditMode
+    final String btnText = widget.isEditMode
         ? l10n.adminFormEditButton
         : l10n.adminFormCreateButton;
 
+    if (!_isDataLoaded) {
+      return Scaffold(
+        appBar: AppBar(title: Text(title)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(tituloPantalla, style: Theme.of(context).textTheme.titleLarge),
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text(title),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -316,33 +315,28 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
               _buildImageUploader(l10n),
               const SizedBox(height: 24),
               _buildInputField(
-                context,
-                l10n: l10n,
                 controller: _tituloController,
-                labelText: l10n.adminFormTitleLabel,
-                validator: (String? value) => (value == null || value.isEmpty)
+                label: l10n.adminFormTitleLabel,
+                validator: (v) => (v == null || v.isEmpty)
                     ? l10n.validationTitleRequired
                     : null,
               ),
               const SizedBox(height: 16),
               _buildInputField(
-                context,
-                l10n: l10n,
                 controller: _descripcionController,
-                labelText: l10n.adminFormDescLabel,
+                label: l10n.adminFormDescLabel,
                 maxLines: 4,
-                validator: (String? value) => (value == null || value.isEmpty)
+                validator: (v) => (v == null || v.isEmpty)
                     ? l10n.validationDescRequired
                     : null,
               ),
               const SizedBox(height: 16),
-              _buildTipoField(context, l10n),
+              _buildTipoDropdown(l10n),
               const SizedBox(height: 16),
               _buildGenerosField(l10n),
               const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24.0),
-                child: Divider(),
-              ),
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Divider()),
               Text(l10n.adminFormProgressTitle,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
@@ -353,30 +347,26 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                 pagesController: _totalPaginasLibroController,
                 durationController: _durationController,
                 unitsController: _totalUnidadesController,
-                l10n: AppLocalizations.of(context)!,
+                l10n: l10n,
               ),
               const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24.0),
-                child: Divider(),
-              ),
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Divider()),
               _buildSecuelasSelector(l10n),
-              const SizedBox(height: 32.0),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-                onPressed: _isLoading || _isUploading ? null : _handleGuardar,
+              const SizedBox(height: 32),
+              FilledButton(
+                onPressed: (_isLoading || _isUploading) ? null : _handleGuardar,
+                style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16)),
                 child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                        botonGuardar,
-                        style:
-                            const TextStyle(fontSize: 18, color: Colors.white),
-                      ),
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : Text(btnText,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -386,263 +376,175 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   }
 
   Widget _buildImageUploader(AppLocalizations l10n) {
+    final theme = Theme.of(context);
     Widget content;
+
     if (_pickedImage != null) {
       content = Image.file(File(_pickedImage!.path), fit: BoxFit.cover);
     } else if (_uploadedImageUrl != null) {
       content = CachedNetworkImage(
         imageUrl: _uploadedImageUrl!,
         fit: BoxFit.cover,
-        placeholder: (BuildContext c, String u) =>
+        placeholder: (_, __) =>
             const Center(child: CircularProgressIndicator()),
-        errorWidget: (BuildContext c, String u, Object e) =>
-            Icon(Icons.image_not_supported, size: 48, color: Colors.grey[600]),
+        errorWidget: (_, __, ___) =>
+            const Icon(Icons.broken_image, size: 50, color: Colors.grey),
       );
     } else {
       content = Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Icon(Icons.image_search, size: 48, color: Colors.grey[600]),
+        children: [
+          Icon(Icons.add_photo_alternate,
+              size: 48, color: theme.colorScheme.primary),
           const SizedBox(height: 8),
           Text(l10n.adminFormImageTitle,
-              style: Theme.of(context).textTheme.bodyMedium),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
         ],
       );
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Container(
-          height: 200,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10.0),
+      children: [
+        GestureDetector(
+          onTap: (_isLoading || _isUploading) ? null : _handlePickImage,
+          child: Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: theme.dividerColor),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: content,
           ),
         ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            TextButton.icon(
-              icon: const Icon(Icons.photo_library),
-              label: Text(l10n.adminFormImageGallery),
-              onPressed: _isLoading || _isUploading ? null : _handlePickImage,
+        if (_pickedImage != null && !_isUploading)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: FilledButton.icon(
+              onPressed: _handleUploadImage,
+              icon: const Icon(Icons.upload),
+              label: Text(l10n.adminFormImageUpload),
             ),
-            ElevatedButton.icon(
-              icon: _isUploading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.cloud_upload),
-              label: Text(_isUploading
-                  ? l10n.adminFormImageUploading
-                  : l10n.adminFormImageUpload),
-              onPressed: _pickedImage == null || _isUploading || _isLoading
-                  ? null
-                  : _handleUploadImage,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-              ),
+          ),
+        if (_isUploading)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2)),
+                const SizedBox(width: 8),
+                Text(l10n.adminFormImageUploading),
+              ],
             ),
-          ],
-        )
+          ),
       ],
     );
   }
 
-  Widget _buildInputField(
-    BuildContext context, {
-    required AppLocalizations l10n,
+  Widget _buildInputField({
     required TextEditingController controller,
-    required String labelText,
-    String? hintText,
+    required String label,
     int maxLines = 1,
-    TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
-    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
-      keyboardType: keyboardType,
       validator: validator,
-      inputFormatters: inputFormatters,
-      style: Theme.of(context).textTheme.bodyMedium,
       decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        labelStyle: Theme.of(context).textTheme.labelLarge,
-        hintStyle: Theme.of(context)
-            .textTheme
-            .bodyMedium
-            ?.copyWith(color: Colors.grey[600]),
+        labelText: label,
+        border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
       ),
     );
   }
 
-  Widget _buildTipoField(BuildContext context, AppLocalizations l10n) {
+  Widget _buildTipoDropdown(AppLocalizations l10n) {
     return DropdownButtonFormField<String>(
       initialValue: _tipoSeleccionado,
-      items: _tipos.map((tipo) {
-        return DropdownMenuItem(
-          value: tipo.nombre,
-          child: Text(tipo.nombre),
-        );
-      }).toList(),
-      onChanged: (value) {
-        setState(() {
-          _tipoSeleccionado = value;
-        });
-      },
+      items: _tipos
+          .map((t) => DropdownMenuItem(value: t.nombre, child: Text(t.nombre)))
+          .toList(),
+      onChanged: (v) => setState(() => _tipoSeleccionado = v),
       decoration: InputDecoration(
         labelText: l10n.adminFormTypeLabel,
-        labelStyle: Theme.of(context).textTheme.labelLarge,
+        border: const OutlineInputBorder(),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
       ),
+      validator: (v) => v == null ? l10n.validationTypeRequired : null,
     );
   }
 
   Widget _buildGenerosField(AppLocalizations l10n) {
+    // Encontramos el objeto Tipo seleccionado para pasar sus géneros válidos
+    final selectedTypeObj = _tipos.firstWhere(
+      (t) => t.nombre == _tipoSeleccionado,
+      orElse: () => const Tipo(id: 0, nombre: '', validGenres: []),
+    );
+
     return GenreSelectorWidget(
-      selectedTypes: _tipoSeleccionado != null
-          ? [
-              _tipos.firstWhere(
-                (tipo) => tipo.nombre == _tipoSeleccionado,
-                orElse: () => Tipo(id: 0, nombre: 'Default', validGenres: []),
-              )
-            ]
-          : [],
-      initialGenres:
-          _generosController.text.split(',').map((e) => e.trim()).toList(),
-      onChanged: (List<String> updatedGenres) {
+      selectedTypes: _tipoSeleccionado != null ? [selectedTypeObj] : [],
+      initialGenres: _generosController.text
+          .split(',')
+          .where((s) => s.isNotEmpty)
+          .map((e) => e.trim())
+          .toList(),
+      onChanged: (genres) {
         setState(() {
-          _generosController.text = updatedGenres.join(', ');
+          _generosController.text = genres.join(', ');
         });
       },
     );
   }
 
   Widget _buildSecuelasSelector(AppLocalizations l10n) {
-    return FutureBuilder<List<ElementoRelacion>>(
-      future: _elementosFuture,
-      builder: (BuildContext context,
-          AsyncSnapshot<List<ElementoRelacion>> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting &&
-            _allElementos.isEmpty) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(l10n.adminFormSequelsTitle,
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              const Center(child: CircularProgressIndicator()),
-            ],
-          );
-        }
-        if (snapshot.hasError) {
-          return Text(l10n.errorLoadingElements(snapshot.error.toString()));
-        }
+    // Filtrar para no mostrarse a sí mismo
+    final candidates = widget.elemento == null
+        ? _allElementos
+        : _allElementos.where((e) => e.id != widget.elemento!.id).toList();
 
-        final List<ElementoRelacion> elementosDisponibles =
-            _allElementos.where((ElementoRelacion el) {
-          if (widget.elemento == null) {
-            return true;
-          }
-          return el.id != widget.elemento!.id;
-        }).toList();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(l10n.adminFormSequelsTitle,
-                style: Theme.of(context).textTheme.titleLarge),
-            Text(l10n.adminFormSequelsSubtitle,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Colors.grey[400])),
-            const SizedBox(height: 16),
-            Container(
-              height: 300,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Scrollbar(
-                thumbVisibility: true,
-                controller: _scrollController,
-                child: ListView(
-                  controller: _scrollController,
-                  children: elementosDisponibles.map((ElementoRelacion el) {
-                    final bool isSelected = _selectedSecuelaIds.contains(el.id);
-                    return CheckboxListTile(
-                      title: Text(el.titulo),
-                      value: isSelected,
-                      onChanged: (bool? selected) {
-                        if (selected == null) {
-                          return;
-                        }
-                        setState(() {
-                          if (selected) {
-                            _selectedSecuelaIds.add(el.id);
-                          } else {
-                            _selectedSecuelaIds.remove(el.id);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.adminFormSequelsTitle,
+            style: Theme.of(context).textTheme.titleMedium),
+        Text(l10n.adminFormSequelsSubtitle,
+            style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 8),
+        Container(
+          height: 200,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.withAlpha(100)),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ListView.builder(
+            itemCount: candidates.length,
+            itemBuilder: (context, index) {
+              final item = candidates[index];
+              final isSelected = _selectedSecuelaIds.contains(item.id);
+              return CheckboxListTile(
+                title: Text(item.titulo),
+                value: isSelected,
+                onChanged: (val) {
+                  setState(() {
+                    if (val == true) {
+                      _selectedSecuelaIds.add(item.id);
+                    } else {
+                      _selectedSecuelaIds.remove(item.id);
+                    }
+                  });
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

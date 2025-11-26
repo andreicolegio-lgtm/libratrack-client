@@ -27,6 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late final ApiClient _apiClient;
   final ImagePicker _picker = ImagePicker();
 
+  // Estado de UI
   bool _isLoadingUpdate = false;
   bool _isLoadingPasswordChange = false;
   bool _isLoadingLogout = false;
@@ -34,20 +35,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   late PerfilUsuario _perfil;
 
+  // Formularios y Controladores
   final GlobalKey<FormState> _profileFormKey = GlobalKey<FormState>();
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  String _originalUsername = '';
+
   final GlobalKey<FormState> _passwordFormKey = GlobalKey<FormState>();
   final TextEditingController _contrasenaActualController =
       TextEditingController();
   final TextEditingController _nuevaContrasenaController =
       TextEditingController();
   final FocusNode _newPasswordFocusNode = FocusNode();
-  bool _showPasswordValidation = false;
 
+  bool _showPasswordValidation = false;
   bool _isCurrentPasswordObscured = true;
   bool _isNewPasswordObscured = true;
+
+  // Nombre original para detectar cambios
+  late String _originalUsername;
 
   @override
   void initState() {
@@ -56,99 +61,100 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _userService = context.read<UserService>();
     _apiClient = context.read<ApiClient>();
 
+    // Cargar datos iniciales
     _perfil = _authService.perfilUsuario!;
     _nombreController.text = _perfil.username;
     _emailController.text = _perfil.email;
     _originalUsername = _perfil.username;
 
-    // Add listener to update validation rules dynamically
-    _nuevaContrasenaController.addListener(() {
-      setState(() {});
+    // Listeners para validación visual dinámica
+    _newPasswordFocusNode.addListener(() {
+      if (mounted) {
+        setState(
+            () => _showPasswordValidation = _newPasswordFocusNode.hasFocus);
+      }
     });
 
-    // Add focus listener to show/hide validation rules
-    _newPasswordFocusNode.addListener(() {
-      setState(() {
-        _showPasswordValidation = _newPasswordFocusNode.hasFocus;
-      });
+    _nuevaContrasenaController.addListener(() {
+      if (_showPasswordValidation && mounted) {
+        setState(() {});
+      }
     });
   }
 
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _emailController.dispose();
+    _contrasenaActualController.dispose();
+    _nuevaContrasenaController.dispose();
+    _newPasswordFocusNode.dispose();
+    super.dispose();
+  }
+
+  bool get _isAnyLoading =>
+      _isLoadingUpdate ||
+      _isLoadingPasswordChange ||
+      _isLoadingLogout ||
+      _isUploadingFoto;
+
+  // --- Lógica de Negocio ---
+
   Future<void> _handlePickAndUploadFoto() async {
-    if (_isAnyLoading()) {
+    if (_isAnyLoading) {
       return;
     }
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image == null) {
-      return;
-    }
-
-    setState(() {
-      _isUploadingFoto = true;
-    });
+    final l10n = AppLocalizations.of(context);
 
     try {
-      final dynamic data = await _apiClient.upload('uploads', image);
-      final String fotoUrl = data['url'];
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image == null) {
+        return;
+      }
 
+      setState(() => _isUploadingFoto = true);
+
+      // 1. Subir imagen
+      final dynamic uploadData = await _apiClient.upload('uploads', image);
+      final String fotoUrl = uploadData['url'];
+
+      // 2. Actualizar perfil con la nueva URL
       final PerfilUsuario perfilActualizado =
           await _userService.updateFotoPerfil(fotoUrl);
 
       if (!mounted) {
         return;
       }
+
       setState(() {
         _perfil = perfilActualizado;
+        _authService.updateLocalProfileData(
+            perfilActualizado); // Sincronizar estado global
         _isUploadingFoto = false;
-
-        _authService.updateLocalProfileData(perfilActualizado);
       });
+
       SnackBarHelper.showTopSnackBar(context, l10n.snackbarProfilePhotoUpdated,
           isError: false);
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isUploadingFoto = false;
-      });
-      if (e is UnauthorizedException) {
-        _authService.logout();
-      } else {
-        SnackBarHelper.showTopSnackBar(
-            context, ErrorTranslator.translate(context, e.message),
-            isError: true);
-      }
     } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isUploadingFoto = false;
-      });
-      SnackBarHelper.showTopSnackBar(
-          context, l10n.errorImageUpload(e.toString()),
-          isError: true);
+      _handleError(e, l10n);
+      setState(() => _isUploadingFoto = false);
     }
   }
 
   Future<void> _handleUpdateProfile() async {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (!_profileFormKey.currentState!.validate()) {
       return;
     }
-    final String nuevoUsername = _nombreController.text.trim();
 
+    final String nuevoUsername = _nombreController.text.trim();
     if (nuevoUsername == _originalUsername) {
       SnackBarHelper.showTopSnackBar(context, l10n.snackbarProfileNoChanges,
           isError: false, isNeutral: true);
       return;
     }
-    setState(() {
-      _isLoadingUpdate = true;
-    });
+
+    setState(() => _isLoadingUpdate = true);
 
     try {
       final PerfilUsuario perfilActualizado =
@@ -157,290 +163,131 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) {
         return;
       }
+
       setState(() {
         _perfil = perfilActualizado;
-        _nombreController.text = perfilActualizado.username;
         _originalUsername = perfilActualizado.username;
-        _isLoadingUpdate = false;
-
         _authService.updateLocalProfileData(perfilActualizado);
+        _isLoadingUpdate = false;
       });
+
       SnackBarHelper.showTopSnackBar(
           context, l10n.snackbarProfileUsernameUpdated,
           isError: false);
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isLoadingUpdate = false;
-      });
-      if (e is UnauthorizedException) {
-        _authService.logout();
-      } else {
-        SnackBarHelper.showTopSnackBar(
-            context, ErrorTranslator.translate(context, e.message),
-            isError: true);
-      }
     } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isLoadingUpdate = false;
-      });
-      SnackBarHelper.showTopSnackBar(context, l10n.errorUpdating(e.toString()),
-          isError: true);
+      _handleError(e, l10n);
+      setState(() => _isLoadingUpdate = false);
     }
   }
 
   Future<void> _handleChangePassword() async {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (!_passwordFormKey.currentState!.validate()) {
-      debugPrint(
-          '[ProfileScreen._handleChangePassword] Form validation failed');
-
-      // Focus the first invalid field
-      if (_contrasenaActualController.text.isEmpty ||
-          !RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}')
-              .hasMatch(_contrasenaActualController.text)) {
-        FocusScope.of(context)
-            .requestFocus(FocusScope.of(context).focusedChild);
-      } else if (_nuevaContrasenaController.text.isEmpty ||
-          !RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}')
-              .hasMatch(_nuevaContrasenaController.text)) {
-        FocusScope.of(context)
-            .requestFocus(FocusScope.of(context).focusedChild);
-      }
-
-      setState(() {});
       return;
     }
-    setState(() {
-      _isLoadingPasswordChange = true;
-    });
-    final FocusScopeNode focusScope = FocusScope.of(context);
 
-    final String actual = _contrasenaActualController.text;
-    final String nueva = _nuevaContrasenaController.text;
-    debugPrint(
-        '[ProfileScreen._handleChangePassword] Attempting to change password');
-    debugPrint(
-        '[ProfileScreen._handleChangePassword] Current password: $actual');
-    debugPrint('[ProfileScreen._handleChangePassword] New password: $nueva');
+    setState(() => _isLoadingPasswordChange = true);
+    FocusScope.of(context).unfocus(); // Ocultar teclado
+
     try {
-      await _userService.updatePassword(actual, nueva);
+      await _userService.updatePassword(
+        _contrasenaActualController.text,
+        _nuevaContrasenaController.text,
+      );
 
       if (!mounted) {
         return;
       }
+
       setState(() {
         _isLoadingPasswordChange = false;
         _contrasenaActualController.clear();
         _nuevaContrasenaController.clear();
+        // Ocultar validación visual tras éxito
+        _showPasswordValidation = false;
       });
-      focusScope.unfocus();
+
       SnackBarHelper.showTopSnackBar(
           context, l10n.snackbarProfilePasswordUpdated,
           isError: false);
-      debugPrint(
-          '[ProfileScreen._handleChangePassword] Password changed successfully');
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isLoadingPasswordChange = false;
-      });
+    } catch (e) {
+      _handleError(e, l10n);
+      setState(() => _isLoadingPasswordChange = false);
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    setState(() => _isLoadingLogout = true);
+    final l10n = AppLocalizations.of(context);
+
+    try {
+      await _authService.logout();
+    } catch (e) {
+      _handleError(e, l10n);
+      setState(() => _isLoadingLogout = false);
+    }
+  }
+
+  void _handleError(Object e, AppLocalizations l10n) {
+    if (!mounted) {
+      return;
+    }
+
+    if (e is ApiException) {
       if (e is UnauthorizedException) {
-        _authService.logout();
+        _authService.logout(); // Token inválido, salir a login
       } else {
         SnackBarHelper.showTopSnackBar(
             context, ErrorTranslator.translate(context, e.message),
             isError: true);
       }
-      debugPrint(
-          '[ProfileScreen._handleChangePassword] ApiException: ${e.message}');
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isLoadingPasswordChange = false;
-      });
-      SnackBarHelper.showTopSnackBar(context, l10n.errorUpdating(e.toString()),
-          isError: true);
-      debugPrint(
-          '[ProfileScreen._handleChangePassword] Unexpected error: ${e.toString()}');
-    }
-  }
-
-  Future<void> _handleLogout() async {
-    setState(() {
-      _isLoadingLogout = true;
-    });
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-    try {
-      await _authService.logout();
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isLoadingLogout = false;
-      });
-      SnackBarHelper.showTopSnackBar(
-          context, ErrorTranslator.translate(context, e.message),
-          isError: true);
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isLoadingLogout = false;
-      });
+    } else {
       SnackBarHelper.showTopSnackBar(
           context, l10n.errorUnexpected(e.toString()),
           isError: true);
     }
   }
 
-  void _goToModeracionPanel() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (BuildContext context) => const ModeracionPanelScreen(),
-      ),
-    );
-  }
-
-  void _goToAdminPanel() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (BuildContext context) => const AdminPanelScreen(),
-      ),
-    );
-  }
-
-  void _goToSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (BuildContext context) => const SettingsScreen(),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    // Clean up controllers and focus nodes
-    _nuevaContrasenaController.dispose();
-    _newPasswordFocusNode.dispose();
-    _nombreController.dispose();
-    _emailController.dispose();
-    _contrasenaActualController.dispose();
-    super.dispose();
-  }
+  // --- Construcción de UI ---
 
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(l10n.appTitle, style: Theme.of(context).textTheme.titleLarge),
+        title: Text(l10n.bottomNavProfile),
         centerTitle: true,
-        automaticallyImplyLeading: false,
-        actions: <Widget>[
+        actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: _goToSettings,
             tooltip: l10n.settingsTitle,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
           ),
         ],
       ),
-      body: _buildBody(context, l10n),
-    );
-  }
+      body: ListView(
+        padding: const EdgeInsets.all(24.0),
+        children: [
+          _buildAvatarSection(context),
+          const SizedBox(height: 32),
 
-  Widget _buildBody(BuildContext context, AppLocalizations l10n) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Center(
-            child: Stack(
-              children: <Widget>[
-                CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  child: _isUploadingFoto
-                      ? const CircularProgressIndicator()
-                      : (_perfil.fotoPerfilUrl != null)
-                          ? ClipOval(
-                              child: CachedNetworkImage(
-                                imageUrl: _perfil.fotoPerfilUrl!,
-                                width: 120,
-                                height: 120,
-                                fit: BoxFit.cover,
-                                placeholder:
-                                    (BuildContext context, String url) =>
-                                        const CircularProgressIndicator(),
-                                errorWidget: (BuildContext context, String url,
-                                        Object error) =>
-                                    const Icon(Icons.person, size: 60),
-                              ),
-                            )
-                          : const Icon(Icons.person, size: 60),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: Theme.of(context).scaffoldBackgroundColor,
-                          width: 2),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4.0),
-                      child: Icon(Icons.edit, size: 18, color: Colors.white),
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _isAnyLoading() ? null : _handlePickAndUploadFoto,
-                      customBorder: const CircleBorder(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32.0),
+          // Sección: Datos de Usuario
           Text(l10n.profileUserData,
               style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16.0),
+          const SizedBox(height: 16),
           Form(
             key: _profileFormKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                _buildInputField(
-                  context,
-                  l10n: l10n,
+              children: [
+                _buildTextField(
                   controller: _nombreController,
-                  labelText: l10n.registerUsernameLabel,
-                  enabled: !_isAnyLoading(),
-                  validator: (String? value) {
+                  label: l10n.registerUsernameLabel,
+                  icon: Icons.person_outline,
+                  validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return l10n.validationUsernameRequired;
                     }
@@ -450,315 +297,305 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16.0),
-                _buildInputField(
-                  context,
-                  l10n: l10n,
+                const SizedBox(height: 16),
+                _buildTextField(
                   controller: _emailController,
-                  labelText: l10n.loginEmailLabel,
-                  enabled: false,
+                  label: l10n.loginEmailLabel,
+                  icon: Icons.email_outlined,
+                  enabled: false, // Email es de solo lectura
                 ),
-                const SizedBox(height: 24.0),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  ),
-                  onPressed: _isAnyLoading() ? null : _handleUpdateProfile,
-                  child: _isLoadingUpdate
-                      ? _buildSmallSpinner()
-                      : Text(
-                          l10n.profileSaveButton,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(color: Colors.white),
-                        ),
+                const SizedBox(height: 24),
+                _buildButton(
+                  text: l10n.profileSaveButton,
+                  isLoading: _isLoadingUpdate,
+                  onPressed: _handleUpdateProfile,
                 ),
               ],
             ),
           ),
+
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24.0),
-            child: Divider(),
-          ),
-          Text(
-            l10n.profileChangePassword,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16.0),
+              padding: EdgeInsets.symmetric(vertical: 24), child: Divider()),
+
+          // Sección: Cambio de Contraseña
+          Text(l10n.profileChangePassword,
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 16),
           Form(
             key: _passwordFormKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                _buildInputField(
-                  context,
-                  l10n: l10n,
+              children: [
+                _buildTextField(
                   controller: _contrasenaActualController,
-                  labelText: l10n.profileCurrentPassword,
-                  isPassword: _isCurrentPasswordObscured,
-                  prefixIcon: const Icon(Icons.lock_open),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isCurrentPasswordObscured
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isCurrentPasswordObscured =
-                            !_isCurrentPasswordObscured;
-                      });
-                    },
-                  ),
-                  validator: (String? value) {
-                    debugPrint(
-                        '[ProfileScreen._buildInputField] Validating current password: $value');
-
-                    // Validate current password strength
-                    final regex = RegExp(
-                        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}');
-                    if (value == null || value.isEmpty) {
-                      debugPrint(
-                          '[ProfileScreen._buildInputField] Validation failed: Current password is empty');
-                      return l10n.validationPasswordCurrentRequired;
-                    }
-                    if (!regex.hasMatch(value)) {
-                      debugPrint(
-                          '[ProfileScreen._buildInputField] Validation failed: Current password does not meet complexity requirements');
-                      return l10n.validationPasswordComplexity;
-                    }
-
-                    debugPrint(
-                        '[ProfileScreen._buildInputField] Current password validation passed');
-                    return null;
-                  },
+                  label: l10n.profileCurrentPassword,
+                  icon: Icons.lock_open,
+                  isPassword: true,
+                  isObscured: _isCurrentPasswordObscured,
+                  onToggleVisibility: () => setState(() =>
+                      _isCurrentPasswordObscured = !_isCurrentPasswordObscured),
+                  validator: (value) => (value == null || value.isEmpty)
+                      ? l10n.validationPasswordCurrentRequired
+                      : null,
                 ),
-                const SizedBox(height: 16.0),
-                _buildInputField(
-                  context,
-                  l10n: l10n,
+                const SizedBox(height: 16),
+                _buildTextField(
                   controller: _nuevaContrasenaController,
-                  labelText: l10n.profileNewPassword,
-                  focusNode: _newPasswordFocusNode, // Connected FocusNode
-                  isPassword: _isNewPasswordObscured,
-                  prefixIcon: const Icon(
-                      Icons.lock), // Re-added the lock icon as prefix
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          _isNewPasswordObscured
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isNewPasswordObscured = !_isNewPasswordObscured;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  validator: (String? value) {
+                  focusNode: _newPasswordFocusNode,
+                  label: l10n.profileNewPassword,
+                  icon: Icons.lock_outline,
+                  isPassword: true,
+                  isObscured: _isNewPasswordObscured,
+                  onToggleVisibility: () => setState(
+                      () => _isNewPasswordObscured = !_isNewPasswordObscured),
+                  validator: (value) {
                     if (value == null || value.isEmpty) {
                       return l10n.validationPasswordNewRequired;
                     }
+                    if (value == _contrasenaActualController.text) {
+                      return l10n.validationPasswordUnchanged;
+                    }
+                    // Validación de complejidad (coincide con backend)
                     if (!RegExp(
                             r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$')
                         .hasMatch(value)) {
                       return l10n.validationPasswordComplexity;
                     }
-                    if (value == _contrasenaActualController.text) {
-                      return l10n.validationPasswordUnchanged;
-                    }
                     return null;
                   },
                 ),
-                Visibility(
-                  visible: _showPasswordValidation,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _getValidationRules(
-                              _nuevaContrasenaController.text, l10n)
-                          .map((entry) {
-                        return Row(
-                          children: [
-                            Icon(
-                              entry.value ? Icons.check_circle : Icons.cancel,
-                              color: entry.value ? Colors.green : Colors.red,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              entry.key,
-                              style: TextStyle(
-                                color: entry.value ? Colors.green : Colors.red,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                // Reglas visuales dinámicas
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  height: _showPasswordValidation ? null : 0,
+                  child: _buildPasswordRules(l10n),
                 ),
-                const SizedBox(height: 24.0),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  ),
-                  onPressed: _isAnyLoading() ? null : _handleChangePassword,
-                  child: _isLoadingPasswordChange
-                      ? _buildSmallSpinner()
-                      : Text(
-                          l10n.profileChangePassword,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                const SizedBox(height: 24),
+                _buildButton(
+                  text: l10n.profileChangePassword,
+                  isLoading: _isLoadingPasswordChange,
+                  onPressed: _handleChangePassword,
+                  isSecondary: true, // Estilo secundario para diferenciar
                 ),
               ],
             ),
           ),
-          if (_perfil.esModerador) ...<Widget>[
-            const SizedBox(height: 32.0),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber[700],
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-              ),
-              onPressed: _isAnyLoading() ? null : _goToModeracionPanel,
-              child: Text(
-                l10n.profileModPanelButton,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+
+          const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24), child: Divider()),
+
+          // Sección: Roles Administrativos
+          if (_perfil.esModerador)
+            _buildRoleButton(
+              text: l10n.profileModPanelButton,
+              color: Colors.amber.shade800,
+              icon: Icons.security,
+              onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const ModeracionPanelScreen())),
+            ),
+          if (_perfil.esAdministrador)
+            Padding(
+              padding: const EdgeInsets.only(top: 12.0),
+              child: _buildRoleButton(
+                text: l10n.profileAdminPanelButton,
+                color: Colors.deepPurple,
+                icon: Icons.admin_panel_settings,
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const AdminPanelScreen())),
               ),
             ),
-          ],
-          if (_perfil.esAdministrador) ...<Widget>[
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple[700],
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-              ),
-              onPressed: _isAnyLoading() ? null : _goToAdminPanel,
-              child: Text(
-                l10n.profileAdminPanelButton,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+
+          const SizedBox(height: 32),
+
+          // Botón Logout
+          _buildButton(
+            text: l10n.profileLogoutButton,
+            isLoading: _isLoadingLogout,
+            onPressed: _handleLogout,
+            color: Colors.red.shade700,
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatarSection(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Stack(
+        children: [
+          CircleAvatar(
+            radius: 60,
+            backgroundColor: colorScheme.surfaceContainerHighest,
+            backgroundImage: _perfil.fotoPerfilUrl != null
+                ? CachedNetworkImageProvider(_perfil.fotoPerfilUrl!)
+                : null,
+            child: _isUploadingFoto
+                ? const CircularProgressIndicator()
+                : (_perfil.fotoPerfilUrl == null
+                    ? Icon(Icons.person,
+                        size: 60, color: colorScheme.onSurfaceVariant)
+                    : null),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Material(
+              elevation: 4,
+              shape: const CircleBorder(),
+              color: colorScheme.primary,
+              child: InkWell(
+                onTap: _isAnyLoading ? null : _handlePickAndUploadFoto,
+                customBorder: const CircleBorder(),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Icon(Icons.camera_alt, size: 20, color: Colors.white),
+                ),
               ),
             ),
-          ],
-          const SizedBox(height: 16.0),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[700],
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-            ),
-            onPressed: _isAnyLoading() ? null : _handleLogout,
-            child: _isLoadingLogout
-                ? _buildSmallSpinner()
-                : Text(
-                    l10n.profileLogoutButton,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(color: Colors.white),
-                  ),
           ),
         ],
       ),
     );
   }
 
-  bool _isAnyLoading() {
-    return _isLoadingUpdate ||
-        _isLoadingPasswordChange ||
-        _isLoadingLogout ||
-        _isUploadingFoto;
-  }
-
-  Widget _buildSmallSpinner() {
-    return const SizedBox(
-      height: 20,
-      width: 20,
-      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-    );
-  }
-
-  Widget _buildInputField(
-    BuildContext context, {
-    required AppLocalizations l10n,
+  Widget _buildTextField({
     required TextEditingController controller,
-    required String labelText,
-    FocusNode? focusNode, // Added optional FocusNode parameter
+    required String label,
+    required IconData icon,
     bool enabled = true,
     bool isPassword = false,
-    Widget? suffixIcon,
-    Widget? prefixIcon,
+    bool isObscured = false,
+    VoidCallback? onToggleVisibility,
     String? Function(String?)? validator,
-    void Function(String)? onChanged,
-    void Function()? onEditingComplete,
+    FocusNode? focusNode,
   }) {
     return TextFormField(
       controller: controller,
-      focusNode: focusNode, // Connected FocusNode to TextFormField
+      focusNode: focusNode,
       enabled: enabled,
-      obscureText: isPassword,
+      obscureText: isPassword && isObscured,
       validator: validator,
-      onChanged: onChanged,
-      onEditingComplete: onEditingComplete,
-      style: Theme.of(context).textTheme.bodyMedium,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: Theme.of(context).textTheme.labelLarge,
+        labelText: label,
+        prefixIcon: Icon(icon),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon:
+                    Icon(isObscured ? Icons.visibility_off : Icons.visibility),
+                onPressed: onToggleVisibility,
+              )
+            : null,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
-        fillColor: enabled
-            ? Theme.of(context).colorScheme.surface
-            : Theme.of(context).scaffoldBackgroundColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide.none,
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        suffixIcon: suffixIcon,
-        prefixIcon: prefixIcon,
+        fillColor:
+            enabled ? null : Theme.of(context).disabledColor.withAlpha(20),
       ),
     );
   }
 
-  List<MapEntry<String, bool>> _getValidationRules(
-      String password, AppLocalizations l10n) {
-    return [
-      MapEntry(l10n.passwordRuleLength, password.length >= 8),
-      MapEntry(l10n.passwordRuleUppercase, password.contains(RegExp(r'[A-Z]'))),
-      MapEntry(l10n.passwordRuleLowercase, password.contains(RegExp(r'[a-z]'))),
-      MapEntry(l10n.passwordRuleNumber, password.contains(RegExp(r'\d'))),
-      MapEntry(
-          l10n.passwordRuleSpecial, password.contains(RegExp(r'[@$!%*?&]'))),
+  Widget _buildButton({
+    required String text,
+    required VoidCallback onPressed,
+    bool isLoading = false,
+    Color? color,
+    bool isSecondary = false,
+  }) {
+    final theme = Theme.of(context);
+    final style = ElevatedButton.styleFrom(
+      backgroundColor: color ??
+          (isSecondary ? theme.colorScheme.surface : theme.colorScheme.primary),
+      foregroundColor: color != null
+          ? Colors.white
+          : (isSecondary
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onPrimary),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      side: isSecondary ? BorderSide(color: theme.colorScheme.primary) : null,
+      elevation: isSecondary ? 0 : 2,
+    );
+
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: style,
+        onPressed: _isAnyLoading ? null : onPressed,
+        child: isLoading
+            ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: style.foregroundColor?.resolve({})))
+            : Text(text,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  Widget _buildRoleButton({
+    required String text,
+    required Color color,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        onPressed: _isAnyLoading ? null : onPressed,
+        icon: Icon(icon),
+        label: Text(text,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  Widget _buildPasswordRules(AppLocalizations l10n) {
+    final pass = _nuevaContrasenaController.text;
+    final rules = [
+      MapEntry(l10n.passwordRuleLength, pass.length >= 8),
+      MapEntry(l10n.passwordRuleUppercase, pass.contains(RegExp(r'[A-Z]'))),
+      MapEntry(l10n.passwordRuleLowercase, pass.contains(RegExp(r'[a-z]'))),
+      MapEntry(l10n.passwordRuleNumber, pass.contains(RegExp(r'\d'))),
+      MapEntry(l10n.passwordRuleSpecial, pass.contains(RegExp(r'[@$!%*?&]'))),
     ];
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12.0, left: 8.0),
+      child: Column(
+        children: rules.map((rule) {
+          final met = rule.value;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4.0),
+            child: Row(
+              children: [
+                Icon(met ? Icons.check_circle : Icons.circle_outlined,
+                    size: 16, color: met ? Colors.green : Colors.grey),
+                const SizedBox(width: 8),
+                Text(rule.key,
+                    style: TextStyle(
+                      color: met ? Colors.green : Colors.grey,
+                      fontSize: 12,
+                      decoration: met ? TextDecoration.lineThrough : null,
+                    )),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 }

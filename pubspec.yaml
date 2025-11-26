@@ -1,6 +1,6 @@
 name: libratrack_client
-description: "Cliente de Flutter para LibraTrack."
-publish_to: 'none' 
+description: "Cliente de Flutter para la plataforma LibraTrack."
+publish_to: 'none' # Evita publicación accidental en pub.dev
 version: 1.0.0+1
 
 environment:
@@ -9,34 +9,51 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  nested: ^1.0.0
   
+  # --- Internacionalización ---
   flutter_localizations:
     sdk: flutter
-  
-  google_sign_in: ^7.2.0
+  intl: ^0.20.2 # Formateo de fechas y números
 
-  intl: 0.20.2
+  # --- Autenticación y Google ---
+  google_sign_in: ^7.2.0 # Versión estable y compatible
+
+  # --- Red y Almacenamiento ---
   http: ^1.5.0
-  flutter_secure_storage: ^9.2.4
-  cached_network_image: ^3.3.1
-  marquee: ^2.2.3
-  image_picker: ^1.1.2
-  path: ^1.9.0
   http_parser: ^4.1.2
+  flutter_secure_storage: ^9.2.4 # Almacenamiento seguro de tokens
+  shared_preferences: ^2.2.3 # Almacenamiento simple (configuración)
+
+  # --- Gestión de Estado e Inyección ---
   provider: ^6.1.2
-  shared_preferences: ^2.2.3
-  
+
+  # --- UI y Widgets ---
+  cached_network_image: ^3.3.1 # Caché de imágenes
+  flutter_svg: ^2.2.3 # Soporte SVG
   cupertino_icons: ^1.0.6
-  flutter_svg: ^2.2.3
+  marquee: ^2.2.3 # Texto deslizante
+
+  # --- Utilidades ---
+  image_picker: ^1.1.2 # Selección de imágenes
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  
+  # --- Linter y Generadores ---
   flutter_lints: ^6.0.0
 
+# Configuración específica de Flutter
 flutter:
-  generate: true 
   uses-material-design: true
+  
+  # Generación automática de código para l10n (Intl)
+  generate: true 
+
+  # Recursos estáticos
   assets:
     - assets/images/google_logo.svg
+
+flutter_intl:
+  enabled: true

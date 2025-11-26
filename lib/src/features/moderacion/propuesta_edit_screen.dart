@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/api_client.dart';
@@ -15,6 +15,8 @@ import '../../core/utils/api_exceptions.dart';
 import '../../core/widgets/genre_selector_widget.dart';
 import '../../core/widgets/content_type_progress_forms.dart';
 
+/// Pantalla para que un moderador revise, edite y apruebe una propuesta.
+/// Permite modificar todos los campos sugeridos por el usuario antes de crear el elemento final.
 class PropuestaEditScreen extends StatefulWidget {
   final Propuesta propuesta;
 
@@ -29,13 +31,18 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
 
   late final ModeracionService _moderacionService;
   late final ApiClient _apiClient;
+  late final TipoService _tipoService;
 
   bool _isLoading = false;
   bool _isUploading = false;
+  bool _isDataLoaded = false;
 
+  // Controladores de Texto
   late TextEditingController _tituloController;
   late TextEditingController _descripcionController;
   late TextEditingController _generosController;
+
+  // Controladores de Progreso
   late TextEditingController _episodiosPorTemporadaController;
   late TextEditingController _totalUnidadesController;
   late TextEditingController _totalCapitulosLibroController;
@@ -45,6 +52,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
   String? _tipoSeleccionado;
   List<Tipo> _tipos = [];
 
+  // Gestión de Imagen
   XFile? _pickedImage;
   String? _uploadedImageUrl;
 
@@ -54,12 +62,19 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
 
     _moderacionService = context.read<ModeracionService>();
     _apiClient = context.read<ApiClient>();
+    _tipoService = context.read<TipoService>();
 
+    _initControllers();
+    _loadInitialData();
+  }
+
+  void _initControllers() {
     final Propuesta p = widget.propuesta;
     _tituloController = TextEditingController(text: p.tituloSugerido);
     _descripcionController =
         TextEditingController(text: p.descripcionSugerida ?? '');
     _generosController = TextEditingController(text: p.generosSugeridos);
+
     _episodiosPorTemporadaController =
         TextEditingController(text: p.episodiosPorTemporada ?? '');
     _totalUnidadesController =
@@ -69,19 +84,43 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     _totalPaginasLibroController =
         TextEditingController(text: p.totalPaginasLibro?.toString() ?? '');
     _durationController = TextEditingController(text: p.duracion ?? '');
-    _tipoSeleccionado = p.tipoSugerido.toLowerCase();
-    _loadTipos();
+
+    _tipoSeleccionado = p.tipoSugerido; // Intentamos mantener el sugerido
+    _uploadedImageUrl = p.urlImagen;
   }
 
-  Future<void> _loadTipos() async {
-    final tipoService = context.read<TipoService>();
+  Future<void> _loadInitialData() async {
     try {
-      final tipos = await tipoService.fetchTipos('Error loading types');
-      setState(() {
-        _tipos = tipos;
-      });
+      final tipos = await _tipoService.fetchTipos('Error loading types');
+
+      if (mounted) {
+        setState(() {
+          _tipos = tipos;
+
+          // Validar si el tipo sugerido existe en la lista oficial (case-insensitive)
+          final existingType = _tipos.firstWhere(
+            (t) =>
+                t.nombre.toLowerCase() ==
+                (_tipoSeleccionado?.toLowerCase() ?? ''),
+            orElse: () => const Tipo(id: 0, nombre: '', validGenres: []),
+          );
+
+          if (existingType.id != 0) {
+            _tipoSeleccionado = existingType.nombre; // Normalizar nombre
+          } else {
+            // Si no existe, dejamos el valor raw pero el dropdown podría mostrarlo vacío o error
+            // Opcionalmente podríamos añadirlo a la lista localmente o forzar selección
+          }
+
+          _isDataLoaded = true;
+        });
+      }
     } catch (e) {
-      // Handle error
+      debugPrint('Error cargando tipos en edición: $e');
+      if (mounted) {
+        setState(() => _isDataLoaded =
+            true); // Permitir continuar aunque falle carga de tipos
+      }
     }
   }
 
@@ -98,15 +137,18 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     super.dispose();
   }
 
+  // --- Lógica de Imagen ---
+
   Future<void> _handlePickImage() async {
     final ImagePicker picker = ImagePicker();
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
     try {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         setState(() {
           _pickedImage = image;
-          _uploadedImageUrl = null;
+          // No borramos _uploadedImageUrl para mantener preview si falla subida
         });
       }
     } catch (e) {
@@ -123,10 +165,9 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
       return;
     }
 
-    setState(() {
-      _isUploading = true;
-    });
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    setState(() => _isUploading = true);
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
     try {
       final dynamic data = await _apiClient.upload('uploads', _pickedImage!);
       final String url = data['url'];
@@ -134,73 +175,76 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
       if (mounted) {
         setState(() {
           _uploadedImageUrl = url;
+          _pickedImage = null; // Limpiar selección local
           _isUploading = false;
         });
         SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadSuccess,
             isError: false);
       }
-    } on ApiException catch (e) {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-        SnackBarHelper.showTopSnackBar(
-            context, ErrorTranslator.translate(context, e.message),
-            isError: true);
-      }
     } catch (e) {
+      _handleError(e, l10n);
       if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-        SnackBarHelper.showTopSnackBar(
-            context, l10n.errorImageUpload(e.toString()),
-            isError: true);
+        setState(() => _isUploading = false);
       }
     }
   }
 
+  // --- Lógica de Aprobación ---
+
   Future<void> _handleAprobar() async {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    // Validación opcional: Exigir imagen para aprobar
+    /*
     if (_uploadedImageUrl == null) {
-      SnackBarHelper.showTopSnackBar(
-          context, l10n.snackbarImageUploadRequiredApproval,
-          isError: true);
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadRequiredApproval, isError: true);
       return;
     }
+    */
 
-    setState(() {
-      _isLoading = true;
-    });
+    // Subir imagen pendiente si existe
+    if (_pickedImage != null) {
+      await _handleUploadImage();
+      if (_uploadedImageUrl == null) {
+        return; // Falló la subida
+      }
+    }
 
+    setState(() => _isLoading = true);
+
+    if (!mounted) {
+      return;
+    }
     final NavigatorState navContext = Navigator.of(context);
 
     try {
+      // Construir payload limpio
       final Map<String, dynamic> body = <String, dynamic>{
-        'tituloSugerido': _tituloController.text,
-        'descripcionSugerida': _descripcionController.text,
+        'tituloSugerido': _tituloController.text.trim(),
+        'descripcionSugerida': _descripcionController.text.trim(),
         'tipoSugerido': _tipoSeleccionado,
-        'generosSugeridos': _generosController.text,
+        'generosSugeridos': _generosController.text.trim(),
         'urlImagen': _uploadedImageUrl,
-        'episodiosPorTemporada': _episodiosPorTemporadaController.text.isEmpty
+
+        // Progreso
+        'episodiosPorTemporada':
+            _episodiosPorTemporadaController.text.trim().isEmpty
+                ? null
+                : _episodiosPorTemporadaController.text.trim(),
+        'totalUnidades': int.tryParse(_totalUnidadesController.text),
+        'totalCapitulosLibro':
+            int.tryParse(_totalCapitulosLibroController.text),
+        'totalPaginasLibro': int.tryParse(_totalPaginasLibroController.text),
+        'duracion': _durationController.text.trim().isEmpty
             ? null
-            : _episodiosPorTemporadaController.text,
-        'totalUnidades': _totalUnidadesController.text.isEmpty
-            ? null
-            : int.tryParse(_totalUnidadesController.text),
-        'totalCapitulosLibro': _totalCapitulosLibroController.text.isEmpty
-            ? null
-            : int.tryParse(_totalCapitulosLibroController.text),
-        'totalPaginasLibro': _totalPaginasLibroController.text.isEmpty
-            ? null
-            : int.tryParse(_totalPaginasLibroController.text),
-        'duracion':
-            _durationController.text.isEmpty ? null : _durationController.text,
+            : _durationController.text.trim(),
       };
+
+      // Eliminar nulos
       body.removeWhere((String key, value) => value == null);
 
       await _moderacionService.aprobarPropuesta(widget.propuesta.id, body);
@@ -209,35 +253,42 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         return;
       }
 
+      // Retornar 'true' indica éxito para actualizar la lista anterior
       navContext.pop(true);
-    } on ApiException catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        SnackBarHelper.showTopSnackBar(
-          context,
-          l10n.errorApproving(e.toString()),
-          isError: true,
-        );
-      }
     } catch (e) {
+      _handleError(e, l10n);
+    } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        SnackBarHelper.showTopSnackBar(
-          context,
-          l10n.errorUnexpected(e.toString()),
-          isError: true,
-        );
+        setState(() => _isLoading = false);
       }
     }
   }
 
+  void _handleError(Object e, AppLocalizations l10n) {
+    if (!mounted) {
+      return;
+    }
+
+    String msg = l10n.errorUnexpected(e.toString());
+    if (e is ApiException) {
+      msg = ErrorTranslator.translate(context, e.message);
+    }
+    SnackBarHelper.showTopSnackBar(context, msg, isError: true);
+  }
+
+  // --- UI Building ---
+
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+
+    if (!_isDataLoaded) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.modEditTitle)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.modEditTitle,
@@ -252,44 +303,69 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Text(
-                  l10n.modPanelProposalFrom(
-                      widget.propuesta.proponenteUsername),
-                  style: Theme.of(context).textTheme.bodyMedium),
+              // Info del Proponente
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withAlpha(50),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.modPanelProposalFrom(
+                            widget.propuesta.proponenteUsername),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
+
               _buildImageUploader(l10n),
               const SizedBox(height: 24),
+
               _buildInputField(
-                context,
                 l10n: l10n,
                 controller: _tituloController,
                 labelText: l10n.proposalFormTitleLabel,
-                validator: (String? value) => (value == null || value.isEmpty)
+                validator: (v) => (v == null || v.isEmpty)
                     ? l10n.validationTitleRequired
                     : null,
               ),
               const SizedBox(height: 16),
+
               _buildInputField(
-                context,
                 l10n: l10n,
                 controller: _descripcionController,
                 labelText: l10n.proposalFormDescLabel,
                 maxLines: 4,
-                validator: (String? value) => (value == null || value.isEmpty)
+                validator: (v) => (v == null || v.isEmpty)
                     ? l10n.validationDescRequired
                     : null,
               ),
               const SizedBox(height: 16),
+
               _buildTipoDropdown(l10n),
               const SizedBox(height: 16),
+
               _buildGenerosField(l10n),
+
               const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24.0),
-                child: Divider(),
-              ),
+                  padding: EdgeInsets.symmetric(vertical: 24.0),
+                  child: Divider()),
+
               Text(l10n.modEditProgressTitle,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
+
               ContentTypeProgressForms(
                 selectedTypeKey: _tipoSeleccionado,
                 episodesController: _episodiosPorTemporadaController,
@@ -297,25 +373,29 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                 pagesController: _totalPaginasLibroController,
                 durationController: _durationController,
                 unitsController: _totalUnidadesController,
-                l10n: AppLocalizations.of(context)!,
+                l10n: l10n,
               ),
+
               const SizedBox(height: 32.0),
-              ElevatedButton(
+
+              ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[600],
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
+                      borderRadius: BorderRadius.circular(10.0)),
                 ),
-                onPressed: _isLoading ? null : _handleAprobar,
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                        l10n.modEditSubmitButton,
-                        style:
-                            const TextStyle(fontSize: 18, color: Colors.white),
-                      ),
+                onPressed: (_isLoading || _isUploading) ? null : _handleAprobar,
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.check),
+                label: Text(l10n.modEditSubmitButton,
+                    style: const TextStyle(fontSize: 18)),
               ),
             ],
           ),
@@ -329,164 +409,122 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     if (_pickedImage != null) {
       content = Image.file(File(_pickedImage!.path), fit: BoxFit.cover);
     } else if (_uploadedImageUrl != null) {
-      content = Image.network(_uploadedImageUrl!, fit: BoxFit.cover);
+      content = CachedNetworkImage(
+        imageUrl: _uploadedImageUrl!,
+        fit: BoxFit.cover,
+        placeholder: (_, __) =>
+            const Center(child: CircularProgressIndicator()),
+        errorWidget: (_, __, ___) =>
+            const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+      );
     } else {
       content = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Icon(Icons.image_search, size: 48, color: Colors.grey[600]),
+          Icon(Icons.add_a_photo, size: 48, color: Colors.grey[400]),
           const SizedBox(height: 8),
           Text(l10n.modEditImageTitle,
-              style: Theme.of(context).textTheme.bodyMedium),
+              style: TextStyle(color: Colors.grey[600])),
         ],
       );
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Container(
-          height: 200,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10.0),
+      children: [
+        GestureDetector(
+          onTap: (_isLoading || _isUploading) ? null : _handlePickImage,
+          child: Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(10.0),
+              border: Border.all(color: Theme.of(context).dividerColor),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: content,
           ),
         ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            TextButton.icon(
-              icon: const Icon(Icons.photo_library),
-              label: Text(l10n.adminFormImageGallery),
-              onPressed: _isLoading || _isUploading ? null : _handlePickImage,
+        if (_pickedImage != null && !_isUploading)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: FilledButton.icon(
+              onPressed: _handleUploadImage,
+              icon: const Icon(Icons.cloud_upload),
+              label: Text(l10n.adminFormImageUpload),
             ),
-            ElevatedButton.icon(
-              icon: _isUploading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.cloud_upload),
-              label: Text(_isUploading
-                  ? l10n.adminFormImageUploading
-                  : l10n.adminFormImageUpload),
-              onPressed: _pickedImage == null || _isUploading || _isLoading
-                  ? null
-                  : _handleUploadImage,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-              ),
+          ),
+        if (_isUploading)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2)),
+                const SizedBox(width: 8),
+                Text(l10n.adminFormImageUploading),
+              ],
             ),
-          ],
-        )
+          ),
       ],
     );
   }
 
-  Widget _buildInputField(
-    BuildContext context, {
+  Widget _buildInputField({
     required AppLocalizations l10n,
     required TextEditingController controller,
     required String labelText,
-    String? hintText,
     int maxLines = 1,
-    TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
-    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
-      keyboardType: keyboardType,
       validator: validator,
-      inputFormatters: inputFormatters,
-      style: Theme.of(context).textTheme.bodyMedium,
       decoration: InputDecoration(
         labelText: labelText,
-        hintText: hintText,
-        labelStyle: Theme.of(context).textTheme.labelLarge,
-        hintStyle: Theme.of(context)
-            .textTheme
-            .bodyMedium
-            ?.copyWith(color: Colors.grey[600]),
         filled: true,
         fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
+        border: const OutlineInputBorder(),
       ),
     );
   }
 
   Widget _buildTipoDropdown(AppLocalizations l10n) {
     return DropdownButtonFormField<String>(
-      initialValue: _tipoSeleccionado ?? '',
+      initialValue: _tipoSeleccionado,
+      hint: Text(l10n.proposalFormTypeLabel),
       items: _tipos.map((tipo) {
         return DropdownMenuItem(
           value: tipo.nombre,
           child: Text(tipo.nombre),
         );
       }).toList(),
-      onChanged: (value) {
-        setState(() {
-          _tipoSeleccionado = value;
-        });
-      },
+      onChanged: (value) => setState(() => _tipoSeleccionado = value),
       decoration: InputDecoration(
         labelText: l10n.proposalFormTypeLabel,
-        labelStyle: Theme.of(context).textTheme.labelLarge,
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
+        border: const OutlineInputBorder(),
       ),
     );
   }
 
   Widget _buildGenerosField(AppLocalizations l10n) {
+    final selectedTypeObj = _tipos.firstWhere(
+        (t) => t.nombre == _tipoSeleccionado,
+        orElse: () => const Tipo(id: 0, nombre: '', validGenres: []));
+
     return GenreSelectorWidget(
-      selectedTypes: _tipoSeleccionado != null
-          ? [_tipos.firstWhere((tipo) => tipo.nombre == _tipoSeleccionado)]
-          : [],
-      initialGenres:
-          _generosController.text.split(',').map((e) => e.trim()).toList(),
-      onChanged: (List<String> updatedGenres) {
+      selectedTypes: _tipoSeleccionado != null ? [selectedTypeObj] : [],
+      initialGenres: _generosController.text
+          .split(',')
+          .where((s) => s.isNotEmpty)
+          .map((e) => e.trim())
+          .toList(),
+      onChanged: (updatedGenres) {
         setState(() {
           _generosController.text = updatedGenres.join(', ');
         });

@@ -5,317 +5,358 @@
         "description": "El título principal de la aplicación"
     },
     "loginTitle": "Bienvenido a LibraTrack",
-    "@loginTitle": {},
     "loginSubtitle": "Inicia sesión para continuar",
-    "@loginSubtitle": {},
     "loginButton": "Iniciar Sesión",
-    "@loginButton": {
-        "description": "Texto del botón en la pantalla de login"
-    },
     "loginEmailLabel": "Email",
-    "@loginEmailLabel": {
-        "description": "Etiqueta para el campo de texto de email"
-    },
     "loginPasswordLabel": "Contraseña",
-    "@loginPasswordLabel": {
-        "description": "Etiqueta para el campo de texto de contraseña"
-    },
     "loginOr": "O",
-    "@loginOr": {},
     "loginGoogle": "Continuar con Google",
-    "@loginGoogle": {},
     "loginRegisterPrompt": "¿No tienes cuenta? Regístrate",
-    "@loginRegisterPrompt": {
-        "description": "Texto del botón para ir a la pantalla de registro"
-    },
     "registerTitle": "Registrarse",
-    "@registerTitle": {
-        "description": "Texto del botón en la pantalla de registro"
-    },
     "registerUsernameLabel": "Nombre de Usuario",
-    "@registerUsernameLabel": {
-        "description": "Etiqueta para el campo de texto de nombre de usuario"
-    },
     "registerLoginPrompt": "¿Ya tienes cuenta? Inicia sesión",
-    "@registerLoginPrompt": {
-        "description": "Texto del botón para volver a la pantalla de login"
-    },
+    "registrationSuccessAutoLogin": "¡Registro exitoso! Ahora has iniciado sesión automáticamente.",
+    "passwordRulesTitle": "Reglas de Contraseña",
+    "passwordRulesContent": "\n• Mínimo 8 caracteres\n• Al menos 1 mayúscula\n• Al menos 1 minúscula\n• Al menos 1 número\n• Al menos 1 carácter especial (@$!%*?&)\n",
+    "passwordRuleLength": "Al menos 8 caracteres",
+    "passwordRuleUppercase": "Al menos una mayúscula",
+    "passwordRuleLowercase": "Al menos una minúscula",
+    "passwordRuleNumber": "Al menos un número",
+    "passwordRuleSpecial": "Al menos un carácter especial (@$!%*?&)",
     "bottomNavCatalog": "Catálogo",
-    "@bottomNavCatalog": {
-        "description": "Texto para la barra de navegación - Catálogo"
-    },
     "bottomNavSearch": "Buscar",
-    "@bottomNavSearch": {
-        "description": "Texto para la barra de navegación - Buscar"
-    },
     "bottomNavProfile": "Perfil",
-    "@bottomNavProfile": {
-        "description": "Texto para la barra de navegación - Perfil"
-    },
     "catalogTitle": "Mi Catálogo",
-    "@catalogTitle": {
-        "description": "Título de la pantalla de Catálogo"
-    },
     "catalogInProgress": "En Progreso",
-    "@catalogInProgress": {
-        "description": "Pestaña del catálogo - En Progreso"
-    },
     "catalogPending": "Pendiente",
-    "@catalogPending": {
-        "description": "Pestaña del catálogo - Pendiente"
-    },
     "catalogFinished": "Terminado",
-    "@catalogFinished": {
-        "description": "Pestaña del catálogo - Terminado"
-    },
     "catalogDropped": "Abandonado",
-    "@catalogDropped": {
-        "description": "Pestaña del catálogo - Abandonado"
-    },
     "catalogEmptyState": "No hay elementos en estado: {estado}",
     "@catalogEmptyState": {
-        "description": "Texto que aparece si una pestaña del catálogo está vacía",
         "placeholders": {
             "estado": {
-                "type": "String",
-                "example": "Pendiente"
+                "type": "String"
             }
         }
     },
+    "catalogCardState": "Estado",
+    "catalogCardSeriesSeason": "T{season}",
+    "@catalogCardSeriesSeason": {
+        "placeholders": {
+            "season": {
+                "type": "int"
+            }
+        }
+    },
+    "catalogCardSeriesEpisode": "Ep {episode}",
+    "@catalogCardSeriesEpisode": {
+        "placeholders": {
+            "episode": {
+                "type": "int"
+            }
+        }
+    },
+    "catalogCardBookChapter": "Capítulo",
+    "catalogCardBookPage": "Página",
+    "catalogCardBookChapterTotal": "Total: {total}",
+    "@catalogCardBookChapterTotal": {
+        "placeholders": {
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "catalogCardBookPageTotal": "Total: {total}",
+    "@catalogCardBookPageTotal": {
+        "placeholders": {
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "catalogCardUnitLabel": "{label}:",
+    "@catalogCardUnitLabel": {
+        "placeholders": {
+            "label": {
+                "type": "String"
+            }
+        }
+    },
+    "catalogCardUnitProgress": "{current} / {total}",
+    "@catalogCardUnitProgress": {
+        "placeholders": {
+            "current": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "catalogCardSaveChanges": "Guardar Progreso",
     "searchExploreType": "Explorar por Tipo",
-    "@searchExploreType": {
-        "description": "Subtítulo en la pantalla de búsqueda"
-    },
     "searchExploreGenre": "Explorar por Género",
-    "@searchExploreGenre": {
-        "description": "Subtítulo en la pantalla de búsqueda"
-    },
     "searchFieldHint": "Buscar por título...",
-    "@searchFieldHint": {
-        "description": "Texto de ayuda en la barra de búsqueda"
-    },
     "searchEmptyState": "No se encontraron elementos con el filtro aplicado.",
-    "@searchEmptyState": {
-        "description": "Texto si la búsqueda no devuelve resultados"
-    },
     "searchProposeButton": "Proponer Elemento",
-    "@searchProposeButton": {
-        "description": "Texto del botón flotante para proponer un elemento"
+    "elementDetailSynopsis": "Sinopsis",
+    "elementDetailProgressDetails": "Detalles del Progreso",
+    "elementDetailSeriesSeasons": "Total Temporadas",
+    "elementDetailSeriesEpisodes": "Episodios",
+    "elementDetailBookChapters": "Total Capítulos",
+    "elementDetailBookPages": "Total Páginas",
+    "elementDetailAnimeEpisodes": "Total Episodios",
+    "elementDetailMangaChapters": "Total Capítulos",
+    "elementDetailPrequels": "Precuelas",
+    "elementDetailSequels": "Secuelas",
+    "elementDetailReviews": "Reseñas ({count})",
+    "@elementDetailReviews": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
     },
+    "elementDetailAlreadyReviewed": "Ya has reseñado",
+    "elementDetailWriteReview": "Escribir Reseña",
+    "elementDetailNoReviews": "Aún no hay reseñas para este elemento.",
+    "elementDetailAddButton": "Añadir a Mi Catálogo",
+    "elementDetailAddingButton": "Añadiendo...",
+    "elementDetailRemoveButton": "Quitar del catálogo",
+    "elementDetailRemovingButton": "Eliminando...",
+    "elementDetailAdminEdit": "Editar",
+    "elementDetailAdminMakeCommunity": "Comunitarizar",
+    "elementDetailAdminMakeOfficial": "Oficializar",
+    "elementDetailAdminLoading": "...",
+    "elementDetailNoElement": "Elemento no encontrado.",
+    "contentStatusOfficial": "OFICIAL",
+    "contentStatusCommunity": "COMUNITARIO",
+    "reviewModalTitle": "Escribir Reseña",
+    "reviewModalReviewLabel": "Reseña (opcional)",
+    "reviewModalReviewHint": "Escribe tu opinión...",
+    "reviewModalSubmitButton": "Publicar Reseña",
+    "reviewCardBy": "Reseña de: {username}",
+    "@reviewCardBy": {
+        "placeholders": {
+            "username": {
+                "type": "String"
+            }
+        }
+    },
+    "reviewCardNoText": "Este usuario no ha escrito un texto.",
     "profileUserData": "Datos de Usuario",
-    "@profileUserData": {
-        "description": "Subtítulo para la sección de datos de usuario"
-    },
     "profileSaveButton": "Guardar Cambios",
-    "@profileSaveButton": {
-        "description": "Texto del botón para guardar cambios del perfil"
-    },
     "profileChangePassword": "Cambiar Contraseña",
-    "@profileChangePassword": {
-        "description": "Subtítulo para la sección de cambio de contraseña"
-    },
     "profileCurrentPassword": "Contraseña actual",
-    "@profileCurrentPassword": {
-        "description": "Etiqueta para el campo de contraseña actual"
-    },
     "profileNewPassword": "Nueva contraseña",
-    "@profileNewPassword": {
-        "description": "Etiqueta para el campo de nueva contraseña"
-    },
     "profileModPanelButton": "Panel de Moderación",
-    "@profileModPanelButton": {
-        "description": "Texto del botón para ir al panel de moderación"
-    },
     "profileAdminPanelButton": "Panel de Administrador",
-    "@profileAdminPanelButton": {
-        "description": "Texto del botón para ir al panel de administrador"
-    },
     "profileLogoutButton": "Cerrar Sesión",
-    "@profileLogoutButton": {
-        "description": "Texto del botón para cerrar sesión"
-    },
     "settingsTitle": "Ajustes",
-    "@settingsTitle": {
-        "description": "Título de la pantalla de Ajustes"
-    },
     "settingsDarkMode": "Modo Oscuro",
-    "@settingsDarkMode": {
-        "description": "Etiqueta para el interruptor de modo oscuro"
-    },
     "settingsDarkModeOn": "Activado",
-    "@settingsDarkModeOn": {
-        "description": "Subtítulo del interruptor de modo oscuro (Activado)"
-    },
     "settingsDarkModeOff": "Desactivado",
-    "@settingsDarkModeOff": {
-        "description": "Subtítulo del interruptor de modo oscuro (Desactivado)"
-    },
     "settingsLanguage": "Idioma",
-    "@settingsLanguage": {
-        "description": "Etiqueta para la selección de idioma"
-    },
     "settingsLanguageSpanish": "Español",
-    "@settingsLanguageSpanish": {
-        "description": "Opción de idioma Español"
-    },
     "settingsLanguageEnglish": "Inglés",
-    "@settingsLanguageEnglish": {
-        "description": "Opción de idioma Inglés"
-    },
     "settingsSystemDefault": "Sistema (Por defecto)",
-    "@settingsSystemDefault": {},
+    "dialogCloseButton": "Cerrar",
+    "proposalFormTitle": "Proponer Elemento",
+    "proposalFormTitleLabel": "Título Sugerido",
+    "proposalFormDescLabel": "Descripción Breve",
+    "proposalFormTypeLabel": "Tipo (Ej. Serie, Libro, Anime)",
+    "proposalFormGenresLabel": "Géneros (separados por coma)",
+    "proposalFormProgressTitle": "Datos de Progreso (Opcional)",
+    "proposalFormSeriesEpisodesLabel": "Episodios por Temporada",
+    "proposalFormSeriesEpisodesHint": "Ej. 10,8,12 (para T1, T2, T3)",
+    "proposalFormBookChaptersLabel": "Total Capítulos (Libro)",
+    "proposalFormBookPagesLabel": "Total Páginas (Libro)",
+    "proposalFormAnimeEpisodesLabel": "Total Episodios (Anime)",
+    "proposalFormMangaChaptersLabel": "Total Capítulos (Manga)",
+    "proposalFormNoProgress": "El tipo \"{tipo}\" no requiere datos de progreso.",
+    "@proposalFormNoProgress": {
+        "placeholders": {
+            "tipo": {
+                "type": "String"
+            }
+        }
+    },
+    "proposalFormSubmitButton": "Enviar Propuesta",
+    "adminFormEditTitle": "Editar Elemento",
+    "adminFormCreateTitle": "Crear Elemento Oficial",
+    "adminFormEditButton": "Guardar Cambios",
+    "adminFormCreateButton": "Crear Elemento",
+    "adminFormImageTitle": "Añadir portada",
+    "adminFormImageGallery": "Galería",
+    "adminFormImageUpload": "Subir",
+    "adminFormImageUploading": "Subiendo...",
+    "adminFormTitleLabel": "Título",
+    "adminFormDescLabel": "Descripción",
+    "adminFormTypeLabel": "Tipo (Ej. Serie, Libro)",
+    "adminFormGenresLabel": "Géneros (separados por coma)",
+    "adminFormProgressTitle": "Datos de Progreso (Opcional)",
+    "adminFormSequelsTitle": "Secuelas (Opcional)",
+    "adminFormSequelsSubtitle": "Elementos que van DESPUÉS de este.",
+    "adminPanelSearchHint": "Buscar por nombre o email...",
+    "adminPanelFilterAll": "Todos",
+    "adminPanelFilterMods": "Moderadores",
+    "adminPanelFilterAdmins": "Admins",
+    "adminPanelRoleMod": "Moderador",
+    "adminPanelRoleAdmin": "Administrador",
+    "adminPanelSaveButton": "Guardar Cambios",
+    "adminPanelCreateElement": "Crear Elemento",
+    "adminPanelNoUsersFound": "No se encontraron usuarios.",
+    "modPanelTitle": "Panel de Moderación",
+    "modPanelProposalFrom": "Propuesto por: {username}",
+    "@modPanelProposalFrom": {
+        "placeholders": {
+            "username": {
+                "type": "String"
+            }
+        }
+    },
+    "modPanelProposalType": "Tipo: {type}",
+    "@modPanelProposalType": {
+        "placeholders": {
+            "type": {
+                "type": "String"
+            }
+        }
+    },
+    "modPanelProposalGenres": "Géneros: {genres}",
+    "@modPanelProposalGenres": {
+        "placeholders": {
+            "genres": {
+                "type": "String"
+            }
+        }
+    },
+    "modPanelReject": "Rechazar",
+    "modPanelReview": "Revisar",
+    "modPanelNoPending": "¡Buen trabajo! No hay propuestas pendientes.",
+    "modPanelNoOthers": "No hay propuestas {status}.",
+    "@modPanelNoOthers": {
+        "placeholders": {
+            "status": {
+                "type": "String"
+            }
+        }
+    },
+    "modPanelStatusPending": "Pendientes",
+    "modPanelStatusApproved": "Aprobadas",
+    "modPanelStatusRejected": "Rechazadas",
+    "modEditTitle": "Revisar Propuesta",
+    "modEditImageTitle": "Sin portada",
+    "modEditProgressTitle": "Datos de Progreso (¡Obligatorio!)",
+    "modEditSeriesEpisodesRequired": "Este campo es obligatorio para Series",
+    "modEditBookChaptersRequired": "Este campo es obligatorio para Libros",
+    "modEditBookPagesRequired": "Este campo es obligatorio para Libros",
+    "modEditUnitRequired": "Este campo es obligatorio",
+    "modEditSubmitButton": "Guardar y Aprobar",
+    "totalEpisodes": "Total de Episodios",
+    "duration": "Duración",
+    "totalChapters": "Total de Capítulos",
+    "totalPages": "Total de Páginas",
+    "episodesPerSeason": "Episodios por Temporada",
+    "snackbarCloseButton": "CERRAR",
+    "snackbarLoginGoogleCancel": "Inicio de sesión cancelado.",
+    "snackbarRegisterSuccess": "¡Registro exitoso! Ahora has iniciado sesión automáticamente.",
+    "snackbarReviewPublished": "¡Reseña publicada!",
+    "snackbarReviewRatingRequired": "Por favor, selecciona una valoración (1-5 estrellas).",
+    "snackbarProposalSent": "¡Propuesta enviada con éxito! Gracias por tu contribución.",
+    "snackbarProfilePhotoUpdated": "¡Foto de perfil actualizada!",
+    "snackbarProfileNoChanges": "No has realizado ningún cambio.",
+    "snackbarProfileUsernameUpdated": "¡Nombre de usuario actualizado!",
+    "snackbarProfilePasswordUpdated": "¡Contraseña actualizada con éxito!",
+    "snackbarCatalogAdded": "¡Añadido al catálogo!",
+    "snackbarCatalogRemoved": "Elemento quitado del catálogo",
+    "snackbarCatalogStatusUpdated": "Estado actualizado.",
+    "snackbarCatalogProgressSaved": "Progreso guardado.",
+    "snackbarImageUploadSuccess": "¡Imagen subida!",
+    "snackbarImageUploadRequired": "Por favor, sube una imagen de portada.",
+    "snackbarImageUploadRequiredApproval": "Por favor, sube una imagen de portada antes de aprobar.",
+    "snackbarModProposalApproved": "¡Propuesta aprobada!",
+    "snackbarModProposalRejected": "Propuesta rechazada (simulado).",
+    "snackbarAdminRolesUpdated": "Roles de {username} actualizados.",
+    "@snackbarAdminRolesUpdated": {
+        "placeholders": {
+            "username": {
+                "type": "String"
+            }
+        }
+    },
+    "snackbarAdminElementUpdated": "¡Elemento actualizado!",
+    "snackbarAdminElementCreated": "¡Elemento OFICIAL creado!",
+    "snackbarAdminStatusCommunity": "Elemento marcado como COMUNITARIO.",
+    "snackbarAdminStatusOfficial": "¡Elemento marcado como OFICIAL!",
+    "snackbarFavoritoAdded": "Añadido a favoritos",
+    "snackbarFavoritoRemoved": "Eliminado de favoritos",
     "validationUsernameRequired": "El nombre de usuario es obligatorio.",
-    "@validationUsernameRequired": {
-        "description": "Error de validación para nombre de usuario vacío"
-    },
     "validationUsernameLength450": "El nombre de usuario debe tener entre 4 y 50 caracteres.",
-    "@validationUsernameLength450": {
-        "description": "Error de validación para longitud de nombre de usuario"
-    },
     "validationEmailRequired": "El email es obligatorio.",
-    "@validationEmailRequired": {
-        "description": "Error de validación para email vacío"
-    },
     "validationEmailInvalid": "Introduce un email válido.",
-    "@validationEmailInvalid": {
-        "description": "Error de validación para email con formato incorrecto"
-    },
     "validationPasswordRequired": "La contraseña es obligatoria.",
-    "@validationPasswordRequired": {
-        "description": "Error de validación para contraseña vacía"
-    },
     "validationPasswordCurrentRequired": "La contraseña actual es obligatoria.",
-    "@validationPasswordCurrentRequired": {
-        "description": "Error de validación para contraseña actual vacía"
-    },
     "validationPasswordNewRequired": "La nueva contraseña es obligatoria.",
-    "@validationPasswordNewRequired": {
-        "description": "Error de validación para nueva contraseña vacía"
-    },
     "validationPasswordMin8": "La nueva contraseña debe tener al menos 8 caracteres.",
-    "@validationPasswordMin8": {
-        "description": "Error de validación para contraseña corta"
-    },
+    "validationPasswordComplexity": "La contraseña debe cumplir con los requisitos de complejidad.",
+    "validationPasswordUnchanged": "No has realizado ningún cambio.",
+    "validationPasswordRules": "La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.",
     "validationElementIdRequired": "El ID del elemento no puede ser nulo.",
-    "@validationElementIdRequired": {
-        "description": "Error de validación"
-    },
     "validationRatingRequired": "La valoración es obligatoria.",
-    "@validationRatingRequired": {
-        "description": "Error de validación"
-    },
     "validationRatingMin1": "La valoración mínima es 1.",
-    "@validationRatingMin1": {
-        "description": "Error de validación"
-    },
     "validationRatingMax5": "La valoración máxima es 5.",
-    "@validationRatingMax5": {
-        "description": "Error de validación"
-    },
     "validationReviewMax2000": "La reseña no puede exceder los 2000 caracteres.",
-    "@validationReviewMax2000": {
-        "description": "Error de validación"
-    },
     "validationTitleRequired": "El título es obligatorio.",
-    "@validationTitleRequired": {
-        "description": "Error de validación"
-    },
     "validationDescRequired": "La descripción es obligatoria.",
-    "@validationDescRequired": {
-        "description": "Error de validación"
-    },
     "validationTypeRequired": "El tipo es obligatorio.",
-    "@validationTypeRequired": {
-        "description": "Error de validación"
-    },
     "validationGenresRequired": "Los géneros son obligatorios.",
-    "@validationGenresRequired": {
-        "description": "Error de validación"
-    },
     "validationGoogleTokenRequired": "El token de Google no puede estar vacío.",
-    "@validationGoogleTokenRequired": {
-        "description": "Error de validación"
-    },
     "validationModStatusRequired": "Debe especificar el estado de moderador.",
-    "@validationModStatusRequired": {
-        "description": "Error de validación"
-    },
     "validationAdminStatusRequired": "Debe especificar el estado de administrador.",
-    "@validationAdminStatusRequired": {
-        "description": "Error de validación"
-    },
+    "validationSeasonMin1": "La temporada debe ser al menos 1.",
+    "validationUnitMin0": "La unidad debe ser al menos 0.",
+    "validationChapterMin0": "El capítulo debe ser al menos 0.",
+    "validationPageMin0": "La página debe ser al menos 0.",
+    "validationTypeNameRequired": "El nombre del tipo es obligatorio.",
+    "validationTypeNameMax50": "El nombre del tipo debe tener 50 caracteres o menos.",
+    "validationGenreNameRequired": "El nombre del género es obligatorio.",
+    "validationGenreNameMax50": "El nombre del género debe tener 50 caracteres o menos.",
+    "validationTitleMax255": "El título debe tener 255 caracteres o menos.",
+    "validationDescMax5000": "La descripción debe tener 5000 caracteres o menos.",
+    "validationEpisodesStringMax255": "La cadena de episodios es demasiado larga.",
+    "validationUnitsMin1": "El total de unidades debe ser al menos 1.",
+    "validationChaptersMin1": "El total de capítulos debe ser al menos 1.",
+    "validationPagesMin1": "El total de páginas debe ser al menos 1.",
+    "validationCommentMax500": "El comentario debe tener 500 caracteres o menos.",
     "errorEmailAlreadyRegistered": "El email ya está registrado.",
-    "@errorEmailAlreadyRegistered": {
-        "description": "Error: El email ya está registrado."
-    },
     "errorUsernameAlreadyExists": "El nombre de usuario ya existe.",
-    "@errorUsernameAlreadyExists": {
-        "description": "Error: El nombre de usuario ya existe."
-    },
     "errorPasswordIncorrect": "La contraseña actual es incorrecta.",
-    "@errorPasswordIncorrect": {
-        "description": "Error: La contraseña actual es incorrecta."
-    },
     "errorAlreadyReviewed": "Ya has reseñado este elemento.",
-    "@errorAlreadyReviewed": {
-        "description": "Error: Ya has reseñado este elemento."
-    },
     "errorInvalidRatingRange": "La valoración debe estar entre 1 y 5.",
-    "@errorInvalidRatingRange": {
-        "description": "Error: La valoración debe estar entre 1 y 5."
-    },
     "errorProposalAlreadyHandled": "Esta propuesta ya ha sido gestionada.",
-    "@errorProposalAlreadyHandled": {
-        "description": "Error: Propuesta ya gestionada."
-    },
     "errorTypeEmpty": "El Tipo sugerido no puede estar vacío.",
-    "@errorTypeEmpty": {
-        "description": "Error: Tipo vacío."
-    },
     "errorGenresEmpty": "Los Géneros sugeridos no pueden estar vacíos.",
-    "@errorGenresEmpty": {
-        "description": "Error: Géneros vacíos."
-    },
     "errorGenreInvalid": "Se debe proporcionar al menos un género válido.",
-    "@errorGenreInvalid": {
-        "description": "Error: Género inválido."
-    },
     "errorFileEmpty": "El archivo está vacío.",
-    "@errorFileEmpty": {
-        "description": "Error: Archivo vacío."
-    },
     "errorAlreadyInCatalog": "Este elemento ya está en tu catálogo.",
-    "@errorAlreadyInCatalog": {
-        "description": "Error: Ya está en el catálogo."
-    },
     "errorValidation": "Error de validación.",
-    "@errorValidation": {
-        "description": "Error: Error de validación."
-    },
     "errorIllegalArgument": "Argumento no válido.",
-    "@errorIllegalArgument": {
-        "description": "Error: Argumento no válido."
-    },
     "errorInternalServerError": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.",
-    "@errorInternalServerError": {
-        "description": "Error: Error interno del servidor."
-    },
     "errorAccessDenied": "No tienes permiso para acceder a este recurso.",
-    "@errorAccessDenied": {
-        "description": "Error: Acceso denegado."
-    },
     "errorTokenExpired": "Tu sesión ha caducado. Por favor, inicia sesión de nuevo.",
-    "@errorTokenExpired": {
-        "description": "Error: Token JWT caducado."
-    },
     "errorTokenInvalid": "Token inválido. Por favor, inicia sesión de nuevo.",
-    "@errorTokenInvalid": {
-        "description": "Error: Token JWT inválido."
-    },
     "errorInvalidCredentials": "Email o contraseña incorrectos.",
-    "@errorInvalidCredentials": {
-        "description": "Error: Credenciales de login inválidas."
-    },
+    "errorGoogleTokenInvalid": "Token de Google inválido.",
+    "errorGoogleTokenError": "Error al verificar el token de Google.",
+    "errorRefreshTokenRequired": "Se requiere un token de refresco.",
+    "errorRefreshTokenNotFound": "Token de refresco no encontrado.",
+    "errorRefreshTokenExpired": "Tu sesión ha caducado. Por favor, inicia sesión de nuevo.",
+    "errorProposalNotFound": "Propuesta no encontrada.",
+    "errorNotInCatalog": "Este elemento no está en tu catálogo.",
+    "errorReviewerNotFound": "Revisor no encontrado.",
+    "errorFileSave": "Error al guardar el archivo.",
+    "errorUserNotFound": "Usuario no encontrado.",
     "errorUnexpected": "Error inesperado: {error}",
     "@errorUnexpected": {
         "placeholders": {
@@ -428,603 +469,62 @@
             }
         }
     },
-    "snackbarCloseButton": "CERRAR",
-    "@snackbarCloseButton": {},
-    "snackbarLoginGoogleCancel": "Inicio de sesión cancelado.",
-    "@snackbarLoginGoogleCancel": {},
-    "snackbarRegisterSuccess": "¡Registro exitoso! Ahora has iniciado sesión automáticamente.",
-    "@snackbarRegisterSuccess": {},
-    "snackbarReviewPublished": "¡Reseña publicada!",
-    "@snackbarReviewPublished": {},
-    "snackbarReviewRatingRequired": "Por favor, selecciona una valoración (1-5 estrellas).",
-    "@snackbarReviewRatingRequired": {},
-    "snackbarProposalSent": "¡Propuesta enviada con éxito! Gracias por tu contribución.",
-    "@snackbarProposalSent": {},
-    "snackbarProfilePhotoUpdated": "¡Foto de perfil actualizada!",
-    "@snackbarProfilePhotoUpdated": {},
-    "snackbarProfileNoChanges": "No has realizado ningún cambio.",
-    "@snackbarProfileNoChanges": {},
-    "snackbarProfileUsernameUpdated": "¡Nombre de usuario actualizado!",
-    "@snackbarProfileUsernameUpdated": {},
-    "snackbarProfilePasswordUpdated": "¡Contraseña actualizada con éxito!",
-    "@snackbarProfilePasswordUpdated": {},
-    "snackbarCatalogAdded": "¡Añadido al catálogo!",
-    "@snackbarCatalogAdded": {},
-    "snackbarCatalogRemoved": "Elemento quitado del catálogo",
-    "@snackbarCatalogRemoved": {},
-    "snackbarCatalogStatusUpdated": "Estado actualizado.",
-    "@snackbarCatalogStatusUpdated": {},
-    "snackbarCatalogProgressSaved": "Progreso guardado.",
-    "@snackbarCatalogProgressSaved": {},
-    "snackbarImageUploadSuccess": "¡Imagen subida!",
-    "@snackbarImageUploadSuccess": {},
-    "snackbarImageUploadRequired": "Por favor, sube una imagen de portada.",
-    "@snackbarImageUploadRequired": {},
-    "snackbarImageUploadRequiredApproval": "Por favor, sube una imagen de portada antes de aprobar.",
-    "@snackbarImageUploadRequiredApproval": {},
-    "snackbarModProposalApproved": "¡Propuesta aprobada!",
-    "@snackbarModProposalApproved": {},
-    "snackbarModProposalRejected": "Propuesta rechazada (simulado).",
-    "@snackbarModProposalRejected": {},
-    "snackbarAdminRolesUpdated": "Roles de {username} actualizados.",
-    "@snackbarAdminRolesUpdated": {
-        "placeholders": {
-            "username": {
-                "type": "String"
-            }
-        }
-    },
-    "snackbarAdminElementUpdated": "¡Elemento actualizado!",
-    "@snackbarAdminElementUpdated": {},
-    "snackbarAdminElementCreated": "¡Elemento OFICIAL creado!",
-    "@snackbarAdminElementCreated": {},
-    "snackbarAdminStatusCommunity": "Elemento marcado como COMUNITARIO.",
-    "@snackbarAdminStatusCommunity": {},
-    "snackbarAdminStatusOfficial": "¡Elemento marcado como OFICIAL!",
-    "@snackbarAdminStatusOfficial": {},
-    "reviewModalTitle": "Escribir Reseña",
-    "@reviewModalTitle": {},
-    "reviewModalReviewLabel": "Reseña (opcional)",
-    "@reviewModalReviewLabel": {},
-    "reviewModalReviewHint": "Escribe tu opinión...",
-    "@reviewModalReviewHint": {},
-    "reviewModalSubmitButton": "Publicar Reseña",
-    "@reviewModalSubmitButton": {},
-    "proposalFormTitle": "Proponer Elemento",
-    "@proposalFormTitle": {},
-    "proposalFormTitleLabel": "Título Sugerido",
-    "@proposalFormTitleLabel": {},
-    "proposalFormDescLabel": "Descripción Breve",
-    "@proposalFormDescLabel": {},
-    "proposalFormTypeLabel": "Tipo (Ej. Serie, Libro, Anime)",
-    "@proposalFormTypeLabel": {},
-    "proposalFormGenresLabel": "Géneros (separados por coma)",
-    "@proposalFormGenresLabel": {},
-    "proposalFormProgressTitle": "Datos de Progreso (Opcional)",
-    "@proposalFormProgressTitle": {},
-    "proposalFormSeriesEpisodesLabel": "Episodios por Temporada",
-    "@proposalFormSeriesEpisodesLabel": {},
-    "proposalFormSeriesEpisodesHint": "Ej. 10,8,12 (para T1, T2, T3)",
-    "@proposalFormSeriesEpisodesHint": {},
-    "proposalFormBookChaptersLabel": "Total Capítulos (Libro)",
-    "@proposalFormBookChaptersLabel": {},
-    "proposalFormBookPagesLabel": "Total Páginas (Libro)",
-    "@proposalFormBookPagesLabel": {},
-    "proposalFormAnimeEpisodesLabel": "Total Episodios (Anime)",
-    "@proposalFormAnimeEpisodesLabel": {},
-    "proposalFormMangaChaptersLabel": "Total Capítulos (Manga)",
-    "@proposalFormMangaChaptersLabel": {},
-    "proposalFormNoProgress": "El tipo \"{tipo}\" no requiere datos de progreso.",
-    "@proposalFormNoProgress": {
-        "placeholders": {
-            "tipo": {
-                "type": "String"
-            }
-        }
-    },
-    "proposalFormSubmitButton": "Enviar Propuesta",
-    "@proposalFormSubmitButton": {},
-    "elementDetailSynopsis": "Sinopsis",
-    "@elementDetailSynopsis": {},
-    "elementDetailProgressDetails": "Detalles del Progreso",
-    "@elementDetailProgressDetails": {},
-    "elementDetailSeriesSeasons": "Total Temporadas",
-    "@elementDetailSeriesSeasons": {},
-    "elementDetailSeriesEpisodes": "Episodios",
-    "@elementDetailSeriesEpisodes": {},
-    "elementDetailBookChapters": "Total Capítulos",
-    "@elementDetailBookChapters": {},
-    "elementDetailBookPages": "Total Páginas",
-    "@elementDetailBookPages": {},
-    "elementDetailAnimeEpisodes": "Total Episodios",
-    "@elementDetailAnimeEpisodes": {},
-    "elementDetailMangaChapters": "Total Capítulos",
-    "@elementDetailMangaChapters": {},
-    "elementDetailPrequels": "Precuelas",
-    "@elementDetailPrequels": {},
-    "elementDetailSequels": "Secuelas",
-    "@elementDetailSequels": {},
-    "elementDetailReviews": "Reseñas ({count})",
-    "@elementDetailReviews": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
-    "elementDetailAlreadyReviewed": "Ya has reseñado",
-    "@elementDetailAlreadyReviewed": {},
-    "elementDetailWriteReview": "Escribir Reseña",
-    "@elementDetailWriteReview": {},
-    "elementDetailNoReviews": "Aún no hay reseñas para este elemento.",
-    "@elementDetailNoReviews": {},
-    "elementDetailAddButton": "Añadir a Mi Catálogo",
-    "@elementDetailAddButton": {},
-    "elementDetailAddingButton": "Añadiendo...",
-    "@elementDetailAddingButton": {},
-    "elementDetailRemoveButton": "Quitar del catálogo",
-    "@elementDetailRemoveButton": {},
-    "elementDetailRemovingButton": "Eliminando...",
-    "@elementDetailRemovingButton": {},
-    "elementDetailAdminEdit": "Editar",
-    "@elementDetailAdminEdit": {},
-    "elementDetailAdminMakeCommunity": "Comunitarizar",
-    "@elementDetailAdminMakeCommunity": {},
-    "elementDetailAdminMakeOfficial": "Oficializar",
-    "@elementDetailAdminMakeOfficial": {},
-    "elementDetailAdminLoading": "...",
-    "@elementDetailAdminLoading": {},
-    "elementDetailNoElement": "Elemento no encontrado.",
-    "@elementDetailNoElement": {},
-    "adminFormEditTitle": "Editar Elemento",
-    "@adminFormEditTitle": {},
-    "adminFormCreateTitle": "Crear Elemento Oficial",
-    "@adminFormCreateTitle": {},
-    "adminFormEditButton": "Guardar Cambios",
-    "@adminFormEditButton": {},
-    "adminFormCreateButton": "Crear Elemento",
-    "@adminFormCreateButton": {},
-    "adminFormImageTitle": "Añadir portada",
-    "@adminFormImageTitle": {},
-    "adminFormImageGallery": "Galería",
-    "@adminFormImageGallery": {},
-    "adminFormImageUpload": "Subir",
-    "@adminFormImageUpload": {},
-    "adminFormImageUploading": "Subiendo...",
-    "@adminFormImageUploading": {},
-    "adminFormTitleLabel": "Título",
-    "@adminFormTitleLabel": {},
-    "adminFormDescLabel": "Descripción",
-    "@adminFormDescLabel": {},
-    "adminFormTypeLabel": "Tipo (Ej. Serie, Libro)",
-    "@adminFormTypeLabel": {},
-    "adminFormGenresLabel": "Géneros (separados por coma)",
-    "@adminFormGenresLabel": {},
-    "adminFormProgressTitle": "Datos de Progreso (Opcional)",
-    "@adminFormProgressTitle": {},
-    "adminFormSequelsTitle": "Secuelas (Opcional)",
-    "@adminFormSequelsTitle": {},
-    "adminFormSequelsSubtitle": "Elementos que van DESPUÉS de este.",
-    "@adminFormSequelsSubtitle": {},
-    "adminPanelSearchHint": "Buscar por nombre o email...",
-    "@adminPanelSearchHint": {},
-    "adminPanelFilterAll": "Todos",
-    "@adminPanelFilterAll": {},
-    "adminPanelFilterMods": "Moderadores",
-    "@adminPanelFilterMods": {},
-    "adminPanelFilterAdmins": "Admins",
-    "@adminPanelFilterAdmins": {},
-    "adminPanelRoleMod": "Moderador",
-    "@adminPanelRoleMod": {},
-    "adminPanelRoleAdmin": "Administrador",
-    "@adminPanelRoleAdmin": {},
-    "adminPanelSaveButton": "Guardar Cambios",
-    "@adminPanelSaveButton": {},
-    "adminPanelCreateElement": "Crear Elemento",
-    "@adminPanelCreateElement": {},
-    "adminPanelNoUsersFound": "No se encontraron usuarios.",
-    "@adminPanelNoUsersFound": {},
-    "modPanelTitle": "Panel de Moderación",
-    "@modPanelTitle": {},
-    "modPanelProposalFrom": "Propuesto por: {username}",
-    "@modPanelProposalFrom": {
-        "placeholders": {
-            "username": {
-                "type": "String"
-            }
-        }
-    },
-    "modPanelProposalType": "Tipo: {type}",
-    "@modPanelProposalType": {
-        "placeholders": {
-            "type": {
-                "type": "String"
-            }
-        }
-    },
-    "modPanelProposalGenres": "Géneros: {genres}",
-    "@modPanelProposalGenres": {
-        "placeholders": {
-            "genres": {
-                "type": "String"
-            }
-        }
-    },
-    "modPanelReject": "Rechazar",
-    "@modPanelReject": {},
-    "modPanelReview": "Revisar",
-    "@modPanelReview": {},
-    "modPanelNoPending": "¡Buen trabajo! No hay propuestas pendientes.",
-    "@modPanelNoPending": {},
-    "modPanelNoOthers": "No hay propuestas {status}.",
-    "@modPanelNoOthers": {
-        "placeholders": {
-            "status": {
-                "type": "String"
-            }
-        }
-    },
-    "modPanelStatusPending": "Pendientes",
-    "@modPanelStatusPending": {},
-    "modPanelStatusApproved": "Aprobadas",
-    "@modPanelStatusApproved": {},
-    "modPanelStatusRejected": "Rechazadas",
-    "@modPanelStatusRejected": {},
-    "modEditTitle": "Revisar Propuesta",
-    "@modEditTitle": {},
-    "modEditImageTitle": "Sin portada",
-    "@modEditImageTitle": {},
-    "modEditProgressTitle": "Datos de Progreso (¡Obligatorio!)",
-    "@modEditProgressTitle": {},
-    "modEditSeriesEpisodesRequired": "Este campo es obligatorio para Series",
-    "@modEditSeriesEpisodesRequired": {},
-    "modEditBookChaptersRequired": "Este campo es obligatorio para Libros",
-    "@modEditBookChaptersRequired": {},
-    "modEditBookPagesRequired": "Este campo es obligatorio para Libros",
-    "@modEditBookPagesRequired": {},
-    "modEditUnitRequired": "Este campo es obligatorio",
-    "@modEditUnitRequired": {},
-    "modEditSubmitButton": "Guardar y Aprobar",
-    "@modEditSubmitButton": {},
-    "catalogCardState": "Estado",
-    "@catalogCardState": {},
-    "catalogCardSeriesSeason": "T{season}",
-    "@catalogCardSeriesSeason": {
-        "placeholders": {
-            "season": {
-                "type": "int"
-            }
-        }
-    },
-    "catalogCardSeriesEpisode": "Ep {episode}",
-    "@catalogCardSeriesEpisode": {
-        "placeholders": {
-            "episode": {
-                "type": "int"
-            }
-        }
-    },
-    "catalogCardBookChapter": "Capítulo",
-    "@catalogCardBookChapter": {},
-    "catalogCardBookPage": "Página",
-    "@catalogCardBookPage": {},
-    "catalogCardBookChapterTotal": "Total: {total}",
-    "@catalogCardBookChapterTotal": {
-        "placeholders": {
-            "total": {
-                "type": "int"
-            }
-        }
-    },
-    "catalogCardBookPageTotal": "Total: {total}",
-    "@catalogCardBookPageTotal": {
-        "placeholders": {
-            "total": {
-                "type": "int"
-            }
-        }
-    },
-    "catalogCardUnitLabel": "{label}:",
-    "@catalogCardUnitLabel": {
-        "placeholders": {
-            "label": {
-                "type": "String"
-            }
-        }
-    },
-    "catalogCardUnitProgress": "{current} / {total}",
-    "@catalogCardUnitProgress": {
-        "placeholders": {
-            "current": {
-                "type": "int"
-            },
-            "total": {
-                "type": "int"
-            }
-        }
-    },
-    "catalogCardSaveChanges": "Guardar Progreso",
-    "@catalogCardSaveChanges": {},
-    "contentStatusOfficial": "OFICIAL",
-    "@contentStatusOfficial": {},
-    "contentStatusCommunity": "COMUNITARIO",
-    "@contentStatusCommunity": {},
-    "reviewCardBy": "Reseña de: {username}",
-    "@reviewCardBy": {
-        "placeholders": {
-            "username": {
-                "type": "String"
-            }
-        }
-    },
-    "reviewCardNoText": "Este usuario no ha escrito un texto.",
-    "@reviewCardNoText": {},
-    "errorGoogleTokenInvalid": "Token de Google inválido.",
-    "@errorGoogleTokenInvalid": {},
-    "errorGoogleTokenError": "Error al verificar el token de Google.",
-    "@errorGoogleTokenError": {},
-    "errorRefreshTokenRequired": "Se requiere un token de refresco.",
-    "@errorRefreshTokenRequired": {},
-    "errorRefreshTokenNotFound": "Token de refresco no encontrado.",
-    "@errorRefreshTokenNotFound": {},
-    "errorRefreshTokenExpired": "Tu sesión ha caducado. Por favor, inicia sesión de nuevo.",
-    "@errorRefreshTokenExpired": {},
-    "errorProposalNotFound": "Propuesta no encontrada.",
-    "@errorProposalNotFound": {},
-    "errorNotInCatalog": "Este elemento no está en tu catálogo.",
-    "@errorNotInCatalog": {},
-    "validationSeasonMin1": "La temporada debe ser al menos 1.",
-    "@validationSeasonMin1": {
-        "description": "Error de validación: El valor mínimo de temporada es 1."
-    },
-    "validationUnitMin0": "La unidad debe ser al menos 0.",
-    "@validationUnitMin0": {
-        "description": "Error de validación: El valor mínimo de unidad es 0."
-    },
-    "validationChapterMin0": "El capítulo debe ser al menos 0.",
-    "@validationChapterMin0": {
-        "description": "Error de validación: El valor mínimo de capítulo es 0."
-    },
-    "validationPageMin0": "La página debe ser al menos 0.",
-    "@validationPageMin0": {
-        "description": "Error de validación: El valor mínimo de página es 0."
-    },
-    "validationTypeNameRequired": "El nombre del tipo es obligatorio.",
-    "@validationTypeNameRequired": {
-        "description": "Error de validación: El nombre del tipo no puede estar vacío."
-    },
-    "validationTypeNameMax50": "El nombre del tipo debe tener 50 caracteres o menos.",
-    "@validationTypeNameMax50": {
-        "description": "Error de validación: El nombre del tipo excede los 50 caracteres."
-    },
-    "validationGenreNameRequired": "El nombre del género es obligatorio.",
-    "@validationGenreNameRequired": {
-        "description": "Error de validación: El nombre del género no puede estar vacío."
-    },
-    "validationGenreNameMax50": "El nombre del género debe tener 50 caracteres o menos.",
-    "@validationGenreNameMax50": {
-        "description": "Error de validación: El nombre del género excede los 50 caracteres."
-    },
-    "validationTitleMax255": "El título debe tener 255 caracteres o menos.",
-    "@validationTitleMax255": {
-        "description": "Error de validación: El título excede los 255 caracteres."
-    },
-    "validationDescMax5000": "La descripción debe tener 5000 caracteres o menos.",
-    "@validationDescMax5000": {
-        "description": "Error de validación: La descripción excede los 5000 caracteres."
-    },
-    "validationEpisodesStringMax255": "La cadena de episodios es demasiado larga.",
-    "@validationEpisodesStringMax255": {
-        "description": "Error de validación: La cadena de episodios excede los 255 caracteres."
-    },
-    "validationUnitsMin1": "El total de unidades debe ser al menos 1.",
-    "@validationUnitsMin1": {
-        "description": "Error de validación: El total mínimo de unidades es 1."
-    },
-    "validationChaptersMin1": "El total de capítulos debe ser al menos 1.",
-    "@validationChaptersMin1": {
-        "description": "Error de validación: El total mínimo de capítulos es 1."
-    },
-    "validationPagesMin1": "El total de páginas debe ser al menos 1.",
-    "@validationPagesMin1": {
-        "description": "Error de validación: El total mínimo de páginas es 1."
-    },
-    "validationCommentMax500": "El comentario debe tener 500 caracteres o menos.",
-    "@validationCommentMax500": {
-        "description": "Error de validación: El comentario excede los 500 caracteres."
-    },
-    "errorReviewerNotFound": "Revisor no encontrado.",
-    "@errorReviewerNotFound": {
-        "description": "Error: Revisor no encontrado."
-    },
-    "errorFileSave": "Error al guardar el archivo.",
-    "@errorFileSave": {
-        "description": "Error: No se pudo guardar el archivo."
-    },
-    "errorUserNotFound": "Usuario no encontrado.",
-    "@errorUserNotFound": {
-        "description": "Error: Usuario no encontrado en el sistema."
-    },
-    "passwordRulesTitle": "Reglas de Contraseña",
-    "@passwordRulesTitle": {
-        "description": "Título para el diálogo de reglas de contraseña."
-    },
-    "passwordRulesContent": "\n• Mínimo 8 caracteres\n• Al menos 1 mayúscula\n• Al menos 1 minúscula\n• Al menos 1 número\n• Al menos 1 carácter especial (@$!%*?&)\n",
-    "@passwordRulesContent": {
-        "description": "Contenido para el diálogo de reglas de contraseña."
-    },
-    "dialogCloseButton": "Cerrar",
-    "@dialogCloseButton": {
-        "description": "Etiqueta para el botón de cerrar en diálogos."
-    },
-    "validationPasswordComplexity": "La contraseña debe cumplir con los requisitos de complejidad.",
-    "@validationPasswordComplexity": {
-        "description": "Mensaje de validación para la complejidad de la contraseña."
-    },
-    "validationPasswordUnchanged": "No has realizado ningún cambio.",
-    "@validationPasswordUnchanged": {
-        "description": "Mensaje mostrado cuando el usuario intenta guardar la misma contraseña que la actual"
-    },
-    "registrationSuccessAutoLogin": "¡Registro exitoso! Ahora has iniciado sesión automáticamente.",
-    "@registrationSuccessAutoLogin": {
-        "description": "Mensaje mostrado después de un registro exitoso e inicio de sesión automático"
-    },
-    "validationPasswordRules": "La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial.",
-    "@validationPasswordRules": {
-        "description": "Reglas de validación para contraseñas"
-    },
     "typeAnime": "Anime",
-    "@typeAnime": {},
     "typeMovie": "Película",
-    "@typeMovie": {},
     "typeVideoGame": "Videojuego",
-    "@typeVideoGame": {},
     "typeManga": "Manga",
-    "@typeManga": {},
     "typeManhwa": "Manhwa",
-    "@typeManhwa": {},
     "typeBook": "Libro",
-    "@typeBook": {},
     "typeSeries": "Serie",
-    "@typeSeries": {},
     "genreAction": "Acción",
-    "@genreAction": {},
     "genreAdventure": "Aventura",
-    "@genreAdventure": {},
     "genreComedy": "Comedia",
-    "@genreComedy": {},
     "genreDrama": "Drama",
-    "@genreDrama": {},
     "genreFantasy": "Fantasía",
-    "@genreFantasy": {},
     "genreHorror": "Terror",
-    "@genreHorror": {},
     "genreMystery": "Misterio",
-    "@genreMystery": {},
     "genreRomance": "Romance",
-    "@genreRomance": {},
     "genreSciFi": "Ciencia Ficción",
-    "@genreSciFi": {},
     "genreSliceOfLife": "Recuentos de la vida",
-    "@genreSliceOfLife": {},
     "genrePsychological": "Psicológico",
-    "@genrePsychological": {},
     "genreThriller": "Thriller",
-    "@genreThriller": {},
     "genreHistorical": "Histórico",
-    "@genreHistorical": {},
     "genreCrime": "Crimen",
-    "@genreCrime": {},
     "genreFamily": "Familia",
-    "@genreFamily": {},
     "genreWar": "Guerra",
-    "@genreWar": {},
     "genreCyberpunk": "Cyberpunk",
-    "@genreCyberpunk": {},
     "genrePostApocalyptic": "Post-apocalíptico",
-    "@genrePostApocalyptic": {},
     "genreShonen": "Shonen",
-    "@genreShonen": {},
     "genreShojo": "Shojo",
-    "@genreShojo": {},
     "genreSeinen": "Seinen",
-    "@genreSeinen": {},
     "genreJosei": "Josei",
-    "@genreJosei": {},
     "genreIsekai": "Isekai",
-    "@genreIsekai": {},
     "genreMecha": "Mecha",
-    "@genreMecha": {},
     "genreHarem": "Harem",
-    "@genreHarem": {},
     "genreEcchi": "Ecchi",
-    "@genreEcchi": {},
     "genreYaoi": "Yaoi",
-    "@genreYaoi": {},
     "genreYuri": "Yuri",
-    "@genreYuri": {},
     "genreMartialArts": "Artes Marciales",
-    "@genreMartialArts": {},
     "genreSchool": "Escolar",
-    "@genreSchool": {},
     "genreRPG": "RPG",
-    "@genreRPG": {},
     "genreShooter": "Shooter",
-    "@genreShooter": {},
     "genrePlatformer": "Plataformas",
-    "@genrePlatformer": {},
     "genreStrategy": "Estrategia",
-    "@genreStrategy": {},
     "genrePuzzle": "Puzzle",
-    "@genrePuzzle": {},
     "genreFighting": "Lucha",
-    "@genreFighting": {},
     "genreSports": "Deportes",
-    "@genreSports": {},
     "genreRacing": "Carreras",
-    "@genreRacing": {},
     "genreOpenWorld": "Mundo Abierto",
-    "@genreOpenWorld": {},
     "genreRoguelike": "Roguelike",
-    "@genreRoguelike": {},
     "genreMOBA": "MOBA",
-    "@genreMOBA": {},
     "genreBattleRoyale": "Battle Royale",
-    "@genreBattleRoyale": {},
     "genreSimulator": "Simulador",
-    "@genreSimulator": {},
     "genreSurvivalHorror": "Terror de supervivencia",
-    "@genreSurvivalHorror": {},
     "genreBiography": "Biografía",
-    "@genreBiography": {},
     "genreEssay": "Ensayo",
-    "@genreEssay": {},
     "genrePoetry": "Poesía",
-    "@genrePoetry": {},
     "genreSelfHelp": "Autoayuda",
-    "@genreSelfHelp": {},
     "genreBusiness": "Negocios",
-    "@genreBusiness": {},
     "genreNoir": "Novela Negra",
-    "@genreNoir": {},
-    "genreMagicalRealism": "Realismo Mágico",
-    "@genreMagicalRealism": {},
-    "passwordRuleLength": "Al menos 8 caracteres",
-    "@passwordRuleLength": {},
-    "passwordRuleUppercase": "Al menos una mayúscula",
-    "@passwordRuleUppercase": {},
-    "passwordRuleLowercase": "Al menos una minúscula",
-    "@passwordRuleLowercase": {},
-    "passwordRuleNumber": "Al menos un número",
-    "@passwordRuleNumber": {},
-    "passwordRuleSpecial": "Al menos un carácter especial (@$!%*?&)",
-    "@passwordRuleSpecial": {},
-    "totalEpisodes": "Total de Episodios",
-    "@totalEpisodes": {
-        "description": "Etiqueta para el campo de entrada de episodios totales."
-    },
-    "duration": "Duración",
-    "@duration": {
-        "description": "Etiqueta para el campo de entrada de duración."
-    },
-    "totalChapters": "Total de Capítulos",
-    "@totalChapters": {
-        "description": "Etiqueta para el campo de entrada de capítulos totales."
-    },
-    "totalPages": "Total de Páginas",
-    "@totalPages": {
-        "description": "Etiqueta para el campo de entrada de páginas totales."
-    },
-    "episodesPerSeason": "Episodios por Temporada",
-    "@episodesPerSeason": {
-        "description": "Etiqueta para el campo de entrada de episodios por temporada."
-    },
-    "snackbarFavoritoAdded": "Añadido a favoritos",
-    "@snackbarFavoritoAdded": {
-        "description": "Mensaje mostrado cuando un elemento se añade a favoritos"
-    },
-    "snackbarFavoritoRemoved": "Eliminado de favoritos",
-    "@snackbarFavoritoRemoved": {
-        "description": "Mensaje mostrado cuando un elemento se elimina de favoritos"
-    }
+    "genreMagicalRealism": "Realismo Mágico"
 }

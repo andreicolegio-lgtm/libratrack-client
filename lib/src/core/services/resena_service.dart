@@ -3,39 +3,53 @@ import '../utils/api_client.dart';
 import '../utils/api_exceptions.dart';
 import '../../model/resena.dart';
 
+/// Servicio para gestionar las reseñas y valoraciones de contenido.
 class ResenaService with ChangeNotifier {
   final ApiClient _apiClient;
   ResenaService(this._apiClient);
 
+  /// Obtiene todas las reseñas de un elemento específico.
   Future<List<Resena>> getResenas(int elementoId) async {
     try {
-      final List<dynamic> data =
+      final dynamic response =
           await _apiClient.get('resenas/elemento/${elementoId.toString()}');
-      return data.map((item) => Resena.fromJson(item)).toList();
-    } on ApiException {
-      rethrow;
+
+      final List<dynamic> data = response is List ? response : [];
+
+      return data
+          .map((item) => Resena.fromJson(item as Map<String, dynamic>))
+          .toList();
     } catch (e) {
-      throw ApiException('Error al cargar las reseñas: ${e.toString()}');
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw ApiException('Error al cargar las reseñas: $e');
     }
   }
 
-  Future<Resena> crearResena(
-      {required int elementoId,
-      required int valoracion,
-      String? textoResena}) async {
+  /// Publica una nueva reseña.
+  Future<Resena> crearResena({
+    required int elementoId,
+    required int valoracion,
+    String? textoResena,
+  }) async {
     try {
-      final Map<String, Object?> body = <String, Object?>{
+      final Map<String, dynamic> body = {
         'elementoId': elementoId,
         'valoracion': valoracion,
         'textoResena': textoResena,
       };
 
-      final data = await _apiClient.post('resenas', body);
-      return Resena.fromJson(data);
-    } on ApiException {
-      rethrow;
+      // Eliminamos nulos para limpiar el payload
+      body.removeWhere((key, value) => value == null);
+
+      final dynamic data = await _apiClient.post('resenas', body);
+      return Resena.fromJson(data as Map<String, dynamic>);
     } catch (e) {
-      throw ApiException('Error al publicar la reseña: ${e.toString()}');
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw ApiException('Error al publicar la reseña: $e');
     }
   }
 }

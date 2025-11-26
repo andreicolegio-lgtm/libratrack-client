@@ -1,16 +1,38 @@
-# Configuración para el generador de código de internacionalización (i18n)
+# ==============================================================================
+# Configuración del Generador de Localización de Flutter (gen-l10n)
+# ==============================================================================
+# Esta configuración controla cómo se genera el código Dart a partir de los
+# archivos de recursos (.arb).
 
-# 1. El archivo ARB (Formato de Recurso de Aplicación) que contiene el texto base
-template-arb-file: app_es.arb
-
-# 2. El archivo Dart que se generará automáticamente
-output-localization-file: app_localizations.dart
-
-# 3. (Opcional pero recomendado) El nombre de la clase generada
-output-class: AppLocalizations
-
-# 4. (Opcional pero recomendado) La carpeta donde buscar los archivos .arb
+# Directorio donde se encuentran los archivos de recursos (.arb)
 arb-dir: lib/l10n
 
-# 5. (Opcional pero recomendado) La carpeta donde se generará el código .dart
+# Archivo plantilla que define las claves y metadatos base (generalmente inglés)
+template-arb-file: app_en.arb
+
+# Nombre del archivo Dart principal que se generará
+output-localization-file: app_localizations.dart
+
+# Nombre de la clase Dart generada (opcional, por defecto AppLocalizations)
+output-class: AppLocalizations
+
+# Directorio donde se guardará el código generado (opcional, por defecto en .dart_tool)
 output-dir: lib/src/core/l10n
+
+# Configuración de Linter y Metadatos
+# ------------------------------------
+# Deshabilita la obligatoriedad de definir metadatos (@key) para cada clave.
+# Esto evita advertencias del linter si no documentamos cada string individual.
+required-resource-attributes: false
+
+# Silencia advertencias sobre claves faltantes en archivos secundarios (ej. español).
+# Útil durante el desarrollo rápido, pero se recomienda revisar antes de producción.
+suppress-warnings: true
+
+# Configuración de Clases Sintéticas
+# ----------------------------------
+# Generar clases con seguridad de nulos (Null Safety).
+nullable-getter: false
+
+# Usar la sintaxis moderna de Dart
+use-deferred-loading: false

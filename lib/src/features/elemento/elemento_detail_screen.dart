@@ -9,7 +9,6 @@ import '../../core/services/auth_service.dart';
 import '../../model/elemento.dart';
 import '../../model/catalogo_entrada.dart';
 import '../../model/resena.dart';
-import '../../model/perfil_usuario.dart';
 import '../../model/elemento_relacion.dart';
 import 'widgets/resena_form_modal.dart';
 import 'widgets/resena_card.dart';
@@ -18,6 +17,7 @@ import '../../core/utils/error_translator.dart';
 import '../../core/services/admin_service.dart';
 import '../admin/admin_elemento_form.dart';
 import '../../core/utils/api_exceptions.dart';
+import '../../core/widgets/maybe_marquee.dart';
 
 class ElementoDetailScreen extends StatefulWidget {
   final int elementoId;
@@ -38,17 +38,19 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   late final AdminService _adminService;
   late final AuthService _authService;
 
-  late Future<Map<String, dynamic>> _screenDataFuture;
+  late Future<void> _screenDataFuture;
 
+  Elemento? _elemento;
+  List<Resena> _resenas = [];
   bool _isInCatalog = false;
-  bool _isAdding = false;
-  bool _isDeleting = false;
-  bool _isLoadingStatusChange = false;
   bool _isFavorito = false;
-
-  List<Resena> _resenas = <Resena>[];
   bool _haResenado = false;
-  String? _usernameActual;
+
+  // Estado UI
+  bool _isAddingToCatalog = false;
+  bool _isRemovingFromCatalog = false;
+  bool _isTogglingFavorite = false;
+  bool _isUpdatingAdminStatus = false;
 
   @override
   void initState() {
@@ -59,402 +61,314 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     _adminService = context.read<AdminService>();
     _authService = context.read<AuthService>();
 
-    _loadScreenData();
+    _screenDataFuture = _loadData();
   }
 
-  @override
-  void didUpdateWidget(ElementoDetailScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.elementoId != oldWidget.elementoId) {
-      _loadScreenData();
-    }
-  }
-
-  void _loadScreenData() {
-    _screenDataFuture = _fetchData();
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  Future<Map<String, dynamic>> _fetchData() async {
+  /// Carga inicial de todos los datos necesarios.
+  Future<void> _loadData() async {
     try {
-      final PerfilUsuario perfil = _authService.perfilUsuario!;
-      _usernameActual = perfil.username;
-
-      await _catalogService.fetchCatalog();
-      final List<CatalogoEntrada> catalogo = _catalogService.entradas;
-
-      final List<Object> results = await Future.wait(<Future<Object>>[
+      // 1. Cargar Elemento y Reseñas en paralelo
+      final results = await Future.wait([
         _elementoService.getElementoById(widget.elementoId),
         _resenaService.getResenas(widget.elementoId),
       ]);
 
-      final Elemento elemento = results[0] as Elemento;
-      final List<Resena> resenas = results[1] as List<Resena>;
+      _elemento = results[0] as Elemento;
+      _resenas = results[1] as List<Resena>;
 
-      final bool inCatalog = catalogo.any(
-          (CatalogoEntrada entrada) => entrada.elementoId == widget.elementoId);
+      // 2. Verificar estado en el catálogo (usando caché del servicio si es posible)
+      // Nota: Si el catálogo no está cargado, podríamos forzar una carga rápida o comprobar solo este ID
+      final CatalogoEntrada? entrada =
+          _catalogService.getEntradaPorElementoId(widget.elementoId);
 
-      final bool haResenado = resenas
-          .any((Resena resena) => resena.usernameAutor == _usernameActual);
+      _isInCatalog = entrada != null;
+      _isFavorito = entrada?.esFavorito ?? false;
 
-      _isInCatalog = inCatalog;
-      _resenas = resenas;
-      _haResenado = haResenado;
-
-      return <String, dynamic>{'elemento': elemento, 'perfil': perfil};
-    } on ApiException {
-      rethrow;
+      // 3. Verificar si el usuario actual ya reseñó
+      final username = _authService.perfilUsuario?.username;
+      if (username != null) {
+        _haResenado = _resenas.any((r) => r.usernameAutor == username);
+      }
     } catch (e) {
+      // Dejamos que el FutureBuilder maneje el error en la UI
       rethrow;
     }
   }
 
-  Future<void> _handleAddElemento() async {
-    setState(() {
-      _isAdding = true;
-    });
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+  // --- Acciones de Usuario ---
+
+  Future<void> _handleAddCatalog() async {
+    setState(() => _isAddingToCatalog = true);
+    final l10n = AppLocalizations.of(context);
+
     try {
       await _catalogService.addElemento(widget.elementoId);
       if (!mounted) {
         return;
       }
+
       setState(() {
-        _isAdding = false;
         _isInCatalog = true;
+        // Al añadir, por defecto no es favorito a menos que el backend diga lo contrario,
+        // pero asumimos false inicial.
+        _isFavorito = false;
       });
+
       SnackBarHelper.showTopSnackBar(context, l10n.snackbarCatalogAdded,
           isError: false);
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isAdding = false;
-      });
-      SnackBarHelper.showTopSnackBar(
-          context, ErrorTranslator.translate(context, e.message),
-          isError: true);
     } catch (e) {
-      if (!mounted) {
-        return;
+      _handleError(e, l10n);
+    } finally {
+      if (mounted) {
+        setState(() => _isAddingToCatalog = false);
       }
-      setState(() {
-        _isAdding = false;
-      });
-      SnackBarHelper.showTopSnackBar(
-          context, l10n.errorUnexpected(e.toString()),
-          isError: true);
     }
   }
 
-  Future<void> _handleRemoveElemento() async {
-    setState(() {
-      _isDeleting = true;
-    });
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+  Future<void> _handleRemoveCatalog() async {
+    setState(() => _isRemovingFromCatalog = true);
+    final l10n = AppLocalizations.of(context);
+
     try {
       await _catalogService.removeElemento(widget.elementoId);
       if (!mounted) {
         return;
       }
+
       setState(() {
-        _isDeleting = false;
         _isInCatalog = false;
+        _isFavorito =
+            false; // Si se quita del catálogo, ya no es favorito visiblemente
       });
+
       SnackBarHelper.showTopSnackBar(context, l10n.snackbarCatalogRemoved,
           isError: false);
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isDeleting = false;
-      });
-      SnackBarHelper.showTopSnackBar(
-          context, ErrorTranslator.translate(context, e.message),
-          isError: true);
     } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isDeleting = false;
-      });
-      SnackBarHelper.showTopSnackBar(
-          context, l10n.errorUnexpected(e.toString()),
-          isError: true);
-    }
-  }
-
-  Future<void> _openWriteReviewModal() async {
-    final Resena? resultado = await showModalBottomSheet<Resena>(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext ctx) {
-        return ResenaFormModal(elementoId: widget.elementoId);
-      },
-    );
-    if (resultado != null) {
-      setState(() {
-        _resenas.insert(0, resultado);
-        _haResenado = true;
-      });
-    }
-  }
-
-  Future<void> _handleToggleOficial(Elemento elemento) async {
-    final bool esOficial = elemento.estadoContenido == 'OFICIAL';
-    setState(() {
-      _isLoadingStatusChange = true;
-    });
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
-    try {
-      await _adminService.toggleElementoOficial(
-        elemento.id,
-        !esOficial,
-      );
-      if (!mounted) {
-        return;
-      }
-      final String successMessage = esOficial
-          ? l10n.snackbarAdminStatusCommunity
-          : l10n.snackbarAdminStatusOfficial;
-      SnackBarHelper.showTopSnackBar(context, successMessage, isError: false);
-      _loadScreenData();
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      SnackBarHelper.showTopSnackBar(
-          context, ErrorTranslator.translate(context, e.message),
-          isError: true);
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      SnackBarHelper.showTopSnackBar(
-          context, l10n.errorUnexpected(e.toString()),
-          isError: true);
+      _handleError(e, l10n);
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoadingStatusChange = false;
-        });
+        setState(() => _isRemovingFromCatalog = false);
       }
     }
   }
 
-  Future<void> _goToEditarElemento(Elemento elemento) async {
-    if (_isAnyLoading()) {
+  Future<void> _handleToggleFavorite() async {
+    if (_isTogglingFavorite) {
       return;
     }
-    final bool? seHaActualizado = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (BuildContext context) =>
-            AdminElementoFormScreen(elemento: elemento),
-      ),
-    );
-    if (seHaActualizado == true && mounted) {
-      _loadScreenData();
-    }
-  }
 
-  Future<void> _handleToggleFavorito() async {
+    // Optimistic UI Update
     setState(() {
+      _isTogglingFavorite = true;
       _isFavorito = !_isFavorito;
     });
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+
+    final l10n = AppLocalizations.of(context);
+
     try {
       await _catalogService.toggleFavorite(widget.elementoId);
-      SnackBarHelper.showTopSnackBar(
-        context,
-        _isFavorito ? l10n.snackbarFavoritoAdded : l10n.snackbarFavoritoRemoved,
-        isError: false,
-      );
-    } on ApiException catch (e) {
-      setState(() {
-        _isFavorito = !_isFavorito; // Revert state on error
-      });
-      SnackBarHelper.showTopSnackBar(
-        context,
-        ErrorTranslator.translate(context, e.message),
-        isError: true,
-      );
+
+      if (!mounted) {
+        return;
+      }
+
+      final msg = _isFavorito
+          ? l10n.snackbarFavoritoAdded
+          : l10n.snackbarFavoritoRemoved;
+      SnackBarHelper.showTopSnackBar(context, msg, isError: false);
+
+      // Si no estaba en catálogo y se marcó favorito, ahora está en catálogo implícitamente
+      if (!_isInCatalog && _isFavorito) {
+        setState(() => _isInCatalog = true);
+      }
     } catch (e) {
-      setState(() {
-        _isFavorito = !_isFavorito; // Revert state on error
-      });
-      SnackBarHelper.showTopSnackBar(
-        context,
-        l10n.errorUnexpected(e.toString()),
-        isError: true,
-      );
+      // Revertir en caso de error
+      if (mounted) {
+        setState(() => _isFavorito = !_isFavorito);
+        _handleError(e, l10n);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isTogglingFavorite = false);
+      }
     }
   }
 
-  bool _isAnyLoading() {
-    return _isAdding || _isDeleting || _isLoadingStatusChange;
+  Future<void> _openReviewModal() async {
+    final l10n = AppLocalizations.of(context);
+    final Resena? nuevaResena = await showModalBottomSheet<Resena>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => ResenaFormModal(elementoId: widget.elementoId),
+    );
+
+    if (nuevaResena != null && mounted) {
+      setState(() {
+        _resenas.insert(0, nuevaResena);
+        _haResenado = true;
+      });
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarReviewPublished,
+          isError: false);
+    }
   }
+
+  // --- Acciones de Admin ---
+
+  Future<void> _handleToggleOfficial() async {
+    if (_elemento == null) {
+      return;
+    }
+
+    setState(() => _isUpdatingAdminStatus = true);
+    final l10n = AppLocalizations.of(context);
+    final bool esOficialActual = _elemento!.estadoContenido == 'OFICIAL';
+
+    try {
+      final updatedElement = await _adminService.toggleElementoOficial(
+        widget.elementoId,
+        !esOficialActual, // Invertir estado
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() => _elemento = updatedElement);
+
+      final msg = updatedElement.estadoContenido == 'OFICIAL'
+          ? l10n.snackbarAdminStatusOfficial
+          : l10n.snackbarAdminStatusCommunity;
+
+      SnackBarHelper.showTopSnackBar(context, msg, isError: false);
+    } catch (e) {
+      _handleError(e, l10n);
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingAdminStatus = false);
+      }
+    }
+  }
+
+  Future<void> _goToEditElement() async {
+    if (_elemento == null) {
+      return;
+    }
+
+    final bool? result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (_) => AdminElementoFormScreen(elemento: _elemento)),
+    );
+
+    if (result == true) {
+      // Recargar datos si hubo edición exitosa
+      setState(() {
+        _screenDataFuture = _loadData();
+      });
+    }
+  }
+
+  void _handleError(Object e, AppLocalizations l10n) {
+    if (!mounted) {
+      return;
+    }
+
+    String msg = l10n.errorUnexpected(e.toString());
+    if (e is ApiException) {
+      msg = ErrorTranslator.translate(context, e.message);
+    }
+    SnackBarHelper.showTopSnackBar(context, msg, isError: true);
+  }
+
+  bool get _isProcessing => _isAddingToCatalog || _isRemovingFromCatalog;
+
+  // --- UI Builder ---
 
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      body: FutureBuilder<Map<String, dynamic>>(
+      body: FutureBuilder<void>(
         future: _screenDataFuture,
-        builder: (BuildContext context,
-            AsyncSnapshot<Map<String, dynamic>> snapshot) {
+        builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+
           if (snapshot.hasError) {
-            String errorMessage;
-            if (snapshot.error is ApiException) {
-              errorMessage = ErrorTranslator.translate(
-                  context, (snapshot.error as ApiException).message);
-            } else {
-              errorMessage =
-                  l10n.errorLoadingElement(snapshot.error.toString());
-            }
             return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  errorMessage,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.red),
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(l10n.errorLoadingElement(''),
+                      textAlign: TextAlign.center),
+                  TextButton(
+                    onPressed: () =>
+                        setState(() => _screenDataFuture = _loadData()),
+                    child: const Text('Reintentar'),
+                  )
+                ],
               ),
             );
           }
-          if (!snapshot.hasData) {
+
+          if (_elemento == null) {
             return Center(child: Text(l10n.elementDetailNoElement));
           }
 
-          final Elemento elemento = snapshot.data!['elemento'];
-          final PerfilUsuario perfil = snapshot.data!['perfil'];
-
           return CustomScrollView(
-            slivers: <Widget>[
-              SliverAppBar(
-                expandedHeight: 300.0,
-                pinned: true,
-                backgroundColor: Theme.of(context).colorScheme.surface,
-                flexibleSpace: FlexibleSpaceBar(
-                  centerTitle: true,
-                  titlePadding: const EdgeInsets.symmetric(
-                      vertical: 16.0, horizontal: 24.0),
-                  title: Text(
-                    elemento.titulo,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        shadows: <Shadow>[const Shadow(blurRadius: 10)],
-                        fontSize: 20),
-                    textAlign: TextAlign.center,
-                  ),
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: <Widget>[
-                      if (elemento.urlImagen != null &&
-                          elemento.urlImagen!.isNotEmpty)
-                        CachedNetworkImage(
-                          imageUrl: elemento.urlImagen!,
-                          fit: BoxFit.cover,
-                          placeholder: (BuildContext context, String url) =>
-                              Container(
-                                  color: Theme.of(context).colorScheme.surface),
-                          errorWidget: (BuildContext context, String url,
-                                  Object error) =>
-                              Container(
-                                  color: Theme.of(context).colorScheme.surface),
-                        )
-                      else
-                        Container(color: Theme.of(context).colorScheme.surface),
-                      Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: <Color>[Colors.transparent, Colors.black87],
-                            stops: <double>[0.5, 1.0],
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 40,
-                        right: 16,
-                        child: _buildEstadoChip(context, elemento),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            slivers: [
+              _buildSliverAppBar(context),
               SliverList(
-                delegate: SliverChildListDelegate(
-                  <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            '${elemento.tipo} | ${elemento.generos.join(", ")}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  fontSize: 16,
-                                  color: Colors.grey[400],
-                                  fontStyle: FontStyle.italic,
-                                ),
-                          ),
-                          const SizedBox(height: 24),
-                          _buildAdminButtons(context, perfil, elemento, l10n),
-                          _buildAddOrRemoveButton(l10n),
-                          const SizedBox(height: 24),
-                          Text(l10n.elementDetailSynopsis,
-                              style: Theme.of(context).textTheme.titleLarge),
-                          const SizedBox(height: 8),
-                          Text(elemento.descripcion,
-                              style: Theme.of(context).textTheme.bodyMedium),
-                          _buildProgresoTotalInfo(elemento, l10n),
-                          _buildRelacionesSection(
-                            context,
-                            l10n.elementDetailPrequels,
-                            elemento.precuelas,
-                          ),
-                          _buildRelacionesSection(
-                            context,
-                            l10n.elementDetailSequels,
-                            elemento.secuelas,
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 24.0),
-                            child: Divider(),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                l10n.elementDetailReviews(_resenas.length),
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              _buildWriteReviewButton(l10n),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          _buildReviewList(l10n),
-                        ],
-                      ),
+                delegate: SliverChildListDelegate([
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeaderInfo(context),
+                        const SizedBox(height: 24),
+                        _buildAdminActions(context, l10n),
+                        _buildUserActions(context, l10n),
+                        const SizedBox(height: 24),
+
+                        // Sinopsis
+                        Text(l10n.elementDetailSynopsis,
+                            style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(height: 8),
+                        Text(
+                          _elemento!.descripcion,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(height: 1.5),
+                        ),
+
+                        _buildTechnicalDetails(context, l10n),
+
+                        // Relaciones
+                        if (_elemento!.precuelas.isNotEmpty)
+                          _buildRelationsList(context,
+                              l10n.elementDetailPrequels, _elemento!.precuelas),
+                        if (_elemento!.secuelas.isNotEmpty)
+                          _buildRelationsList(context,
+                              l10n.elementDetailSequels, _elemento!.secuelas),
+
+                        const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Divider()),
+
+                        // Reseñas
+                        _buildReviewsSection(context, l10n),
+                        const SizedBox(height: 40), // Bottom padding
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ]),
               ),
             ],
           );
@@ -463,320 +377,302 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     );
   }
 
-  List<int> _parseEpisodiosPorTemporada(String? data) {
-    if (data == null || data.isEmpty) {
-      return <int>[];
-    }
-    try {
-      return data
-          .split(',')
-          .map((String e) => int.tryParse(e.trim()) ?? 0)
-          .toList();
-    } catch (e) {
-      return <int>[];
-    }
-  }
-
-  Widget _buildProgresoTotalInfo(Elemento elemento, AppLocalizations l10n) {
-    final String tipo = elemento.tipo.toLowerCase();
-    final List<Widget> infoWidgets = <Widget>[];
-    if (tipo == 'serie') {
-      final List<int> epCounts =
-          _parseEpisodiosPorTemporada(elemento.episodiosPorTemporada);
-      final int totalTemps = epCounts.length;
-      if (totalTemps > 0) {
-        infoWidgets.add(_buildInfoRow(context, Icons.movie_filter,
-            l10n.elementDetailSeriesSeasons, '$totalTemps'));
-        infoWidgets.add(_buildInfoRow(context, Icons.list_alt,
-            l10n.elementDetailSeriesEpisodes, epCounts.join(', ')));
-      }
-    } else if (tipo == 'libro') {
-      if (elemento.totalCapitulosLibro != null &&
-          elemento.totalCapitulosLibro! > 0) {
-        infoWidgets.add(_buildInfoRow(context, Icons.book_outlined,
-            l10n.elementDetailBookChapters, '${elemento.totalCapitulosLibro}'));
-      }
-      if (elemento.totalPaginasLibro != null &&
-          elemento.totalPaginasLibro! > 0) {
-        infoWidgets.add(_buildInfoRow(context, Icons.pages_outlined,
-            l10n.elementDetailBookPages, '${elemento.totalPaginasLibro}'));
-      }
-    } else if (tipo == 'anime' || tipo == 'manga') {
-      if (elemento.totalUnidades != null && elemento.totalUnidades! > 0) {
-        final String label = tipo == 'anime'
-            ? l10n.elementDetailAnimeEpisodes
-            : l10n.elementDetailMangaChapters;
-        infoWidgets.add(_buildInfoRow(
-            context, Icons.list, label, '${elemento.totalUnidades}'));
-      }
-    }
-    if (infoWidgets.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 24.0),
-          child: Divider(),
-        ),
-        Text(l10n.elementDetailProgressDetails,
-            style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 16),
-        ...infoWidgets,
-      ],
-    );
-  }
-
-  Widget _buildInfoRow(
-      BuildContext context, IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Icon(icon, size: 20, color: Colors.grey[400]),
-          const SizedBox(width: 16),
-          Text('$label:',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(value,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: Colors.grey[300])),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEstadoChip(BuildContext context, Elemento elemento) {
-    final bool isOficial = elemento.estadoContenido == 'OFICIAL';
-    final Color chipColor =
-        isOficial ? Theme.of(context).colorScheme.secondary : Colors.grey[700]!;
-    return Chip(
-      label: Text(
-        elemento.estadoContenidoDisplay(context),
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-      ),
-      backgroundColor: chipColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-    );
-  }
-
-  Widget _buildAddOrRemoveButton(AppLocalizations l10n) {
-    final Color primaryColor = Theme.of(context).colorScheme.primary;
-    if (_isDeleting) {
-      return ElevatedButton.icon(
-        icon: const SizedBox(
-          width: 20,
+  Widget _buildSliverAppBar(BuildContext context) {
+    return SliverAppBar(
+      expandedHeight: 320.0,
+      pinned: true,
+      stretch: true,
+      flexibleSpace: FlexibleSpaceBar(
+        title: MaybeMarquee(
+          text: _elemento!.titulo,
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           height: 20,
-          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
         ),
-        label: Text(l10n.elementDetailRemovingButton),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red[700],
-          foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 50),
-        ),
-        onPressed: null,
-      );
-    }
-    if (_isInCatalog) {
-      return ElevatedButton.icon(
-        icon: const Icon(Icons.remove_circle_outline),
-        label: Text(l10n.elementDetailRemoveButton),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          foregroundColor: Colors.red[300],
-          minimumSize: const Size(double.infinity, 50),
-        ),
-        onPressed: _isAnyLoading() ? null : _handleRemoveElemento,
-      );
-    }
-    if (_isAdding) {
-      return ElevatedButton.icon(
-        icon: const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-        ),
-        label: Text(l10n.elementDetailAddingButton),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 50),
-        ),
-        onPressed: null,
-      );
-    }
-    return Column(
-      children: [
-        ElevatedButton.icon(
-          icon: const Icon(Icons.add),
-          label: Text(l10n.elementDetailAddButton),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 50),
-          ),
-          onPressed: _isAnyLoading() ? null : _handleAddElemento,
-        ),
-        const SizedBox(height: 16),
-        IconButton(
-          icon: Icon(
-            _isFavorito ? Icons.star : Icons.star_border,
-            color: _isFavorito ? Colors.yellow : Colors.grey,
-          ),
-          onPressed: _handleToggleFavorito,
-        ),
-      ],
-    );
-  }
+        centerTitle: true,
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (_elemento!.urlImagen != null)
+              CachedNetworkImage(
+                imageUrl: _elemento!.urlImagen!,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => Container(color: Colors.grey[900]),
+                errorWidget: (_, __, ___) => const Icon(Icons.broken_image,
+                    size: 64, color: Colors.white54),
+              )
+            else
+              Container(
+                  color: Colors.grey[800],
+                  child:
+                      const Icon(Icons.movie, size: 64, color: Colors.white54)),
 
-  Widget _buildWriteReviewButton(AppLocalizations l10n) {
-    if (_haResenado) {
-      return TextButton(
-        onPressed: null,
-        child: Text(l10n.elementDetailAlreadyReviewed,
-            style: const TextStyle(color: Colors.grey)),
-      );
-    }
-    return TextButton.icon(
-      icon: const Icon(Icons.edit, size: 16),
-      label: Text(l10n.elementDetailWriteReview),
-      style: TextButton.styleFrom(
-          foregroundColor: Theme.of(context).colorScheme.primary),
-      onPressed: _openWriteReviewModal,
-    );
-  }
-
-  Widget _buildReviewList(AppLocalizations l10n) {
-    if (_resenas.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            l10n.elementDetailNoReviews,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ),
-      );
-    }
-    return ListView.builder(
-      itemCount: _resenas.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemBuilder: (BuildContext context, int index) {
-        return ResenaCard(resena: _resenas[index]);
-      },
-    );
-  }
-
-  Widget _buildAdminButtons(BuildContext context, PerfilUsuario perfil,
-      Elemento elemento, AppLocalizations l10n) {
-    if (!perfil.esModerador) {
-      return const SizedBox.shrink();
-    }
-    final bool esOficial = elemento.estadoContenido == 'OFICIAL';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.edit_note, size: 18),
-              label: Text(l10n.elementDetailAdminEdit),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.surface,
-                foregroundColor: Theme.of(context).colorScheme.primary,
-              ),
-              onPressed:
-                  _isAnyLoading() ? null : () => _goToEditarElemento(elemento),
-            ),
-          ),
-          if (perfil.esAdministrador) ...<Widget>[
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton.icon(
-                icon: _isLoadingStatusChange
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : Icon(esOficial ? Icons.public_off : Icons.verified,
-                        size: 18),
-                label: Text(_isLoadingStatusChange
-                    ? l10n.elementDetailAdminLoading
-                    : (esOficial
-                        ? l10n.elementDetailAdminMakeCommunity
-                        : l10n.elementDetailAdminMakeOfficial)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: esOficial
-                      ? Colors.grey[700]
-                      : Theme.of(context).colorScheme.secondary,
-                  foregroundColor: Colors.white,
+            // Gradiente para legibilidad
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black87],
+                  stops: [0.6, 1.0],
                 ),
-                onPressed: _isAnyLoading()
-                    ? null
-                    : () => _handleToggleOficial(elemento),
               ),
             ),
-          ]
-        ],
+
+            // Chip de Estado
+            Positioned(
+              top: kToolbarHeight + 16, // Ajustar según SafeArea
+              right: 16,
+              child: SafeArea(
+                child: Chip(
+                  label: Text(
+                    _elemento!.estadoContenidoDisplay(context),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12),
+                  ),
+                  backgroundColor: _elemento!.estadoContenido == 'OFICIAL'
+                      ? Colors.blueAccent
+                      : Colors.grey[700],
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  side: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildRelacionesSection(
-    BuildContext context,
-    String titulo,
-    List<ElementoRelacion> relaciones,
-  ) {
-    if (relaciones.isEmpty) {
+  Widget _buildHeaderInfo(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _elemento!.tipo,
+          style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: _elemento!.generos
+              .map((g) => Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(g, style: theme.textTheme.bodySmall),
+                  ))
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUserActions(BuildContext context, AppLocalizations l10n) {
+    if (_isProcessing) {
+      return SizedBox(
+        height: 50,
+        child: Center(
+            child: Text(
+          _isAddingToCatalog
+              ? l10n.elementDetailAddingButton
+              : l10n.elementDetailRemovingButton,
+          style: const TextStyle(fontStyle: FontStyle.italic),
+        )),
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: _isInCatalog
+              ? OutlinedButton.icon(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  label: Text(l10n.elementDetailRemoveButton),
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                  onPressed: _handleRemoveCatalog,
+                )
+              : FilledButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.elementDetailAddButton),
+                  onPressed: _handleAddCatalog,
+                ),
+        ),
+        const SizedBox(width: 12),
+        IconButton.filledTonal(
+          icon: Icon(_isFavorito ? Icons.star : Icons.star_border),
+          color: _isFavorito ? Colors.amber : null,
+          onPressed: _handleToggleFavorite,
+          tooltip: 'Favorito',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdminActions(BuildContext context, AppLocalizations l10n) {
+    final perfil = _authService.perfilUsuario;
+    if (perfil == null || !perfil.esModerador) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Card(
+        elevation: 0,
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              const Icon(Icons.security, size: 16),
+              const SizedBox(width: 8),
+              Text('Mod Actions',
+                  style: Theme.of(context).textTheme.labelMedium),
+              const Spacer(),
+              TextButton.icon(
+                icon: const Icon(Icons.edit, size: 16),
+                label: Text(l10n.elementDetailAdminEdit),
+                onPressed: _goToEditElement,
+              ),
+              if (perfil.esAdministrador)
+                IconButton(
+                  icon: _isUpdatingAdminStatus
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : Icon(_elemento!.estadoContenido == 'OFICIAL'
+                          ? Icons.verified
+                          : Icons.public),
+                  onPressed:
+                      _isUpdatingAdminStatus ? null : _handleToggleOfficial,
+                  tooltip: 'Cambiar Estado Oficial',
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTechnicalDetails(BuildContext context, AppLocalizations l10n) {
+    final List<Widget> details = [];
+    final e = _elemento!;
+
+    if (e.fechaLanzamiento != null) {
+      details.add(
+          _detailRow(Icons.calendar_today, 'Lanzamiento', e.fechaLanzamiento!));
+    }
+    if (e.duracion != null) {
+      details.add(_detailRow(Icons.timer, l10n.duration, e.duracion!));
+    }
+
+    // Detalles específicos por tipo
+    if (e.tipo == 'Series' && e.episodiosPorTemporada != null) {
+      details.add(_detailRow(
+          Icons.tv, l10n.episodesPerSeason, e.episodiosPorTemporada!));
+    } else if (e.tipo == 'Book') {
+      if (e.totalPaginasLibro != null) {
+        details.add(_detailRow(
+            Icons.menu_book, l10n.totalPages, '${e.totalPaginasLibro}'));
+      }
+    } else if (e.tipo == 'Anime') {
+      if (e.totalUnidades != null) {
+        details.add(_detailRow(Icons.play_circle_outline, l10n.totalEpisodes,
+            '${e.totalUnidades}'));
+      }
+    }
+
+    if (details.isEmpty) {
       return const SizedBox.shrink();
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.only(top: 24.0, bottom: 12.0),
-          child: Text(
-            titulo,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-        ),
+      children: [
+        const SizedBox(height: 24),
+        Text(l10n.elementDetailProgressDetails,
+            style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        ...details,
+      ],
+    );
+  }
+
+  Widget _detailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey),
+          const SizedBox(width: 8),
+          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRelationsList(
+      BuildContext context, String title, List<ElementoRelacion> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
         SizedBox(
-          height: 190,
+          height: 160,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: relaciones.length,
-            itemBuilder: (BuildContext context, int index) {
-              final ElementoRelacion relacion = relaciones[index];
-              return _RelacionCard(
-                relacion: relacion,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (BuildContext context) =>
-                          ElementoDetailScreen(elementoId: relacion.id),
-                    ),
-                  ).then((_) => _loadScreenData());
-                },
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return Container(
+                width: 100,
+                margin: const EdgeInsets.only(right: 8),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) =>
+                              ElementoDetailScreen(elementoId: item.id)),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: item.urlImagen != null
+                              ? CachedNetworkImage(
+                                  imageUrl: item.urlImagen!, fit: BoxFit.cover)
+                              : Container(
+                                  color: Colors.grey[300],
+                                  child: const Icon(Icons.image)),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(item.titulo,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
               );
             },
           ),
@@ -784,79 +680,45 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       ],
     );
   }
-}
 
-class _RelacionCard extends StatelessWidget {
-  final ElementoRelacion relacion;
-  final VoidCallback onTap;
-
-  const _RelacionCard({
-    required this.relacion,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 120,
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8.0),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Card(
-                clipBehavior: Clip.antiAlias,
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: SizedBox(
-                  height: 130,
-                  width: 120,
-                  child: (relacion.urlImagen != null &&
-                          relacion.urlImagen!.isNotEmpty)
-                      ? CachedNetworkImage(
-                          imageUrl: relacion.urlImagen!,
-                          fit: BoxFit.cover,
-                          placeholder: (BuildContext context, String url) =>
-                              const Center(
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2)),
-                          errorWidget: (BuildContext context, String url,
-                                  Object error) =>
-                              Center(
-                                  child: Icon(Icons.image_not_supported,
-                                      color: Colors.grey[400])),
-                        )
-                      : Container(
-                          color: Colors.grey[800],
-                          child: Center(
-                            child: Icon(
-                              Icons.movie,
-                              color: Colors.grey[600],
-                              size: 40,
-                            ),
-                          ),
-                        ),
-                ),
+  Widget _buildReviewsSection(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(l10n.elementDetailReviews(_resenas.length),
+                style: Theme.of(context).textTheme.titleLarge),
+            if (!_haResenado)
+              TextButton.icon(
+                icon: const Icon(Icons.rate_review),
+                label: Text(l10n.elementDetailWriteReview),
+                onPressed: _openReviewModal,
+              )
+            else
+              Chip(
+                label: Text(l10n.elementDetailAlreadyReviewed),
+                avatar: const Icon(Icons.check, size: 16),
               ),
-              const SizedBox(height: 8),
-              Text(
-                relacion.titulo,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+          ],
         ),
-      ),
+        const SizedBox(height: 16),
+        if (_resenas.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(l10n.elementDetailNoReviews,
+                style: const TextStyle(color: Colors.grey)),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _resenas.length,
+            separatorBuilder: (_, __) => const Divider(height: 32),
+            itemBuilder: (context, index) =>
+                ResenaCard(resena: _resenas[index]),
+          ),
+      ],
     );
   }
 }
-// Fixed BuildContext usage across async gaps.

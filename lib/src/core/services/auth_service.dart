@@ -6,10 +6,11 @@ import '../utils/api_client.dart';
 import '../utils/api_exceptions.dart';
 import '../../model/perfil_usuario.dart';
 
+/// Excepción específica para cuando el usuario cancela el flujo de Google.
 class GoogleSignInCanceledException implements Exception {
   const GoogleSignInCanceledException();
   @override
-  String toString() => 'GoogleSignInCanceledException';
+  String toString() => 'El usuario canceló el inicio de sesión con Google.';
 }
 
 const String _accessTokenKey = 'jwt_access_token';
@@ -18,14 +19,15 @@ const String _refreshTokenKey = 'jwt_refresh_token';
 class AuthService with ChangeNotifier {
   final ApiClient _apiClient;
   final FlutterSecureStorage _secureStorage;
-
   late final GoogleSignIn _googleSignIn;
 
+  // Estado interno
   String? _accessToken;
   String? _refreshToken;
   PerfilUsuario? _perfilUsuario;
   bool _isLoading = true;
 
+  // Getters públicos
   String? get token => _accessToken;
   PerfilUsuario? get perfilUsuario => _perfilUsuario;
   bool get isAuthenticated => _accessToken != null && _perfilUsuario != null;
@@ -43,28 +45,30 @@ class AuthService with ChangeNotifier {
       );
       await _tryAutoLogin();
     } catch (e) {
-      debugPrint('❌ Error durante inicialización: $e');
+      debugPrint('❌ Error crítico en inicialización de Auth: $e');
+      // En caso de error grave, aseguramos que la app no se quede en splash infinito
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  /// Intenta restaurar la sesión desde el almacenamiento seguro.
   Future<void> _tryAutoLogin() async {
     try {
       _accessToken = await _secureStorage.read(key: _accessTokenKey);
       _refreshToken = await _secureStorage.read(key: _refreshTokenKey);
 
-      debugPrint(
-          '🔐 Auto-login: accessToken=${_accessToken != null ? "✅" : "❌"}, refreshToken=${_refreshToken != null ? "✅" : "❌"}');
-
       if (_accessToken != null && _refreshToken != null) {
+        debugPrint('🔐 Tokens encontrados. Cargando perfil...');
+        // Intentamos cargar el perfil. Si el token es inválido, _loadUserProfile
+        // lanzará excepción y forzará logout.
         await _loadUserProfile(shouldNotify: false);
       } else {
-        debugPrint('⚠️ No hay tokens guardados, cerrando sesión');
+        debugPrint('⚠️ No hay sesión guardada.');
         await logout(shouldNotify: false);
       }
     } catch (e) {
-      debugPrint('❌ Error en auto-login: $e');
+      debugPrint('❌ Fallo en auto-login: $e');
       await logout(shouldNotify: false);
     } finally {
       _isLoading = false;
@@ -72,139 +76,116 @@ class AuthService with ChangeNotifier {
     }
   }
 
+  /// Obtiene los datos actualizados del usuario desde la API.
   Future<void> _loadUserProfile({bool shouldNotify = true}) async {
     try {
-      debugPrint('📥 Cargando perfil de usuario desde /usuarios/me...');
       final data = await _apiClient.get('usuarios/me');
       _perfilUsuario = PerfilUsuario.fromJson(data);
       debugPrint('✅ Perfil cargado: ${_perfilUsuario?.username}');
       if (shouldNotify) {
         notifyListeners();
       }
-    } on UnauthorizedException catch (e) {
-      debugPrint('❌ UnauthorizedException en _loadUserProfile: ${e.message}');
-      await logout(shouldNotify: shouldNotify);
     } catch (e) {
-      debugPrint('❌ Error en _loadUserProfile: $e');
-      await logout(shouldNotify: shouldNotify);
+      // Si falla la carga del perfil (ej. 401 persistente), limpiamos todo.
+      debugPrint('❌ Error cargando perfil: $e');
+      throw UnauthorizedException('Sesión inválida.');
     }
   }
 
+  /// Inicia sesión con email y contraseña.
   Future<void> login(String email, String password) async {
     try {
       final data = await _apiClient.post(
-          'auth/login',
-          <String, dynamic>{
-            'email': email,
-            'password': password,
-          },
-          isAuthEndpoint: true);
+        'auth/login',
+        {'email': email, 'password': password},
+        isAuthEndpoint: true,
+      );
 
-      _accessToken = data['accessToken'];
-      _refreshToken = data['refreshToken'];
-
-      await _secureStorage.write(key: _accessTokenKey, value: _accessToken!);
-      await _secureStorage.write(key: _refreshTokenKey, value: _refreshToken!);
-
+      await _saveTokens(data['accessToken'], data['refreshToken']);
       await _loadUserProfile(shouldNotify: false);
-
       notifyListeners();
-    } on ApiException {
-      rethrow;
     } catch (e) {
-      throw ApiException('Ocurrió un error inesperado: ${e.toString()}');
+      // Propagamos la excepción tal cual para que la UI muestre el mensaje correcto
+      rethrow;
     }
   }
 
+  /// Registra un nuevo usuario.
+  Future<void> register(String username, String email, String password) async {
+    try {
+      // 1. Registrar
+      await _apiClient.post(
+        'auth/register',
+        {'username': username, 'email': email, 'password': password},
+        isAuthEndpoint: true,
+      );
+
+      // 2. Auto-login inmediato tras registro exitoso
+      await login(email, password);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Inicia sesión con Google Identity Services.
   Future<void> signInWithGoogle() async {
     try {
-      final user = await _googleSignIn.authenticate();
-      debugPrint('✅ Google Sign-In exitoso: ${user.email}');
+      // 1. Flujo nativo de Google
+      final googleUser = await _googleSignIn.authenticate();
 
-      final googleAuth = user.authentication;
-      final String? idToken = googleAuth.idToken;
-      debugPrint(
-          '🔑 ID Token obtenido: ${idToken?.substring(0, 20) ?? "null"}...');
+      final googleAuth = googleUser.authentication;
+      final idToken = googleAuth.idToken;
 
       if (idToken == null) {
-        throw ApiException('No se pudo obtener el token de Google.');
+        throw ApiException(
+            'No se pudo obtener el token de identidad de Google.');
       }
 
-      debugPrint('📤 Enviando token a /auth/google...');
-      debugPrint('📦 Payload: {"token": "${idToken.substring(0, 50)}..."}');
+      // 2. Intercambio con nuestro Backend
       final data = await _apiClient.post(
-          'auth/google',
-          <String, dynamic>{
-            'token': idToken,
-          },
-          isAuthEndpoint: true);
-      debugPrint('✅ Backend respondió correctamente');
+        'auth/google',
+        {'token': idToken},
+        isAuthEndpoint: true,
+      );
 
-      _accessToken = data['accessToken'];
-      _refreshToken = data['refreshToken'];
-
-      await _secureStorage.write(key: _accessTokenKey, value: _accessToken!);
-      await _secureStorage.write(key: _refreshTokenKey, value: _refreshToken!);
-
+      await _saveTokens(data['accessToken'], data['refreshToken']);
       await _loadUserProfile(shouldNotify: false);
-
       notifyListeners();
-    } on GoogleSignInCanceledException {
-      rethrow;
-    } on Exception catch (e) {
-      final message = e.toString().toLowerCase();
-      if (message.contains('canceled') || message.contains('cancelled')) {
-        debugPrint('ℹ️ Google Sign-In cancelado por el usuario');
+    } catch (e) {
+      if (e is GoogleSignInCanceledException || e is ApiException) {
+        rethrow;
+      }
+
+      // Capturamos errores específicos de cancelación en Android/iOS si la librería los lanza diferente
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('canceled') || msg.contains('cancelled')) {
         throw const GoogleSignInCanceledException();
       }
-      debugPrint('❌ Error inesperado: $e');
-      throw ApiException(
-          'Error inesperado durante el inicio de sesión con Google: ${e.toString()}');
+
+      throw ApiException('Error inesperado con Google: $e');
     }
   }
 
-  Future<PerfilUsuario> register(
-      String username, String email, String password) async {
-    try {
-      final data = await _apiClient.post(
-          'auth/register',
-          <String, dynamic>{
-            'username': username,
-            'email': email,
-            'password': password,
-          },
-          isAuthEndpoint: true);
-
-      final PerfilUsuario user = PerfilUsuario.fromJson(data);
-
-      // Auto-login after successful registration
-      await login(email, password);
-
-      return user;
-    } on ApiException {
-      rethrow;
-    } catch (e) {
-      throw ApiException('Ocurrió un error inesperado: ${e.toString()}');
-    }
-  }
-
-  void updateLocalProfileData(PerfilUsuario perfilActualizado) {
-    _perfilUsuario = perfilActualizado;
-    notifyListeners();
-  }
-
+  /// Cierra la sesión del usuario.
   Future<void> logout({bool shouldNotify = true}) async {
     try {
-      await _apiClient.logout();
-
-      try {
-        await _googleSignIn.signOut();
-      } catch (e) {
-        debugPrint('Error silencioso al cerrar sesión de Google: $e');
+      // Intentamos avisar al backend (best effort)
+      final token = await _secureStorage.read(key: _refreshTokenKey);
+      if (token != null) {
+        await _apiClient
+            .post(
+              'auth/logout',
+              {'refreshToken': token},
+              isAuthEndpoint: true,
+            )
+            .catchError((_) {}); // Ignoramos errores de red en logout
       }
+
+      await _googleSignIn.signOut();
     } catch (e) {
-      debugPrint('Error durante el logout remoto: $e');
+      debugPrint('Error en proceso de logout: $e');
     } finally {
+      // Limpieza local obligatoria
       _accessToken = null;
       _refreshToken = null;
       _perfilUsuario = null;
@@ -216,5 +197,19 @@ class AuthService with ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  /// Helper para guardar tokens y actualizar estado en memoria.
+  Future<void> _saveTokens(String access, String refresh) async {
+    _accessToken = access;
+    _refreshToken = refresh;
+    await _secureStorage.write(key: _accessTokenKey, value: access);
+    await _secureStorage.write(key: _refreshTokenKey, value: refresh);
+  }
+
+  /// Permite actualizar el perfil en memoria sin recargar de la red (ej. tras cambiar foto).
+  void updateLocalProfileData(PerfilUsuario nuevoPerfil) {
+    _perfilUsuario = nuevoPerfil;
+    notifyListeners();
   }
 }

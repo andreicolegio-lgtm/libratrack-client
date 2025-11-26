@@ -1,62 +1,77 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 
+/// Utilidad para mostrar notificaciones flotantes (Top SnackBars/Toasts) personalizadas.
+/// Se muestran en la parte superior para no tapar la navegación inferior.
 class SnackBarHelper {
   static void showTopSnackBar(
-    BuildContext
-        context, // Nota: Ahora pedimos BuildContext directo, es más seguro para Overlays
+    BuildContext context,
     String message, {
     required bool isError,
     bool isNeutral = false,
   }) {
+    // Obtener el Overlay del contexto actual.
+    // Es vital que el contexto venga de un Scaffold o Navigator hijo de MaterialApp.
     final OverlayState overlayState = Overlay.of(context);
 
     late OverlayEntry overlayEntry;
 
-    // Diseño del Banner/SnackBar
+    // Definición de colores según tipo
+    final Color bgColor = isError
+        ? Colors.red.shade700
+        : isNeutral
+            ? Colors.grey.shade800
+            : Colors.green.shade700;
+
+    final IconData icon = isError
+        ? Icons.error_outline
+        : isNeutral
+            ? Icons.info_outline
+            : Icons.check_circle_outline;
+
+    // Widget del Toast
     final Widget toast = SafeArea(
       child: Material(
         color: Colors.transparent,
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isError
-                ? Colors.red[700]
-                : isNeutral
-                    ? Colors.grey[800]
-                    : Colors.green[600],
-            borderRadius: BorderRadius.circular(8.0),
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(
                 color: Colors.black26,
-                blurRadius: 10.0,
-                offset: Offset(0, 4),
+                blurRadius: 8,
+                offset: Offset(0, 2),
               ),
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Icon(icon, color: Colors.white),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   message,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: () => overlayEntry.remove(),
-                child: Text(
-                  AppLocalizations.of(context)?.snackbarCloseButton ?? 'CERRAR',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                onPressed: () {
+                  if (overlayEntry.mounted) {
+                    overlayEntry.remove();
+                  }
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: AppLocalizations.of(context).snackbarCloseButton,
               ),
             ],
           ),
@@ -64,18 +79,17 @@ class SnackBarHelper {
       ),
     );
 
-    // Crear la entrada del Overlay
+    // Crear la entrada del Overlay con animación
     overlayEntry = OverlayEntry(
       builder: (context) {
-        // Usamos un TweenAnimationBuilder para una entrada suave desde arriba
         return Positioned(
           top: 0,
           left: 0,
           right: 0,
           child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: -100.0, end: 0.0),
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
+            tween: Tween(begin: -100.0, end: 0.0), // Animación de deslizamiento
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.elasticOut,
             builder: (context, value, child) {
               return Transform.translate(
                 offset: Offset(0, value),
@@ -85,7 +99,11 @@ class SnackBarHelper {
             child: Dismissible(
               key: UniqueKey(),
               direction: DismissDirection.up,
-              onDismissed: (_) => overlayEntry.remove(),
+              onDismissed: (_) {
+                if (overlayEntry.mounted) {
+                  overlayEntry.remove();
+                }
+              },
               child: toast,
             ),
           ),
@@ -96,8 +114,8 @@ class SnackBarHelper {
     // Insertar en pantalla
     overlayState.insert(overlayEntry);
 
-    // Auto-cerrar después de 5 segundos
-    Future.delayed(const Duration(seconds: 5), () {
+    // Auto-cerrar después de 4 segundos
+    Future.delayed(const Duration(seconds: 4), () {
       if (overlayEntry.mounted) {
         overlayEntry.remove();
       }

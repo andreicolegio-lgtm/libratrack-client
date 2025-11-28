@@ -33,6 +33,12 @@ class AuthService with ChangeNotifier {
   bool get isAuthenticated => _accessToken != null && _perfilUsuario != null;
   bool get isLoading => _isLoading;
 
+  /// Devuelve el usuario autenticado actualmente.
+  PerfilUsuario? get currentUser => _perfilUsuario;
+
+  /// Devuelve el ID del usuario autenticado actualmente.
+  int? get currentUserId => _perfilUsuario?.id;
+
   AuthService(this._apiClient, this._secureStorage) {
     _initialize();
   }

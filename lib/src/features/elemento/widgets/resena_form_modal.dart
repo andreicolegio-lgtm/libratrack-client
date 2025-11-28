@@ -9,8 +9,13 @@ import '../../../core/utils/api_exceptions.dart';
 
 class ResenaFormModal extends StatefulWidget {
   final int elementoId;
+  final Resena? resenaExistente; // Added optional parameter for editing
 
-  const ResenaFormModal({required this.elementoId, super.key});
+  const ResenaFormModal({
+    required this.elementoId,
+    this.resenaExistente,
+    super.key,
+  });
 
   @override
   State<ResenaFormModal> createState() => _ResenaFormModalState();
@@ -28,6 +33,12 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
   void initState() {
     super.initState();
     _resenaService = context.read<ResenaService>();
+
+    // Initialize state if editing an existing review
+    if (widget.resenaExistente != null) {
+      _valoracion = widget.resenaExistente!.valoracion;
+      _textoController.text = widget.resenaExistente!.textoResena ?? '';
+    }
   }
 
   @override
@@ -53,21 +64,36 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
     final navigator = Navigator.of(context);
 
     try {
-      final Resena nuevaResena = await _resenaService.crearResena(
-        elementoId: widget.elementoId,
-        valoracion: _valoracion,
-        textoResena:
-            _textoController.text.isEmpty ? null : _textoController.text,
-      );
+      Resena nuevaResena;
+
+      if (widget.resenaExistente == null) {
+        // Create new review
+        nuevaResena = await _resenaService.crearResena(
+          elementoId: widget.elementoId,
+          valoracion: _valoracion,
+          textoResena:
+              _textoController.text.isEmpty ? null : _textoController.text,
+        );
+      } else {
+        // Update existing review
+        nuevaResena = await _resenaService.actualizarResena(
+          widget.resenaExistente!.id,
+          widget.elementoId, // <--- AÑADIMOS ESTO (ya lo tienes en el widget)
+          _valoracion,
+          _textoController.text.isEmpty ? null : _textoController.text,
+        );
+      }
 
       if (!mounted) {
         return;
       }
 
-      SnackBarHelper.showTopSnackBar(context, l10n.snackbarReviewPublished,
-          isError: false);
-      navigator.pop(
-          nuevaResena); // Devuelve la nueva reseña para actualizar la lista
+      final successMessage = widget.resenaExistente == null
+          ? 'Reseña publicada con éxito'
+          : 'Reseña actualizada con éxito';
+
+      SnackBarHelper.showTopSnackBar(context, successMessage, isError: false);
+      navigator.pop(nuevaResena); // Return the review for list update
     } catch (e) {
       _handleError(e, l10n);
     } finally {
@@ -116,7 +142,9 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Text(
-              l10n.reviewModalTitle,
+              widget.resenaExistente == null
+                  ? 'Crear Reseña'
+                  : 'Editar Reseña', // Hardcoded title in Spanish
               style: theme.textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
@@ -184,7 +212,9 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
                       width: 20,
                       child: CircularProgressIndicator(
                           color: Colors.white, strokeWidth: 2))
-                  : Text(l10n.reviewModalSubmitButton),
+                  : Text(widget.resenaExistente == null
+                      ? 'Publicar'
+                      : 'Actualizar'), // Hardcoded button text in Spanish
             ),
             const SizedBox(height: 32),
           ],

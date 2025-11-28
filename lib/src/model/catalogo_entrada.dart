@@ -5,6 +5,7 @@ class CatalogoEntrada {
   final String estadoPersonal; // PENDIENTE, EN_PROGRESO, etc.
   final DateTime agregadoEn;
   final bool esFavorito;
+  final String? notas;
 
   // Progreso
   final int? temporadaActual;
@@ -16,9 +17,11 @@ class CatalogoEntrada {
   final int elementoId;
   final String elementoTitulo;
   final String elementoTipoNombre;
+  final String? elementoGeneros;
   final String? elementoUrlImagen;
   final String? elementoEstadoPublicacion;
   final String? elementoEpisodiosPorTemporada;
+  final String? elementoDuracion;
 
   // Totales del elemento para calcular barras de progreso
   final int? elementoTotalUnidades;
@@ -36,13 +39,16 @@ class CatalogoEntrada {
     required this.elementoTipoNombre,
     required this.usuarioId,
     this.esFavorito = false,
+    this.notas,
     this.temporadaActual,
     this.unidadActual,
     this.capituloActual,
     this.paginaActual,
+    this.elementoGeneros,
     this.elementoUrlImagen,
     this.elementoEstadoPublicacion,
     this.elementoEpisodiosPorTemporada,
+    this.elementoDuracion,
     this.elementoTotalUnidades,
     this.elementoTotalCapitulosLibro,
     this.elementoTotalPaginasLibro,
@@ -54,18 +60,18 @@ class CatalogoEntrada {
     String? estadoPersonal,
     DateTime? agregadoEn,
     bool? esFavorito,
+    String? notas,
     int? temporadaActual,
     int? unidadActual,
     int? capituloActual,
     int? paginaActual,
-    // Raramente cambiamos los datos del elemento en una actualización local,
-    // pero lo permitimos por flexibilidad.
   }) {
     return CatalogoEntrada(
       id: id ?? this.id,
       estadoPersonal: estadoPersonal ?? this.estadoPersonal,
       agregadoEn: agregadoEn ?? this.agregadoEn,
       esFavorito: esFavorito ?? this.esFavorito,
+      notas: notas ?? this.notas,
       temporadaActual: temporadaActual ?? this.temporadaActual,
       unidadActual: unidadActual ?? this.unidadActual,
       capituloActual: capituloActual ?? this.capituloActual,
@@ -75,10 +81,12 @@ class CatalogoEntrada {
       elementoId: elementoId,
       elementoTitulo: elementoTitulo,
       elementoTipoNombre: elementoTipoNombre,
+      elementoGeneros: elementoGeneros,
       usuarioId: usuarioId,
       elementoUrlImagen: elementoUrlImagen,
       elementoEstadoPublicacion: elementoEstadoPublicacion,
       elementoEpisodiosPorTemporada: elementoEpisodiosPorTemporada,
+      elementoDuracion: elementoDuracion,
       elementoTotalUnidades: elementoTotalUnidades,
       elementoTotalCapitulosLibro: elementoTotalCapitulosLibro,
       elementoTotalPaginasLibro: elementoTotalPaginasLibro,
@@ -91,6 +99,7 @@ class CatalogoEntrada {
       estadoPersonal: json['estadoPersonal'] as String,
       agregadoEn: DateTime.parse(json['agregadoEn'] as String),
       esFavorito: json['esFavorito'] as bool? ?? false,
+      notas: json['notas'] as String?,
       temporadaActual: json['temporadaActual'] as int?,
       unidadActual: json['unidadActual'] as int?,
       capituloActual: json['capituloActual'] as int?,
@@ -98,10 +107,12 @@ class CatalogoEntrada {
       elementoId: json['elementoId'] as int,
       elementoTitulo: json['elementoTitulo'] as String,
       elementoTipoNombre: json['elementoTipoNombre'] as String,
+      elementoGeneros: json['elementoGeneros'] as String?,
       elementoUrlImagen: json['elementoUrlImagen'] as String?,
       elementoEstadoPublicacion: json['elementoEstadoPublicacion'] as String?,
       elementoEpisodiosPorTemporada:
           json['elementoEpisodiosPorTemporada'] as String?,
+      elementoDuracion: json['elementoDuracion'] as String?,
       elementoTotalUnidades: json['elementoTotalUnidades'] as int?,
       elementoTotalCapitulosLibro: json['elementoTotalCapitulosLibro'] as int?,
       elementoTotalPaginasLibro: json['elementoTotalPaginasLibro'] as int?,

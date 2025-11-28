@@ -7,6 +7,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/api_client.dart';
 import '../../core/services/admin_service.dart';
 import '../../model/elemento.dart';
+import '../../model/paginated_response.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/services/elemento_service.dart';
@@ -58,6 +59,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   final TextEditingController _durationController = TextEditingController();
 
   String? _tipoSeleccionado;
+  String?
+      _estadoPublicacionSeleccionado; // Nueva variable para el estado de publicación
   List<Tipo> _tipos = [];
 
   // Relaciones (Secuelas/Precuelas)
@@ -95,6 +98,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       _tipoSeleccionado = e.tipo;
       _uploadedImageUrl = e.urlImagen;
       _selectedSecuelaIds.addAll(e.secuelas.map((s) => s.id));
+      _estadoPublicacionSeleccionado =
+          e.estadoPublicacion; // Inicializar estado de publicación
     }
 
     // 2. Cargar Tipos y Lista de Elementos (para secuelas)
@@ -197,21 +202,24 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   Future<void> _handleGuardar() async {
     final l10n = AppLocalizations.of(context);
 
+    // SnackBar rojo si hay errores de validación
     if (!_formKey.currentState!.validate()) {
+      SnackBarHelper.showTopSnackBar(
+        context,
+        'Por favor, revisa los campos marcados en rojo.', // Centralizar texto si es posible
+        isError: true,
+      );
       return;
     }
 
-    if (_uploadedImageUrl == null && _pickedImage == null) {
-      SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadRequired,
-          isError: true);
-      return;
-    }
-
-    // Si hay una imagen seleccionada pero no subida, avisar o subir automáticamente
+    // Subida automática si hay imagen pendiente
     if (_pickedImage != null) {
       await _handleUploadImage();
-      if (_uploadedImageUrl == null) {
-        return; // Falló la subida
+      // Si falla la subida (_uploadedImageUrl sigue siendo null o el anterior),
+      // decidimos si parar o continuar con la URL antigua.
+      // En este caso, si _pickedImage sigue ahí es que falló.
+      if (_pickedImage != null) {
+        return;
       }
     }
 
@@ -241,6 +249,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
             ? null
             : _durationController.text.trim(),
         'secuelaIds': _selectedSecuelaIds.toList(),
+        'estadoPublicacion':
+            _estadoPublicacionSeleccionado, // Añadir estado de publicación
       };
 
       // Limpiar nulos
@@ -282,7 +292,64 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     SnackBarHelper.showTopSnackBar(context, msg, isError: true);
   }
 
+  String? _validateProgressData() {
+    // Si no hay tipo, no validamos progreso aún
+    if (_tipoSeleccionado == null) {
+      return null;
+    }
+
+    final type = _tipoSeleccionado;
+    // Lógica personalizada según el tipo seleccionado
+    if (type == 'Anime' && _totalUnidadesController.text.trim().isEmpty) {
+      return 'El número de episodios es obligatorio.';
+    }
+    if ((type == 'Manga' || type == 'Manhwa') &&
+        _totalCapitulosLibroController.text.trim().isEmpty) {
+      return 'El número de capítulos es obligatorio.';
+    }
+    if (type == 'Book') {
+      if (_totalPaginasLibroController.text.trim().isEmpty) {
+        return 'Las páginas son obligatorias.';
+      }
+      // Capítulos en libros pueden ser opcionales, depende de la lógica
+    }
+    if (type == 'Series' &&
+        _episodiosPorTemporadaController.text.trim().isEmpty) {
+      return 'Debes indicar los episodios por temporada.';
+    }
+    if (type == 'Movie' && _durationController.text.trim().isEmpty) {
+      return 'La duración es obligatoria.';
+    }
+
+    return null; // Todo correcto
+  }
+
   // --- UI ---
+
+  // Método auxiliar para crear los "Fields" contenedores
+  Widget _buildSectionField({
+    required String label,
+    required Widget child,
+    String? errorText,
+  }) {
+    return InputDecorator(
+      decoration: getCommonDecoration(label).copyWith(errorText: errorText),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 6.0),
+        child: child,
+      ),
+    );
+  }
+
+  InputDecoration getCommonDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      border: const OutlineInputBorder(),
+      filled: true,
+      fillColor: Theme.of(context).colorScheme.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -305,70 +372,126 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         title: Text(title),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              _buildImageUploader(l10n),
-              const SizedBox(height: 24),
-              _buildInputField(
-                controller: _tituloController,
-                label: l10n.adminFormTitleLabel,
-                validator: (v) => (v == null || v.isEmpty)
-                    ? l10n.validationTitleRequired
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              _buildInputField(
-                controller: _descripcionController,
-                label: l10n.adminFormDescLabel,
-                maxLines: 4,
-                validator: (v) => (v == null || v.isEmpty)
-                    ? l10n.validationDescRequired
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTipoDropdown(l10n),
-              const SizedBox(height: 16),
-              _buildGenerosField(l10n),
-              const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Divider()),
-              Text(l10n.adminFormProgressTitle,
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              ContentTypeProgressForms(
-                selectedTypeKey: _tipoSeleccionado,
-                episodesController: _episodiosPorTemporadaController,
-                chaptersController: _totalCapitulosLibroController,
-                pagesController: _totalPaginasLibroController,
-                durationController: _durationController,
-                unitsController: _totalUnidadesController,
-                l10n: l10n,
-              ),
-              const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Divider()),
-              _buildSecuelasSelector(l10n),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: (_isLoading || _isUploading) ? null : _handleGuardar,
-                style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16)),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : Text(btnText,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-            ],
+      // Protege el contenido (especialmente el final del scroll) de la barra de navegación transparente
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                // Imagen
+                _buildImageUploader(l10n),
+                const SizedBox(height: 24),
+
+                // Título
+                _buildInputField(
+                  controller: _tituloController,
+                  label: l10n.adminFormTitleLabel,
+                  validator: (v) => (v == null || v.isEmpty)
+                      ? l10n.validationTitleRequired
+                      : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Descripción
+                _buildInputField(
+                  controller: _descripcionController,
+                  label: l10n.adminFormDescLabel,
+                  maxLines: 4,
+                ),
+                const SizedBox(height: 16),
+
+                // Tipo
+                _buildTipoDropdown(l10n),
+                const SizedBox(height: 24),
+
+                // FIELD: GENRE
+                FormField<String>(
+                  validator: (_) {
+                    return _generosController.text.isEmpty
+                        ? 'El género no puede estar vacío'
+                        : null;
+                  },
+                  builder: (FormFieldState<String> state) {
+                    return _buildSectionField(
+                      label: 'Genre',
+                      errorText: state.errorText,
+                      child: _buildGenerosField(l10n),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // FIELD: PROGRESS DATA
+                if (_tipoSeleccionado != 'Video Game') ...[
+                  FormField<String>(
+                    validator: (_) => _validateProgressData(),
+                    builder: (FormFieldState<String> state) {
+                      return _buildSectionField(
+                        label: 'Progress Data',
+                        errorText: state.errorText,
+                        child: ContentTypeProgressForms(
+                          selectedTypeKey: _tipoSeleccionado,
+                          episodesController: _episodiosPorTemporadaController,
+                          chaptersController: _totalCapitulosLibroController,
+                          pagesController: _totalPaginasLibroController,
+                          durationController: _durationController,
+                          unitsController: _totalUnidadesController,
+                          l10n: l10n,
+                          hasError: state.hasError, // Nuevo parámetro
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // FIELD: SEQUELS
+                _buildSectionField(
+                  label: 'Sequels (Optional)',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          icon: const Icon(Icons.search),
+                          label: const Text('Añadir Relación'),
+                          onPressed: _openSearchDialog,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildSecuelasChips(l10n),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // FIELD: ESTADO DE PUBLICACIÓN
+                _buildAvailabilityDropdown(l10n),
+
+                const SizedBox(height: 32),
+
+                // Botón Guardar
+                FilledButton(
+                  onPressed:
+                      (_isLoading || _isUploading) ? null : _handleGuardar,
+                  style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16)),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : Text(btnText,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -378,6 +501,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   Widget _buildImageUploader(AppLocalizations l10n) {
     final theme = Theme.of(context);
     Widget content;
+    bool hasImage = _pickedImage != null || _uploadedImageUrl != null;
 
     if (_pickedImage != null) {
       content = Image.file(File(_pickedImage!.path), fit: BoxFit.cover);
@@ -405,20 +529,43 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
     return Column(
       children: [
-        GestureDetector(
-          onTap: (_isLoading || _isUploading) ? null : _handlePickImage,
-          child: Container(
-            height: 200,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.dividerColor),
+        Stack(
+          children: [
+            GestureDetector(
+              onTap: (_isLoading || _isUploading) ? null : _handlePickImage,
+              child: Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.dividerColor),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: content,
+              ),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: content,
-          ),
+            // Botón para quitar la imagen
+            if (hasImage && !_isLoading && !_isUploading)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  style: IconButton.styleFrom(
+                      backgroundColor: Colors.black54,
+                      foregroundColor: Colors.white),
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      _pickedImage = null;
+                      _uploadedImageUrl = null;
+                    });
+                  },
+                ),
+              ),
+          ],
         ),
+        // Ocultar botón de subida si ya se subió (es decir, _pickedImage es null)
         if (_pickedImage != null && !_isUploading)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
@@ -457,11 +604,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       controller: controller,
       maxLines: maxLines,
       validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        filled: true,
-      ),
+      decoration: getCommonDecoration(label),
     );
   }
 
@@ -472,11 +615,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
           .map((t) => DropdownMenuItem(value: t.nombre, child: Text(t.nombre)))
           .toList(),
       onChanged: (v) => setState(() => _tipoSeleccionado = v),
-      decoration: InputDecoration(
-        labelText: l10n.adminFormTypeLabel,
-        border: const OutlineInputBorder(),
-        filled: true,
-      ),
+      decoration: getCommonDecoration(l10n.adminFormTypeLabel),
       validator: (v) => v == null ? l10n.validationTypeRequired : null,
     );
   }
@@ -503,48 +642,163 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     );
   }
 
-  Widget _buildSecuelasSelector(AppLocalizations l10n) {
-    // Filtrar para no mostrarse a sí mismo
-    final candidates = widget.elemento == null
-        ? _allElementos
-        : _allElementos.where((e) => e.id != widget.elemento!.id).toList();
+  Widget _buildSecuelasChips(AppLocalizations l10n) {
+    final selectedObjects =
+        _allElementos.where((e) => _selectedSecuelaIds.contains(e.id)).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(l10n.adminFormSequelsTitle,
-            style: Theme.of(context).textTheme.titleMedium),
-        Text(l10n.adminFormSequelsSubtitle,
-            style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 8),
-        Container(
-          height: 200,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.withAlpha(100)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: ListView.builder(
-            itemCount: candidates.length,
-            itemBuilder: (context, index) {
-              final item = candidates[index];
-              final isSelected = _selectedSecuelaIds.contains(item.id);
-              return CheckboxListTile(
-                title: Text(item.titulo),
-                value: isSelected,
-                onChanged: (val) {
-                  setState(() {
-                    if (val == true) {
-                      _selectedSecuelaIds.add(item.id);
-                    } else {
-                      _selectedSecuelaIds.remove(item.id);
-                    }
-                  });
-                },
-              );
-            },
+    if (selectedObjects.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
+        child: Text(
+          'Sin relaciones seleccionadas',
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyMedium?.color ??
+                Theme.of(context).colorScheme.onSurface,
+            fontSize: 12,
+            fontStyle: FontStyle.italic,
           ),
         ),
-      ],
+      );
+    }
+
+    return Wrap(
+      spacing: 8.0,
+      runSpacing: 4.0,
+      children: selectedObjects.map((item) {
+        return Chip(
+          avatar: item.urlImagen != null
+              ? CircleAvatar(backgroundImage: NetworkImage(item.urlImagen!))
+              : null,
+          label: Text(item.titulo),
+          deleteIcon: const Icon(Icons.close, size: 18),
+          onDeleted: () {
+            setState(() {
+              _selectedSecuelaIds.remove(item.id);
+            });
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  void _openSearchDialog() async {
+    final Elemento? selected = await showSearch<Elemento?>(
+      context: context,
+      delegate: _ElementSearchDelegate(_elementoService),
+    );
+
+    if (selected != null && !_selectedSecuelaIds.contains(selected.id)) {
+      // Evitar autoselección si es el mismo elemento que editamos
+      if (widget.elemento != null && widget.elemento!.id == selected.id) {
+        return;
+      }
+      setState(() {
+        _selectedSecuelaIds.add(selected.id);
+        // Añadimos a _allElementos temporalmente para poder mostrar el chip con título correcto
+        // si no estaba ya en la lista precargada.
+        if (!_allElementos.any((e) => e.id == selected.id)) {
+          _allElementos.add(ElementoRelacion(
+              id: selected.id,
+              titulo: selected.titulo,
+              urlImagen: selected.urlImagen));
+        }
+      });
+    }
+  }
+
+  Widget _buildAvailabilityDropdown(AppLocalizations l10n) {
+    // Definición de los estados exactos solicitados (Clave Backend -> Texto Visible)
+    final Map<String, String> statusOptions = {
+      'RELEASING': 'Releasing',
+      'AVAILABLE': 'Available',
+      'FINISHED': 'Finished',
+      'ANNOUNCED': 'Announced',
+      'CANCELLED': 'Cancelled',
+      'PAUSED': 'Paused',
+    };
+
+    return DropdownButtonFormField<String>(
+      initialValue: _estadoPublicacionSeleccionado,
+      // Generamos la lista de items mapeando las opciones
+      items: statusOptions.entries.map((entry) {
+        return DropdownMenuItem(
+          value: entry.key,
+          child: Text(entry.value),
+        );
+      }).toList(),
+      onChanged: (value) =>
+          setState(() => _estadoPublicacionSeleccionado = value),
+      validator: (value) => value == null ? 'Availability is required' : null,
+      // Usamos getCommonDecoration para mantener el estilo idéntico al campo "Type"
+      decoration: getCommonDecoration('Availability'),
+    );
+  }
+}
+
+class _ElementSearchDelegate extends SearchDelegate<Elemento?> {
+  final ElementoService _service;
+
+  _ElementSearchDelegate(this._service);
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      if (query.isNotEmpty)
+        IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return _buildSearchResults();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    if (query.length < 2) {
+      return const Center(child: Text('Escribe al menos 2 caracteres...'));
+    }
+    return _buildSearchResults();
+  }
+
+  Widget _buildSearchResults() {
+    return FutureBuilder<PaginatedResponse<Elemento>>(
+      future: _service.searchElementos(query: query, size: 10),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        final items = snapshot.data?.content ?? [];
+        if (items.isEmpty) {
+          return const Center(child: Text('No se encontraron resultados.'));
+        }
+
+        return ListView.builder(
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return ListTile(
+              leading: item.urlImagen != null
+                  ? Image.network(item.urlImagen!, width: 40, fit: BoxFit.cover)
+                  : const Icon(Icons.image_not_supported),
+              title: Text(item.titulo),
+              subtitle: Text(item.tipo),
+              onTap: () => close(context, item),
+            );
+          },
+        );
+      },
     );
   }
 }

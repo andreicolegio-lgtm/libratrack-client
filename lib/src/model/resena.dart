@@ -7,6 +7,7 @@ class Resena {
   final DateTime fechaCreacion;
 
   final int elementoId;
+  final int usuarioId; // Added field to identify the user
   final String usernameAutor;
   final String? autorFotoPerfilUrl;
 
@@ -15,6 +16,7 @@ class Resena {
     required this.valoracion,
     required this.fechaCreacion,
     required this.elementoId,
+    required this.usuarioId, // Added to constructor
     required this.usernameAutor,
     this.textoResena,
     this.autorFotoPerfilUrl,
@@ -22,11 +24,14 @@ class Resena {
 
   factory Resena.fromJson(Map<String, dynamic> json) {
     return Resena(
-      id: json['id'] as int,
-      valoracion: json['valoracion'] as int,
+      id: json['id'] as int? ?? 0, // Handle null values safely
+      valoracion: json['valoracion'] as int? ?? 0, // Handle null values safely
       textoResena: json['textoResena'] as String?,
-      fechaCreacion: DateTime.parse(json['fechaCreacion'] as String),
-      elementoId: json['elementoId'] as int,
+      fechaCreacion: json['fechaCreacion'] != null
+          ? DateTime.parse(json['fechaCreacion'] as String)
+          : DateTime.now(), // Use DateTime.now() as fallback
+      elementoId: json['elementoId'] as int? ?? 0, // Handle null values safely
+      usuarioId: json['usuarioId'] as int? ?? 0, // Handle null values safely
       usernameAutor: json['usernameAutor'] as String? ?? 'Anónimo',
       autorFotoPerfilUrl: json['autorFotoPerfilUrl'] as String?,
     );

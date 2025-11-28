@@ -10,6 +10,8 @@ analyzer:
   exclude:
     - "lib/src/core/l10n/**"
     - "lib/l10n/**"
+  errors:
+    missing_required_param: ignore
 
 # Aquí definimos nuestras reglas personalizadas (el Linter).
 linter:

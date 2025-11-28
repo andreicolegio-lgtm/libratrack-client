@@ -12,6 +12,7 @@ class ContentTypeProgressForms extends StatelessWidget {
   final TextEditingController durationController;
   final TextEditingController unitsController;
   final AppLocalizations l10n;
+  final bool hasError; // Nuevo parámetro para manejar errores externos
 
   const ContentTypeProgressForms({
     required this.selectedTypeKey,
@@ -21,6 +22,7 @@ class ContentTypeProgressForms extends StatelessWidget {
     required this.durationController,
     required this.unitsController,
     required this.l10n,
+    this.hasError = false, // Valor por defecto
     super.key,
   });
 
@@ -103,10 +105,9 @@ class ContentTypeProgressForms extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Introduce el número de episodios por temporada separados por comas.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Colors.grey),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
           ],
         );
@@ -130,6 +131,7 @@ class ContentTypeProgressForms extends StatelessWidget {
     }
   }
 
+  // Modificar el método _buildTextField para manejar el estilo de error
   Widget _buildTextField(
     BuildContext context, {
     required TextEditingController controller,
@@ -138,6 +140,8 @@ class ContentTypeProgressForms extends StatelessWidget {
     TextInputType keyboardType = TextInputType.text,
     String? hintText,
   }) {
+    final hasError = this.hasError; // Usar el parámetro hasError
+
     return TextFormField(
       controller: controller,
       inputFormatters: inputFormatters,
@@ -146,14 +150,29 @@ class ContentTypeProgressForms extends StatelessWidget {
         labelText: label,
         hintText: hintText,
         filled: true,
-        fillColor:
-            Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(50),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide.none,
-        ),
+        fillColor: Theme.of(context).colorScheme.surface,
+        border: const OutlineInputBorder(),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: hasError
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.outline,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: hasError
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        labelStyle: TextStyle(
+          color: hasError
+              ? Theme.of(context).colorScheme.error
+              : Theme.of(context).textTheme.bodyMedium?.color,
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +32,10 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() {
   // Asegura que el binding de Flutter esté inicializado antes de cualquier operación asíncrona.
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ACTIVAR EDGE-TO-EDGE
+  // Solo le decimos al sistema "ocupa toda la pantalla", pero no definimos colores todavía.
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   runApp(
     // MultiProvider permite inyectar múltiples dependencias en el árbol de widgets de una vez.
@@ -109,18 +114,15 @@ class LibraTrackApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Escuchamos cambios en la configuración (Tema/Idioma) para reconstruir la app.
     return Consumer<SettingsService>(
       builder: (BuildContext context, SettingsService settings, Widget? child) {
         return MaterialApp(
-          // Configuración Básica
           title: 'LibraTrack',
           debugShowCheckedModeBanner: false,
           navigatorKey: navigatorKey,
 
-          // --- Internacionalización (i18n) ---
-          locale: settings
-              .locale, // Idioma seleccionado por el usuario (o null para sistema)
+          // --- Configuración de Idioma y Tema (Igual que tenías) ---
+          locale: settings.locale,
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
             AppLocalizations.delegate,
@@ -129,13 +131,12 @@ class LibraTrackApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
 
-          // --- Temas ---
-          themeMode: settings.themeMode, // Claro / Oscuro / Sistema
+          themeMode: settings.themeMode,
+
+          // Tema Claro
           theme: ThemeData(
             useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.blue,
-            ),
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
             appBarTheme: const AppBarTheme(centerTitle: true),
             cardTheme: const CardThemeData(
               elevation: 2,
@@ -143,6 +144,8 @@ class LibraTrackApp extends StatelessWidget {
                   borderRadius: BorderRadius.all(Radius.circular(12))),
             ),
           ),
+
+          // Tema Oscuro
           darkTheme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
@@ -152,11 +155,40 @@ class LibraTrackApp extends StatelessWidget {
             appBarTheme: const AppBarTheme(centerTitle: true),
           ),
 
-          // --- Enrutamiento ---
-          // AuthWrapper decide qué pantalla mostrar al inicio (Login vs Home)
+          // El builder envuelve todas las pantallas. Usamos 'context' para saber el brillo actual.
+          builder: (context, child) {
+            // Detectamos si el tema resultante es oscuro o claro
+            final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle(
+                // Hacemos las barras transparentes
+                statusBarColor: Colors.transparent,
+                systemNavigationBarColor: Colors.transparent,
+
+                // Iconos de la Barra de Estado (Arriba)
+                // Android: Brightness.light pone iconos BLANCOS (para fondo oscuro)
+                // Android: Brightness.dark pone iconos NEGROS (para fondo claro)
+                statusBarIconBrightness:
+                    isDark ? Brightness.light : Brightness.dark,
+
+                // iOS: Funciona al revés por razones históricas
+                // Brightness.dark pone texto BLANCO
+                // Brightness.light pone texto NEGRO
+                statusBarBrightness:
+                    isDark ? Brightness.dark : Brightness.light,
+
+                // Iconos de la Barra de Navegación (Abajo - Android)
+                systemNavigationBarIconBrightness:
+                    isDark ? Brightness.light : Brightness.dark,
+              ),
+              child:
+                  child!, // Renderizamos la pantalla correspondiente (Login, Home, etc.)
+            );
+          },
+
           home: const AuthWrapper(),
 
-          // Rutas nombradas para navegación imperativa si es necesario
           routes: <String, WidgetBuilder>{
             '/home': (context) => const HomeScreen(),
             '/login': (context) => const LoginScreen(),

@@ -30,6 +30,10 @@ class _GenreSelectorWidgetState extends State<GenreSelectorWidget> {
   // Conjunto para rastrear cuáles son custom (añadidos manualmente)
   late Set<String> _customGenres;
 
+  // Controlador y estado para la búsqueda
+  final TextEditingController _searchController = TextEditingController();
+  String _filterText = '';
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +44,19 @@ class _GenreSelectorWidgetState extends State<GenreSelectorWidget> {
 
     // Detectar cuáles de los iniciales son custom (no están en la lista oficial del tipo)
     _customGenres = _selectedGenres.difference(availableGenres);
+
+    // Configurar el listener para el controlador de búsqueda
+    _searchController.addListener(() {
+      setState(() {
+        _filterText = _searchController.text.trim().toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -85,19 +102,40 @@ class _GenreSelectorWidgetState extends State<GenreSelectorWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final availableGenres = _computeAvailableGenres();
+    // Filtrar según el texto de búsqueda
+    final filteredAvailableList = _computeAvailableGenres().where((genre) {
+      return genre.toLowerCase().contains(_filterText);
+    }).toList()
+      ..sort();
+
+    // Filtrar los géneros custom según el texto de búsqueda
+    final filteredCustomList = _customGenres.where((genre) {
+      return genre.toLowerCase().contains(_filterText);
+    }).toList()
+      ..sort();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (availableGenres.isNotEmpty) ...[
-          const Text('Sugeridos por Tipo:',
-              style: TextStyle(fontSize: 12, color: Colors.grey)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: availableGenres.map((genre) {
+        // Campo de búsqueda
+        TextField(
+          controller: _searchController,
+          decoration: const InputDecoration(
+            prefixIcon: Icon(Icons.search),
+            hintText: 'Filtrar géneros',
+            isDense: true,
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Unificamos todo en un solo bloque visual
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 8.0,
+          children: [
+            // Chips Sugeridos (Oficiales)
+            ...filteredAvailableList.map((genre) {
               final isSelected = _selectedGenres.contains(genre);
               return FilterChip(
                 label: Text(ContentTranslator.translateGenre(context, genre)),
@@ -106,36 +144,20 @@ class _GenreSelectorWidgetState extends State<GenreSelectorWidget> {
                 selectedColor: Theme.of(context).colorScheme.primaryContainer,
                 checkmarkColor: Theme.of(context).colorScheme.primary,
               );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-        ],
-        const Text('Seleccionados / Custom:',
-            style: TextStyle(fontSize: 12, color: Colors.grey)),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8.0,
-          runSpacing: 4.0,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            // Chips de selección actual (para ver qué tengo seleccionado de un vistazo)
-            ..._selectedGenres.map((genre) {
-              // Si es custom, lo mostramos diferente y permitimos borrar
-              if (_customGenres.contains(genre) ||
-                  !availableGenres.contains(genre)) {
-                return InputChip(
-                  label: Text(genre),
-                  onDeleted: () => _removeCustomGenre(genre),
-                  backgroundColor: Colors.orange.shade100,
-                  labelStyle: TextStyle(color: Colors.orange.shade900),
-                  deleteIconColor: Colors.orange.shade900,
-                );
-              }
-              return const SizedBox
-                  .shrink(); // Los oficiales ya se ven arriba marcados
             }),
 
-            // Botón Añadir
+            // Chips Custom (Los amarillos que añade el usuario)
+            ...filteredCustomList.map((genre) {
+              return InputChip(
+                label: Text(genre),
+                onDeleted: () => _removeCustomGenre(genre),
+                backgroundColor: Colors.orange.shade100,
+                labelStyle: TextStyle(color: Colors.orange.shade900),
+                deleteIconColor: Colors.orange.shade900,
+              );
+            }),
+
+            // Botón "+ Otro" (Siempre al final)
             ActionChip(
               avatar: const Icon(Icons.add, size: 16),
               label: const Text('Otro'),

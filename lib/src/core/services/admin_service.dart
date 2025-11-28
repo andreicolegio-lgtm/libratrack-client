@@ -120,4 +120,30 @@ class AdminService with ChangeNotifier {
       throw ApiException('Error al cambiar el estado del elemento: $e');
     }
   }
+
+  /// Obtiene los elementos creados por el administrador autenticado.
+  Future<PaginatedResponse<Elemento>> getMisElementosCreados({
+    int page = 0,
+    String? search,
+  }) async {
+    try {
+      final queryParams = {
+        'page': page.toString(),
+        if (search != null && search.isNotEmpty) 'search': search,
+      };
+
+      final response =
+          await _apiClient.get('admin/mis-elementos', queryParams: queryParams);
+
+      return PaginatedResponse.fromJson(
+        response,
+        Elemento.fromJson,
+      );
+    } catch (e) {
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw ApiException('Error al cargar elementos creados: $e');
+    }
+  }
 }

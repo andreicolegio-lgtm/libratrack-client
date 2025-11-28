@@ -54,6 +54,7 @@ flutter:
   # Recursos estáticos
   assets:
     - assets/images/google_logo.svg
+    - assets/images/isotipo_libratrack.svg
 
 flutter_intl:
   enabled: true

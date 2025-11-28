@@ -269,6 +269,81 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     }
   }
 
+  Future<void> _handleDeleteReview(Resena resena) async {
+    final l10n = AppLocalizations.of(context);
+
+    // Diálogo de confirmación
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('¿Borrar reseña?'),
+        content: const Text('Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Borrar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) {
+      return;
+    }
+
+    try {
+      await _resenaService.eliminarResena(resena.id);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _resenas.removeWhere((r) => r.id == resena.id);
+
+        // Si borré mi propia reseña, actualizo el estado
+        if (resena.usernameAutor == _authService.perfilUsuario?.username) {
+          _haResenado = false;
+        }
+      });
+
+      SnackBarHelper.showTopSnackBar(context, 'Reseña eliminada',
+          isError: false);
+    } catch (e) {
+      _handleError(e, l10n);
+    }
+  }
+
+  Future<void> _handleEditReview(Resena resena) async {
+    // Reutilizamos el modal existente pasándole la reseña
+    final Resena? resenaActualizada = await showModalBottomSheet<Resena>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => ResenaFormModal(
+        elementoId: widget.elementoId,
+        resenaExistente: resena, // Nuevo parámetro
+      ),
+    );
+
+    if (resenaActualizada != null && mounted) {
+      setState(() {
+        final index = _resenas.indexWhere((r) => r.id == resenaActualizada.id);
+        if (index != -1) {
+          _resenas[index] = resenaActualizada;
+        }
+      });
+
+      SnackBarHelper.showTopSnackBar(context, 'Reseña actualizada',
+          isError: false);
+    }
+  }
+
   void _handleError(Object e, AppLocalizations l10n) {
     if (!mounted) {
       return;
@@ -284,6 +359,13 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   bool get _isProcessing => _isAddingToCatalog || _isRemovingFromCatalog;
 
   // --- UI Builder ---
+
+  void _reloadData() async {
+    final newDataFuture = _loadData(); // Start the async operation
+    setState(() {
+      _screenDataFuture = newDataFuture; // Update the state synchronously
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -304,11 +386,11 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text(l10n.errorLoadingElement(''),
+                  Text(
+                      'Error: ${snapshot.error}\nStack: ${snapshot.stackTrace}',
                       textAlign: TextAlign.center),
                   TextButton(
-                    onPressed: () =>
-                        setState(() => _screenDataFuture = _loadData()),
+                    onPressed: _reloadData, // Use the new method here
                     child: const Text('Reintentar'),
                   )
                 ],
@@ -715,8 +797,14 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _resenas.length,
             separatorBuilder: (_, __) => const Divider(height: 32),
-            itemBuilder: (context, index) =>
-                ResenaCard(resena: _resenas[index]),
+            itemBuilder: (context, index) {
+              final resena = _resenas[index];
+              return ResenaCard(
+                resena: resena,
+                onEdit: () => _handleEditReview(resena),
+                onDelete: () => _handleDeleteReview(resena),
+              );
+            },
           ),
       ],
     );

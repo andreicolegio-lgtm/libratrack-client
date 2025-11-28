@@ -4,12 +4,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/services/admin_service.dart';
+import '../../core/services/auth_service.dart';
 import '../../model/perfil_usuario.dart';
 import '../../model/paginated_response.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/error_translator.dart';
 import '../../core/utils/api_exceptions.dart';
 import 'admin_elemento_form.dart';
+import 'admin_created_elements_screen.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -20,6 +22,7 @@ class AdminPanelScreen extends StatefulWidget {
 
 class _AdminPanelScreenState extends State<AdminPanelScreen> {
   late final AdminService _adminService;
+  int? _currentUserId;
 
   // Estado de Datos
   final List<PerfilUsuario> _usuarios = [];
@@ -44,6 +47,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   void initState() {
     super.initState();
     _adminService = context.read<AdminService>();
+    final authService = context.read<AuthService>();
+    _currentUserId = authService.currentUser?.id;
+
     _scrollController.addListener(_onScroll);
     _searchController.addListener(_onSearchChanged);
     _loadUsers(firstPage: true);
@@ -101,6 +107,17 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       if (mounted) {
         setState(() {
           _usuarios.addAll(response.content);
+
+          // Si el usuario actual está en la lista, lo movemos al índice 0
+          if (_currentUserId != null) {
+            final int myIndex =
+                _usuarios.indexWhere((u) => u.id == _currentUserId);
+            if (myIndex > 0) {
+              final me = _usuarios.removeAt(myIndex);
+              _usuarios.insert(0, me);
+            }
+          }
+
           _currentPage++;
           _hasNextPage = !response.isLast;
           _isLoadingFirst = false;
@@ -118,7 +135,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     }
   }
 
-  // --- Gestión de Roles ---
+  // --- Gestión de Roles (Sin cambios en lógica) ---
 
   void _onRoleChanged(int userId, String role, bool value) {
     setState(() {
@@ -148,12 +165,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
       if (mounted) {
         setState(() {
-          // Actualizar usuario en la lista local
           final index = _usuarios.indexWhere((u) => u.id == user.id);
           if (index != -1) {
             _usuarios[index] = updatedUser;
+            // Re-verificar orden por si acaso (opcional)
           }
-          // Limpiar cambios pendientes
           _pendingChanges.remove(user.id);
         });
 
@@ -175,6 +191,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -192,11 +209,26 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   decoration: InputDecoration(
                     hintText: l10n.adminPanelSearchHint,
                     prefixIcon: const Icon(Icons.search),
+                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _searchController,
+                      builder: (context, value, child) {
+                        if (value.text.isNotEmpty) {
+                          return IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30)),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
+                    fillColor: theme.colorScheme.surface,
                   ),
                 ),
               ),
@@ -239,21 +271,55 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AdminElementoFormScreen()),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: Text(l10n.adminPanelCreateElement),
+
+      // 3. BOTONES SIMÉTRICOS (HISTORIAL Y CREAR)
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Botón Izquierdo: Historial
+            FloatingActionButton.extended(
+              heroTag: 'btnHistory', // Necesario tag único
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const AdminCreatedElementsScreen()),
+                );
+              },
+              icon: const Icon(Icons.history),
+              label: const Text('Historial'), // Idealmente l10n.history
+              backgroundColor: theme.colorScheme.secondaryContainer,
+              foregroundColor: theme.colorScheme.onSecondaryContainer,
+            ),
+
+            // Botón Derecho: Crear Elemento
+            FloatingActionButton.extended(
+              heroTag: 'btnCreate', // Necesario tag único
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const AdminElementoFormScreen()),
+                );
+              },
+              icon: const Icon(Icons.add),
+              label: Text(l10n.adminPanelCreateElement),
+            ),
+          ],
+        ),
       ),
-      body: _buildBody(l10n),
+
+      // 1. SAFE ZONE APLICADA AL CUERPO
+      body: SafeArea(
+        child: _buildBody(l10n, theme),
+      ),
     );
   }
 
-  Widget _buildBody(AppLocalizations l10n) {
+  Widget _buildBody(AppLocalizations l10n, ThemeData theme) {
     if (_isLoadingFirst) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -270,7 +336,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     return ListView.builder(
       controller: _scrollController,
       itemCount: _usuarios.length + 1,
-      padding: const EdgeInsets.only(bottom: 80),
+      // 4. PADDING INFERIOR AUMENTADO
+      // 100px asegura que el último item se vea por encima de los botones flotantes
+      padding: const EdgeInsets.only(bottom: 100),
       itemBuilder: (context, index) {
         if (index == _usuarios.length) {
           return _isLoadingMore
@@ -289,8 +357,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             ? changes['admin']!
             : user.esAdministrador;
         final bool hasUnsavedChanges = changes != null && changes.isNotEmpty;
+        final bool isMe = _currentUserId != null && user.id == _currentUserId;
 
         return Card(
+          // Resaltado visual si soy yo
+          shape: isMe
+              ? RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: theme.colorScheme.primary, width: 2))
+              : null,
+          color: isMe ? theme.colorScheme.primaryContainer.withAlpha(50) : null,
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ExpansionTile(
             leading: CircleAvatar(
@@ -300,8 +376,35 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               child:
                   user.fotoPerfilUrl == null ? const Icon(Icons.person) : null,
             ),
-            title: Text(user.username,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    user.username,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (isMe) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'TÚ',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ]
+              ],
+            ),
             subtitle: Text(user.email),
             children: [
               SwitchListTile(

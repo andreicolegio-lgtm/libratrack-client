@@ -52,4 +52,42 @@ class ResenaService with ChangeNotifier {
       throw ApiException('Error al publicar la reseña: $e');
     }
   }
+
+  /// Elimina una reseña existente.
+  Future<void> eliminarResena(int resenaId) async {
+    try {
+      final url = 'resenas/$resenaId';
+      await _apiClient.delete(url);
+    } catch (e) {
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw ApiException('Error al eliminar la reseña: $e');
+    }
+  }
+
+  /// Actualiza una reseña existente.
+  Future<Resena> actualizarResena(
+    int resenaId,
+    int elementoId, // <--- NUEVO PARAMETRO REQUERIDO
+    int valoracion,
+    String? textoResena,
+  ) async {
+    try {
+      final url = 'resenas/$resenaId';
+      final body = {
+        'elementoId': elementoId, // <--- AHORA LO ENVIAMOS
+        'valoracion': valoracion,
+        'textoResena': textoResena,
+      };
+      // El cliente devuelve el JSON parseado directamente
+      final dynamic responseData = await _apiClient.put(url, body);
+      return Resena.fromJson(responseData as Map<String, dynamic>);
+    } catch (e) {
+      if (e is ApiException) {
+        rethrow;
+      }
+      throw ApiException('Error al actualizar la reseña: $e');
+    }
+  }
 }

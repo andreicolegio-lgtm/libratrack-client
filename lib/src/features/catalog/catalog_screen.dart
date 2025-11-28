@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/catalog_service.dart';
 import '../../core/services/auth_service.dart';
@@ -8,6 +10,8 @@ import '../../core/utils/error_translator.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/api_exceptions.dart';
 import 'widgets/catalog_entry_card.dart';
+import '../../core/widgets/custom_search_bar.dart';
+import '../../core/widgets/filter_modal.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -20,15 +24,28 @@ class _CatalogScreenState extends State<CatalogScreen>
     with SingleTickerProviderStateMixin {
   late final CatalogService _catalogService;
   late final AuthService _authService;
+  late TabController _tabController;
 
   bool _isDataLoaded = false;
   String? _loadingError;
+
+  // Estado de Filtros
+  final TextEditingController _searchController = TextEditingController();
+  List<String> _selectedTypes = [];
+  List<String> _selectedGenres = [];
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _catalogService = context.read<CatalogService>();
     _authService = context.read<AuthService>();
+
+    // 6 Pestañas: All, Favorites, In Progress, Pending, Finished, Dropped
+    _tabController = TabController(length: 6, vsync: this);
+
+    // Listener para la búsqueda inteligente
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
@@ -38,6 +55,14 @@ class _CatalogScreenState extends State<CatalogScreen>
       _loadCatalog();
       _isDataLoaded = true;
     }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadCatalog() async {
@@ -51,7 +76,6 @@ class _CatalogScreenState extends State<CatalogScreen>
       if (!mounted) {
         return;
       }
-
       if (e is UnauthorizedException) {
         _authService.logout();
       } else {
@@ -69,150 +93,304 @@ class _CatalogScreenState extends State<CatalogScreen>
     }
   }
 
-  List<CatalogoEntrada> _filterCatalogo(
-      int tabIndex, List<CatalogoEntrada> all) {
-    switch (tabIndex) {
-      case 0: // Todos
-        return all;
-      case 1: // Favoritos
-        return all.where((e) => e.esFavorito).toList();
-      case 2: // En Progreso
-        return all
-            .where(
-                (e) => e.estadoPersonal == EstadoPersonal.enProgreso.apiValue)
-            .toList();
-      case 3: // Pendiente
-        return all
-            .where((e) => e.estadoPersonal == EstadoPersonal.pendiente.apiValue)
-            .toList();
-      case 4: // Terminado
-        return all
-            .where((e) => e.estadoPersonal == EstadoPersonal.terminado.apiValue)
-            .toList();
-      case 5: // Abandonado
-        return all
-            .where(
-                (e) => e.estadoPersonal == EstadoPersonal.abandonado.apiValue)
-            .toList();
+  // --- LÓGICA DE BÚSQUEDA INTELIGENTE ---
+
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) {
+      _debounce!.cancel();
+    }
+
+    // Pequeño debounce para no saltar de tab mientras escribes rápido
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      final query = _searchController.text.trim().toLowerCase();
+      if (query.isEmpty) {
+        setState(() {}); // Solo repintar para quitar filtros de texto
+        return;
+      }
+
+      // 1. Buscamos la mejor coincidencia en todo el catálogo
+      final allEntries = _catalogService.entradas;
+      final match = allEntries.firstWhere(
+        (e) => e.elementoTitulo.toLowerCase().contains(query),
+        orElse: () => allEntries.first, // Fallback (no crítico)
+      );
+
+      // 2. Si hay coincidencia válida y contiene el texto buscado
+      if (match.elementoTitulo.toLowerCase().contains(query)) {
+        // 3. Obtenemos la Tab correspondiente a su estado
+        final targetIndex = _getTabIndexForState(match);
+
+        // 4. Redirigimos si no estamos en 'All' (0) o en la tab correcta
+        // NOTA: Nunca forzamos ir a 'All' (0) automáticamente.
+        if (_tabController.index != targetIndex && targetIndex != 0) {
+          _tabController.animateTo(targetIndex);
+        }
+      }
+
+      setState(() {}); // Actualizar listas filtradas
+    });
+  }
+
+  int _getTabIndexForState(CatalogoEntrada entrada) {
+    if (entrada.esFavorito) {
+      return 1; // Prioridad a Favs si se quiere, o por estado
+    }
+
+    // Mapeo Estado -> Índice de Tab
+    // Tabs: [0:All, 1:Favs, 2:Progress, 3:Pending, 4:Finished, 5:Dropped]
+    switch (entrada.estadoPersonal) {
+      case 'EN_PROGRESO':
+        return 2;
+      case 'PENDIENTE':
+        return 3;
+      case 'TERMINADO':
+        return 4;
+      case 'ABANDONADO':
+        return 5;
       default:
-        return all;
+        return 0; // Otros (Pausado) van a All
     }
   }
+
+  // --- FILTRADO Y ORDENACIÓN ---
+
+  List<CatalogoEntrada> _filterList(List<CatalogoEntrada> source) {
+    final query = _searchController.text.trim().toLowerCase();
+
+    return source.where((e) {
+      // Filtro Texto
+      if (query.isNotEmpty && !e.elementoTitulo.toLowerCase().contains(query)) {
+        return false;
+      }
+      // Filtro Tipo
+      if (_selectedTypes.isNotEmpty &&
+          !_selectedTypes.contains(e.elementoTipoNombre)) {
+        return false;
+      }
+      // Filtro Género (busca si el string de géneros contiene alguno de los seleccionados)
+      if (_selectedGenres.isNotEmpty) {
+        // e.elementoGeneros es un String "Acción, Aventura".
+        // Verificamos si CUALQUIERA de los seleccionados está presente.
+        final elementGenres = e.elementoGeneros?.toLowerCase() ?? '';
+        bool hasMatch = false;
+        for (final g in _selectedGenres) {
+          if (elementGenres.contains(g.toLowerCase())) {
+            hasMatch = true;
+            break;
+          }
+        }
+        if (!hasMatch) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+  }
+
+  List<CatalogoEntrada> _sortForAllTab(List<CatalogoEntrada> list) {
+    // Orden personalizado para la tab "All" (Punto 5)
+    // Orden: En Progreso > Pendiente > Pausado > Terminado > Abandonado
+    final orderMap = {
+      'EN_PROGRESO': 1,
+      'PENDIENTE': 2,
+      'PAUSADO': 3,
+      'TERMINADO': 4,
+      'ABANDONADO': 5,
+    };
+
+    list.sort((a, b) {
+      final orderA = orderMap[a.estadoPersonal] ?? 99;
+      final orderB = orderMap[b.estadoPersonal] ?? 99;
+      return orderA.compareTo(orderB);
+    });
+    return list;
+  }
+
+  void _openFilterModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => FilterModal(
+        selectedTypes: _selectedTypes,
+        selectedGenres: _selectedGenres,
+        onApply: (types, genres) {
+          setState(() {
+            _selectedTypes = types;
+            _selectedGenres = genres;
+          });
+        },
+      ),
+    );
+  }
+
+  // --- UI ---
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
 
-    // Definición de pestañas
-    final List<Tab> tabs = [
+    // Nombres de las Tabs
+    final List<Widget> tabs = [
       Tab(text: l10n.adminPanelFilterAll),
-      const Tab(icon: Icon(Icons.star, size: 18), text: 'Favs'), // "Favorites"
+      const Tab(text: 'Favorites'), // Punto 1: "Favorite" (o Favorites)
       Tab(text: l10n.catalogInProgress),
       Tab(text: l10n.catalogPending),
       Tab(text: l10n.catalogFinished),
       Tab(text: l10n.catalogDropped),
     ];
 
-    return DefaultTabController(
-      length: tabs.length,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.catalogTitle,
-              style: Theme.of(context).textTheme.titleLarge),
-          centerTitle: true,
-          bottom: TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            tabs: tabs,
-            indicatorSize: TabBarIndicatorSize.label,
-            dividerColor: Colors.transparent,
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-            unselectedLabelStyle:
-                const TextStyle(fontWeight: FontWeight.normal),
-          ),
-        ),
-        body: Consumer<CatalogService>(
-          builder: (context, catalogService, child) {
-            if (catalogService.isLoading && catalogService.entradas.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (_loadingError != null) {
-              return _buildErrorState(_loadingError!);
-            }
-
-            return TabBarView(
-              children: List.generate(tabs.length, (index) {
-                final filteredList =
-                    _filterCatalogo(index, catalogService.entradas);
-
-                if (filteredList.isEmpty) {
-                  return _buildEmptyState(l10n, index);
-                }
-
-                return RefreshIndicator(
-                  onRefresh: _loadCatalog,
-                  child: ListView.separated(
-                    key: PageStorageKey(
-                        'catalog_tab_$index'), // Preserva scroll por pestaña
-                    padding: const EdgeInsets.all(12),
-                    itemCount: filteredList.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) {
-                      return CatalogEntryCard(
-                        key: ValueKey(filteredList[i].id),
-                        entrada: filteredList[i],
-                        onUpdate: () {},
-                      );
-                    },
+    return Scaffold(
+      // SafeArea para proteger bordes
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 1. Cabecera Personalizada
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/isotipo_libratrack.svg',
+                    height: 32,
+                    // Si el SVG tiene color fijo, quitar colorFilter. Si es negro, colorear.
+                    // colorFilter: ColorFilter.mode(theme.primaryColor, BlendMode.srcIn),
                   ),
-                );
-              }),
-            );
-          },
+                  const SizedBox(width: 12),
+                  Text(
+                    'LibraTrack',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white
+                          : theme.primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 2. Buscador y Filtros
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: CustomSearchBar(
+                controller: _searchController,
+                hintText: 'Buscar en mi catálogo...',
+                onFilterPressed: _openFilterModal,
+                onChanged: _onSearchChanged, // Trigger búsqueda al limpiar
+              ),
+            ),
+
+            // 3. Tabs
+            TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              tabs: tabs,
+              dividerColor: Colors.transparent,
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+              unselectedLabelStyle:
+                  const TextStyle(fontWeight: FontWeight.normal),
+            ),
+
+            // 4. Contenido
+            Expanded(
+              child: Consumer<CatalogService>(
+                builder: (context, catalogService, child) {
+                  if (catalogService.isLoading &&
+                      catalogService.entradas.isEmpty) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (_loadingError != null) {
+                    return _buildErrorState(_loadingError!);
+                  }
+
+                  // Filtramos globalmente primero (Búsqueda + Filtros Modal)
+                  final globalFiltered = _filterList(catalogService.entradas);
+
+                  return TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // Tab 0: All (Ordenado por estado)
+                      _buildCatalogList(
+                          _sortForAllTab(List.from(globalFiltered))),
+
+                      // Tab 1: Favorites
+                      _buildCatalogList(
+                          globalFiltered.where((e) => e.esFavorito).toList()),
+
+                      // Tab 2: In Progress
+                      _buildCatalogList(globalFiltered
+                          .where((e) =>
+                              e.estadoPersonal ==
+                              EstadoPersonal.enProgreso.apiValue)
+                          .toList()),
+
+                      // Tab 3: Pending
+                      _buildCatalogList(globalFiltered
+                          .where((e) =>
+                              e.estadoPersonal ==
+                              EstadoPersonal.pendiente.apiValue)
+                          .toList()),
+
+                      // Tab 4: Finished
+                      _buildCatalogList(globalFiltered
+                          .where((e) =>
+                              e.estadoPersonal ==
+                              EstadoPersonal.terminado.apiValue)
+                          .toList()),
+
+                      // Tab 5: Dropped
+                      _buildCatalogList(globalFiltered
+                          .where((e) =>
+                              e.estadoPersonal ==
+                              EstadoPersonal.abandonado.apiValue)
+                          .toList()),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState(AppLocalizations l10n, int index) {
-    IconData icon;
-    String message;
-
-    switch (index) {
-      case 1: // Favoritos
-        icon = Icons.star_border;
-        message = 'Aún no tienes favoritos.';
-        break;
-      case 2: // En Progreso
-        icon = Icons.play_circle_outline;
-        message = 'No estás viendo nada actualmente.';
-        break;
-      case 3: // Pendiente
-        icon = Icons.schedule;
-        message = '¡Estás al día! Nada pendiente.';
-        break;
-      case 4: // Terminado
-        icon = Icons.check_circle_outline;
-        message = 'Aún no has terminado nada.';
-        break;
-      default:
-        icon = Icons.collections_bookmark_outlined;
-        message = 'Tu catálogo está vacío.';
+  Widget _buildCatalogList(List<CatalogoEntrada> list) {
+    if (list.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No se encontraron elementos.',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
     }
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-        ],
+    return RefreshIndicator(
+      onRefresh: _loadCatalog,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(12),
+        itemCount: list.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, i) {
+          return CatalogEntryCard(
+            key: ValueKey(list[i].id),
+            entrada: list[i],
+            onUpdate: () {}, // El provider actualiza auto, callback opcional
+          );
+        },
       ),
     );
   }

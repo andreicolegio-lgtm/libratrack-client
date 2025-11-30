@@ -4,7 +4,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../config/environment_config.dart';
 import '../utils/api_client.dart';
 import '../utils/api_exceptions.dart';
+import '../utils/snackbar_helper.dart';
 import '../../model/perfil_usuario.dart';
+import '../../../../main.dart';
 
 /// Excepción específica para cuando el usuario cancela el flujo de Google.
 class GoogleSignInCanceledException implements Exception {
@@ -40,6 +42,7 @@ class AuthService with ChangeNotifier {
   int? get currentUserId => _perfilUsuario?.id;
 
   AuthService(this._apiClient, this._secureStorage) {
+    _apiClient.onTokenExpired = _handleTokenExpiration; // Suscripción
     _initialize();
   }
 
@@ -217,5 +220,23 @@ class AuthService with ChangeNotifier {
   void updateLocalProfileData(PerfilUsuario nuevoPerfil) {
     _perfilUsuario = nuevoPerfil;
     notifyListeners();
+  }
+
+  Future<void> _handleTokenExpiration() async {
+    // 1. Cerrar sesión limpiamente (borrar datos locales)
+    await logout();
+    // 2. Mostrar aviso al usuario (usando el contexto global)
+    final context = navigatorKey.currentContext;
+    // CORRECCIÓN: Verificamos si el contexto sigue montado/válido
+    if (context != null && context.mounted) {
+      SnackBarHelper.showTopSnackBar(
+        context,
+        'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.',
+        isError: true,
+      );
+    }
+    // 3. Redirigir al Login forzosamente
+    navigatorKey.currentState
+        ?.pushNamedAndRemoveUntil('/login', (route) => false);
   }
 }

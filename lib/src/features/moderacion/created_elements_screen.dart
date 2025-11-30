@@ -1,22 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/widgets/custom_search_bar.dart';
+import '../../core/widgets/filter_modal.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/services/admin_service.dart';
 import '../../model/elemento.dart';
 import '../../model/paginated_response.dart';
-import '../elemento/elemento_detail_screen.dart'; // Para navegar al detalle
+import '../elemento/elemento_detail_screen.dart';
 
-class AdminCreatedElementsScreen extends StatefulWidget {
-  const AdminCreatedElementsScreen({super.key});
+class CreatedElementsScreen extends StatefulWidget {
+  const CreatedElementsScreen({super.key});
 
   @override
-  State<AdminCreatedElementsScreen> createState() =>
-      _AdminCreatedElementsScreenState();
+  State<CreatedElementsScreen> createState() => _CreatedElementsScreenState();
 }
 
-class _AdminCreatedElementsScreenState
-    extends State<AdminCreatedElementsScreen> {
+class _CreatedElementsScreenState extends State<CreatedElementsScreen> {
   late final AdminService _adminService;
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
@@ -28,6 +28,12 @@ class _AdminCreatedElementsScreenState
   int _currentPage = 0;
   String? _error;
   Timer? _debounce;
+
+  // Estado de Filtros (Aunque el backend aún no filtra por esto, lo preparamos en UI)
+  String _sortMode = 'DATE';
+  bool _sortAscending = true;
+  List<String> _selectedTypes = [];
+  List<String> _selectedGenres = [];
 
   @override
   void initState() {
@@ -78,13 +84,14 @@ class _AdminCreatedElementsScreenState
       setState(() => _isLoadingMore = true);
     }
 
+    final String? searchQuery =
+        _searchController.text.isEmpty ? null : _searchController.text.trim();
+
     try {
-      // NOTA: Asegúrate de añadir el método getMisElementosCreados en tu AdminService
-      // que llame al endpoint correspondiente del backend (ej. /admin/my-elements)
       final PaginatedResponse<Elemento> response =
           await _adminService.getMisElementosCreados(
         page: _currentPage,
-        search: _searchController.text.isEmpty ? null : _searchController.text,
+        search: searchQuery,
       );
 
       if (mounted) {
@@ -112,6 +119,39 @@ class _AdminCreatedElementsScreenState
       context,
       MaterialPageRoute(
         builder: (_) => ElementoDetailScreen(elementoId: elemento.id),
+        settings: const RouteSettings(name: 'ElementoDetailScreen'),
+      ),
+    );
+  }
+
+  void _openFilterModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Importante para que el modal crezca
+      builder: (context) => FilterModal(
+        // Pasar parámetros de ordenamiento si FilterModal los soporta (Grupo 1)
+        currentSortMode: _sortMode,
+        isAscending: _sortAscending,
+        onSortChanged: (mode, ascending) {
+          setState(() {
+            _sortMode = mode;
+            _sortAscending = ascending;
+            _loadData(firstPage: true);
+          });
+        },
+
+        selectedTypes: _selectedTypes,
+        selectedGenres: _selectedGenres,
+
+        // CORRECCIÓN: El callback recibe dos listas tipadas, no un mapa dinámico
+        onApply: (types, genres) {
+          setState(() {
+            _selectedTypes = types;
+            _selectedGenres = genres;
+            // Recargar datos con los nuevos filtros
+            _loadData(firstPage: true);
+          });
+        },
       ),
     );
   }
@@ -122,40 +162,19 @@ class _AdminCreatedElementsScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historial de Creaciones'), // Usar l10n idealmente
+        title: const Text('Historial de Creaciones'),
         centerTitle: true,
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // Barra de Búsqueda
+            // Barra de Búsqueda con padding
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: TextField(
+              child: CustomSearchBar(
                 controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Buscar en mis elementos...', // Usar l10n
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _searchController,
-                    builder: (context, value, child) {
-                      if (value.text.isNotEmpty) {
-                        return IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                          },
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  filled: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                ),
+                onFilterPressed: _openFilterModal,
+                onChanged: _onSearchChanged, // Trigger al limpiar
               ),
             ),
 

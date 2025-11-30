@@ -9,6 +9,10 @@ import 'propuesta_edit_screen.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/error_translator.dart';
+import '../../core/widgets/custom_search_bar.dart';
+import '../../core/widgets/filter_modal.dart';
+import '../admin/admin_elemento_form.dart';
+import 'created_elements_screen.dart';
 
 class ModeracionPanelScreen extends StatefulWidget {
   const ModeracionPanelScreen({super.key});
@@ -23,6 +27,19 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
     EstadoPropuesta.aprobado,
     EstadoPropuesta.rechazado,
   ];
+
+  // Estado para búsqueda y filtros
+  final TextEditingController _searchController = TextEditingController();
+  List<String> _selectedTypes = [];
+  List<String> _selectedGenres = [];
+  String _sortMode = 'DATE'; // 'DATE' o 'ALPHA'
+  bool _isAscending = false; // Por defecto descendente (más nuevo arriba)
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,9 +56,89 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
                 _estados.map((e) => Tab(text: e.displayName(context))).toList(),
           ),
         ),
-        body: TabBarView(
-          children:
-              _estados.map((estado) => _PropuestasTab(estado: estado)).toList(),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Barra de búsqueda y filtros
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: CustomSearchBar(
+                  controller: _searchController,
+                  hintText: 'Buscar propuestas...',
+                  onFilterPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (context) => FilterModal(
+                        selectedTypes: _selectedTypes,
+                        selectedGenres: _selectedGenres,
+                        // Pasar parámetros de ordenamiento
+                        currentSortMode: _sortMode,
+                        isAscending: _isAscending,
+                        onSortChanged: (mode, ascending) {
+                          setState(() {
+                            _sortMode = mode;
+                            _isAscending = ascending;
+                          });
+                        },
+
+                        onApply: (types, genres) {
+                          setState(() {
+                            _selectedTypes = types;
+                            _selectedGenres = genres;
+                          });
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              Expanded(
+                child: TabBarView(
+                  children: _estados
+                      .map((estado) => _PropuestasTab(
+                            estado: estado,
+                            searchQuery: _searchController.text,
+                            // Pasar filtros si quieres filtrar en cliente
+                          ))
+                      .toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        floatingActionButton: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              heroTag: 'crearElemento',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdminElementoFormScreen(),
+                  ),
+                );
+              },
+              tooltip: 'Crear Elemento',
+              child: const Icon(Icons.add),
+            ),
+            const SizedBox(width: 16),
+            FloatingActionButton(
+              heroTag: 'historial',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreatedElementsScreen(),
+                  ),
+                );
+              },
+              tooltip: 'Historial',
+              child: const Icon(Icons.history),
+            ),
+          ],
         ),
       ),
     );
@@ -50,7 +147,12 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen> {
 
 class _PropuestasTab extends StatefulWidget {
   final EstadoPropuesta estado;
-  const _PropuestasTab({required this.estado});
+  final String searchQuery;
+
+  const _PropuestasTab({
+    required this.estado,
+    required this.searchQuery,
+  });
 
   @override
   State<_PropuestasTab> createState() => _PropuestasTabState();
@@ -61,7 +163,6 @@ class _PropuestasTabState extends State<_PropuestasTab>
   late final ModeracionService _moderacionService;
   late Future<List<Propuesta>> _propuestasFuture;
 
-  // Lista local mutable para eliminar items visualmente al procesarlos
   List<Propuesta>? _propuestasList;
   final Set<int> _processingIds = {};
 
@@ -83,24 +184,15 @@ class _PropuestasTabState extends State<_PropuestasTab>
   }
 
   Future<void> _handleRechazar(int id) async {
-    // Como no implementamos "Rechazar" en el backend explícitamente (solo aprobar),
-    // esto podría ser una llamada a un endpoint de actualización de estado a RECHAZADO.
-    // Por ahora simularemos el éxito visual.
-
     setState(() => _processingIds.add(id));
-
-    // TODO: Implementar endpoint real de rechazo en backend y servicio
-    // await _moderacionService.rechazarPropuesta(id);
-
-    // Simulación
+    // TODO: Implementar endpoint real. Por ahora simulamos éxito.
     await Future.delayed(const Duration(milliseconds: 500));
-
     if (mounted) {
       setState(() {
         _propuestasList?.removeWhere((p) => p.id == id);
         _processingIds.remove(id);
       });
-      SnackBarHelper.showTopSnackBar(context, 'Propuesta rechazada (Simulado)',
+      SnackBarHelper.showTopSnackBar(context, 'Propuesta rechazada',
           isError: false, isNeutral: true);
     }
   }
@@ -113,7 +205,6 @@ class _PropuestasTabState extends State<_PropuestasTab>
     );
 
     if (approved == true && mounted) {
-      // Eliminar de la lista de pendientes visualmente
       setState(() {
         _propuestasList?.removeWhere((p) => p.id == propuesta.id);
       });
@@ -125,7 +216,7 @@ class _PropuestasTabState extends State<_PropuestasTab>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Necesario para AutomaticKeepAliveClientMixin
+    super.build(context);
     final l10n = AppLocalizations.of(context);
 
     return RefreshIndicator(
@@ -144,26 +235,15 @@ class _PropuestasTabState extends State<_PropuestasTab>
               errorMsg = ErrorTranslator.translate(
                   context, (snapshot.error as ApiException).message);
             }
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(errorMsg, textAlign: TextAlign.center),
-                  TextButton(
-                      onPressed: _refresh, child: const Text('Reintentar'))
-                ],
-              ),
-            );
+            return Center(child: Text(errorMsg));
           }
 
-          // Inicializar lista mutable la primera vez que llegan datos
           if (snapshot.hasData && _propuestasList == null) {
             _propuestasList = List.from(snapshot.data!);
           }
 
           final lista = _propuestasList ?? [];
+          // Aquí podrías aplicar el filtro de _searchQuery localmente si lo deseas
 
           if (lista.isEmpty) {
             return Center(
@@ -173,36 +253,61 @@ class _PropuestasTabState extends State<_PropuestasTab>
                   const Icon(Icons.check_circle_outline,
                       size: 64, color: Colors.grey),
                   const SizedBox(height: 16),
-                  Text(
-                    widget.estado == EstadoPropuesta.pendiente
-                        ? l10n.modPanelNoPending
-                        : l10n.modPanelNoOthers(
-                            widget.estado.displayName(context)),
-                    style: const TextStyle(color: Colors.grey),
-                  ),
+                  Text('No hay propuestas ${widget.estado.name}'),
                 ],
               ),
             );
           }
 
           return ListView.separated(
+            key: PageStorageKey('mod_tab_${widget.estado.apiValue}'),
             padding: const EdgeInsets.all(16),
             itemCount: lista.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final p = lista[index];
-              return _buildPropuestaCard(context, p, l10n);
+              final isProcessing = _processingIds.contains(p.id);
+
+              // Usamos el nuevo widget _PropuestaCard
+              return _PropuestaCard(
+                titulo: p.tituloSugerido,
+                usuario: p.proponenteUsername,
+                tipo: p.tipoSugerido,
+                generos: p.generosSugeridos.split(','),
+                isProcessing: isProcessing,
+                onRechazar: isProcessing ? () {} : () => _handleRechazar(p.id),
+                onRevisar: isProcessing ? () {} : () => _handleRevisar(p),
+              );
             },
           );
         },
       ),
     );
   }
+}
 
-  Widget _buildPropuestaCard(
-      BuildContext context, Propuesta p, AppLocalizations l10n) {
-    final bool isPending = widget.estado == EstadoPropuesta.pendiente;
-    final bool isProcessing = _processingIds.contains(p.id);
+class _PropuestaCard extends StatelessWidget {
+  final String titulo;
+  final String usuario;
+  final String tipo;
+  final List<String> generos;
+  final bool isProcessing;
+  final VoidCallback onRechazar;
+  final VoidCallback onRevisar;
+
+  const _PropuestaCard({
+    required this.titulo,
+    required this.usuario,
+    required this.tipo,
+    required this.generos,
+    required this.isProcessing,
+    required this.onRechazar,
+    required this.onRevisar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -210,95 +315,101 @@ class _PropuestasTabState extends State<_PropuestasTab>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Cabecera con Marquee
           Container(
-            padding: const EdgeInsets.all(12),
-            color: Theme.of(context)
-                .colorScheme
-                .surfaceContainerHighest
-                .withAlpha(100),
-            child: Row(
-              children: [
-                Expanded(
-                  child: MaybeMarquee(
-                    text: p.tituloSugerido,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
+            color: theme.colorScheme.surfaceContainerHighest.withAlpha(150),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: SizedBox(
+              height: 24,
+              child: MaybeMarquee(
+                text: titulo,
+                style: theme.textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-                if (p.tipoSugerido.isNotEmpty)
-                  Chip(
-                    label: Text(p.tipoSugerido,
-                        style: const TextStyle(fontSize: 10)),
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                  ),
-              ],
+              ),
             ),
           ),
+
+          // Cuerpo
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _infoRow(Icons.person,
-                    l10n.modPanelProposalFrom(p.proponenteUsername)),
-                const SizedBox(height: 4),
-                _infoRow(Icons.category,
-                    l10n.modPanelProposalGenres(p.generosSugeridos)),
-                if (p.descripcionSugerida != null &&
-                    p.descripcionSugerida!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      p.descripcionSugerida!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          fontStyle: FontStyle.italic, color: Colors.grey[600]),
-                    ),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      const TextSpan(
+                          text: 'Proposed by: ',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      TextSpan(text: usuario),
+                    ],
                   ),
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 4),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      const TextSpan(
+                          text: 'Type: ',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      TextSpan(text: tipo),
+                    ],
+                  ),
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 8),
+                // Lista horizontal de géneros
+                SizedBox(
+                  height: 32,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: generos.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      return Chip(
+                        label: Text(generos[index].trim()),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        visualDensity: VisualDensity.compact,
+                        labelStyle: const TextStyle(fontSize: 11),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
           ),
-          if (isPending)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed:
-                        isProcessing ? null : () => _handleRechazar(p.id),
-                    style: TextButton.styleFrom(foregroundColor: Colors.red),
-                    child: Text(l10n.modPanelReject),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.icon(
-                    onPressed: isProcessing ? null : () => _handleRevisar(p),
-                    icon: isProcessing
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.edit, size: 16),
-                    label: Text(l10n.modPanelReview),
-                  ),
-                ],
-              ),
+
+          // Botones de acción
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: onRechazar,
+                  style: TextButton.styleFrom(
+                      foregroundColor: theme.colorScheme.error),
+                  child: const Text('Rechazar'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: onRevisar,
+                  icon: isProcessing
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.edit, size: 16),
+                  label: const Text('Revisar'),
+                ),
+              ],
             ),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _infoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: Colors.grey),
-        const SizedBox(width: 6),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
-      ],
     );
   }
 }

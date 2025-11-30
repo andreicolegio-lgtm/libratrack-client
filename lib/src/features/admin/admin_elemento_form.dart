@@ -71,6 +71,9 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   XFile? _pickedImage;
   String? _uploadedImageUrl;
 
+  // New state variable for content status
+  String _estadoContenido = 'COMUNITARIO';
+
   @override
   void initState() {
     super.initState();
@@ -251,6 +254,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
         'secuelaIds': _selectedSecuelaIds.toList(),
         'estadoPublicacion':
             _estadoPublicacionSeleccionado, // Añadir estado de publicación
+        'estadoContenido': _estadoContenido, // Añadir estado de contenido
       };
 
       // Limpiar nulos
@@ -471,6 +475,11 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
                 // FIELD: ESTADO DE PUBLICACIÓN
                 _buildAvailabilityDropdown(l10n),
+
+                const SizedBox(height: 16),
+
+                // FIELD: ESTADO DEL CONTENIDO
+                _buildContentStateDropdown(),
 
                 const SizedBox(height: 32),
 
@@ -731,6 +740,25 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       validator: (value) => value == null ? 'Availability is required' : null,
       // Usamos getCommonDecoration para mantener el estilo idéntico al campo "Type"
       decoration: getCommonDecoration('Availability'),
+    );
+  }
+
+  Widget _buildContentStateDropdown() {
+    return DropdownButtonFormField<String>(
+      initialValue: _estadoContenido,
+      decoration: const InputDecoration(
+        labelText: 'Estado del Contenido',
+        border: OutlineInputBorder(),
+      ),
+      items: const [
+        DropdownMenuItem(value: 'COMUNITARIO', child: Text('Community')),
+        DropdownMenuItem(value: 'OFICIAL', child: Text('Official')),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _estadoContenido = value!;
+        });
+      },
     );
   }
 }

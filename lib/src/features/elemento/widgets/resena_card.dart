@@ -46,7 +46,14 @@ class _ResenaCardState extends State<ResenaCard> {
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
-      color: theme.colorScheme.surfaceContainerLowest,
+      shape: isMyReview
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: theme.colorScheme.primary, width: 2))
+          : null,
+      color: isMyReview
+          ? theme.colorScheme.primaryContainer.withAlpha(30)
+          : theme.colorScheme.surfaceContainerLowest,
       elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -83,9 +90,10 @@ class _ResenaCardState extends State<ResenaCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
+                      // Muestra directamente el nombre de usuario en negrita
                       Text(
-                        l10n.reviewCardBy(widget.resena.usernameAutor),
-                        style: theme.textTheme.titleMedium
+                        widget.resena.usernameAutor,
+                        style: theme.textTheme.bodyMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(

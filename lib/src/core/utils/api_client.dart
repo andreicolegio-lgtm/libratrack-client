@@ -16,9 +16,9 @@ const String _refreshTokenKey = 'jwt_refresh_token';
 class ApiClient {
   final String _baseUrl = EnvironmentConfig.apiUrl;
   final FlutterSecureStorage _storage;
+  VoidCallback? onTokenExpired;
 
-  // Evita bucles infinitos de refresco si varias peticiones fallan a la vez
-  bool _isRefreshing = false;
+  Future<bool>? _refreshFuture;
 
   ApiClient(this._storage);
 
@@ -115,13 +115,20 @@ class ApiClient {
       final response = await requestFn();
       return _handleResponse(response);
     } on UnauthorizedException {
-      // Si es endpoint de auth (login/refresh) o ya estamos refrescando, propagamos el error
-      if (isAuthEndpoint || _isRefreshing) {
+      // Si es endpoint de auth (login/refresh), propagamos el error
+      if (isAuthEndpoint) {
         rethrow;
       }
 
       debugPrint('🔄 Token expirado (401). Intentando refrescar...');
-      final success = await _refreshToken();
+
+      // Si no hay refresco en curso, iniciamos uno y lo guardamos
+      _refreshFuture ??= _refreshToken().whenComplete(() {
+        _refreshFuture = null; // Limpiar al terminar
+      });
+
+      // Esperamos a que el refresco termine (sea el nuestro o uno ya existente)
+      final success = await _refreshFuture!;
 
       if (success) {
         debugPrint('🔄 Reintentando petición original...');
@@ -145,8 +152,20 @@ class ApiClient {
   }
 
   /// Intenta obtener un nuevo Access Token usando el Refresh Token.
-  Future<bool> _refreshToken() async {
-    _isRefreshing = true;
+  Future<bool> _refreshToken() {
+    if (_refreshFuture != null) {
+      return _refreshFuture!; // If a refresh is already in progress, return the same Future
+    }
+
+    _refreshFuture = _performTokenRefresh();
+
+    // Clear the _refreshFuture once the refresh is complete
+    _refreshFuture = _refreshFuture!.whenComplete(() => _refreshFuture = null);
+
+    return _refreshFuture!;
+  }
+
+  Future<bool> _performTokenRefresh() async {
     try {
       final refreshToken = await _storage.read(key: _refreshTokenKey);
       if (refreshToken == null) {
@@ -173,15 +192,21 @@ class ApiClient {
       } else {
         debugPrint(
             '❌ Fallo al refrescar token. Status: ${response.statusCode}');
-        await logout();
+        if (onTokenExpired != null) {
+          onTokenExpired!();
+        } else {
+          await logout(); // Fallback local
+        }
         return false;
       }
     } catch (e) {
       debugPrint('❌ Error refrescando token: $e');
-      await logout();
+      if (onTokenExpired != null) {
+        onTokenExpired!();
+      } else {
+        await logout(); // Fallback local
+      }
       return false;
-    } finally {
-      _isRefreshing = false;
     }
   }
 

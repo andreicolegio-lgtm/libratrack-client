@@ -35,6 +35,10 @@ class _CatalogScreenState extends State<CatalogScreen>
   List<String> _selectedGenres = [];
   Timer? _debounce;
 
+  // Variables de Ordenación
+  String _sortMode = 'DATE';
+  bool _sortAscending = false;
+
   @override
   void initState() {
     super.initState();
@@ -203,6 +207,22 @@ class _CatalogScreenState extends State<CatalogScreen>
       final orderB = orderMap[b.estadoPersonal] ?? 99;
       return orderA.compareTo(orderB);
     });
+
+    // Aplicar ordenación adicional por fecha o alfabética según configuración
+    if (_sortMode == 'DATE') {
+      list.sort((a, b) {
+        final dateA = a.agregadoEn;
+        final dateB = b.agregadoEn;
+        return _sortAscending ? dateA.compareTo(dateB) : dateB.compareTo(dateA);
+      });
+    } else if (_sortMode == 'ALPHA') {
+      list.sort((a, b) {
+        return _sortAscending
+            ? a.elementoTitulo.compareTo(b.elementoTitulo)
+            : b.elementoTitulo.compareTo(a.elementoTitulo);
+      });
+    }
+
     return list;
   }
 
@@ -213,10 +233,18 @@ class _CatalogScreenState extends State<CatalogScreen>
       builder: (ctx) => FilterModal(
         selectedTypes: _selectedTypes,
         selectedGenres: _selectedGenres,
+        currentSortMode: _sortMode,
+        isAscending: _sortAscending,
         onApply: (types, genres) {
           setState(() {
             _selectedTypes = types;
             _selectedGenres = genres;
+          });
+        },
+        onSortChanged: (mode, ascending) {
+          setState(() {
+            _sortMode = mode;
+            _sortAscending = ascending;
           });
         },
       ),
@@ -381,6 +409,7 @@ class _CatalogScreenState extends State<CatalogScreen>
     return RefreshIndicator(
       onRefresh: _loadCatalog,
       child: ListView.separated(
+        key: const PageStorageKey('catalog_tab_all'),
         padding: const EdgeInsets.all(12),
         itemCount: list.length,
         separatorBuilder: (_, __) => const SizedBox(height: 12),

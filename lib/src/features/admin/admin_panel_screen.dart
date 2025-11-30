@@ -10,8 +10,6 @@ import '../../model/paginated_response.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/error_translator.dart';
 import '../../core/utils/api_exceptions.dart';
-import 'admin_elemento_form.dart';
-import 'admin_created_elements_screen.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -193,133 +191,71 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.profileAdminPanelButton),
-        centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(110),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.profileAdminPanelButton),
+          centerTitle: true,
+          bottom: TabBar(
+            tabs: [
+              Tab(text: l10n.adminPanelFilterAll),
+              Tab(text: l10n.adminPanelFilterMods),
+              Tab(text: l10n.adminPanelFilterAdmins),
+            ],
+          ),
+        ),
+        body: SafeArea(
           child: Column(
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(16.0),
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: l10n.adminPanelSearchHint,
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: _searchController,
-                      builder: (context, value, child) {
-                        if (value.text.isNotEmpty) {
-                          return IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                            },
-                          );
-                        }
-                        return const SizedBox.shrink();
+                    labelText: l10n.adminPanelSearchHint,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
                       },
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                    filled: true,
-                    fillColor: theme.colorScheme.surface,
                   ),
                 ),
               ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
+              Expanded(
+                child: TabBarView(
                   children: [
-                    _FilterChip(
-                      label: l10n.adminPanelFilterAll,
-                      isSelected: _roleFilter == null,
-                      onSelected: () => setState(() {
-                        _roleFilter = null;
-                        _loadUsers(firstPage: true);
-                      }),
-                    ),
-                    const SizedBox(width: 8),
-                    _FilterChip(
-                      label: l10n.adminPanelFilterMods,
-                      isSelected: _roleFilter == 'MODERADOR',
-                      onSelected: () => setState(() {
-                        _roleFilter = 'MODERADOR';
-                        _loadUsers(firstPage: true);
-                      }),
-                    ),
-                    const SizedBox(width: 8),
-                    _FilterChip(
-                      label: l10n.adminPanelFilterAdmins,
-                      isSelected: _roleFilter == 'ADMIN',
-                      onSelected: () => setState(() {
-                        _roleFilter = 'ADMIN';
-                        _loadUsers(firstPage: true);
-                      }),
-                    ),
+                    _buildUserListView(l10n, theme, null, 'ALL'),
+                    _buildUserListView(l10n, theme, 'MODERADOR', 'MODS'),
+                    _buildUserListView(l10n, theme, 'ADMIN', 'ADMINS'),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
             ],
           ),
         ),
       ),
-
-      // 3. BOTONES SIMÉTRICOS (HISTORIAL Y CREAR)
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Botón Izquierdo: Historial
-            FloatingActionButton.extended(
-              heroTag: 'btnHistory', // Necesario tag único
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AdminCreatedElementsScreen()),
-                );
-              },
-              icon: const Icon(Icons.history),
-              label: const Text('Historial'), // Idealmente l10n.history
-              backgroundColor: theme.colorScheme.secondaryContainer,
-              foregroundColor: theme.colorScheme.onSecondaryContainer,
-            ),
-
-            // Botón Derecho: Crear Elemento
-            FloatingActionButton.extended(
-              heroTag: 'btnCreate', // Necesario tag único
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AdminElementoFormScreen()),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: Text(l10n.adminPanelCreateElement),
-            ),
-          ],
-        ),
-      ),
-
-      // 1. SAFE ZONE APLICADA AL CUERPO
-      body: SafeArea(
-        child: _buildBody(l10n, theme),
-      ),
     );
   }
 
-  Widget _buildBody(AppLocalizations l10n, ThemeData theme) {
+  Widget _buildUserListView(AppLocalizations l10n, ThemeData theme,
+      String? roleFilter, String tabKey) {
+    // Aplicar filtro de rol si es necesario
+    final List<PerfilUsuario> filteredUsers = roleFilter == null
+        ? _usuarios
+        : _usuarios.where((user) {
+            final changes = _pendingChanges[user.id];
+            final bool isMod = changes != null && changes.containsKey('mod')
+                ? changes['mod']!
+                : user.esModerador;
+            final bool isAdmin = changes != null && changes.containsKey('admin')
+                ? changes['admin']!
+                : user.esAdministrador;
+            return roleFilter == 'MODERADOR' ? isMod : isAdmin;
+          }).toList();
+
     if (_isLoadingFirst) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -329,18 +265,17 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           child: Text(_error!, style: const TextStyle(color: Colors.red)));
     }
 
-    if (_usuarios.isEmpty) {
+    if (filteredUsers.isEmpty) {
       return Center(child: Text(l10n.adminPanelNoUsersFound));
     }
 
     return ListView.builder(
+      key: PageStorageKey('admin_tab_$tabKey'),
       controller: _scrollController,
-      itemCount: _usuarios.length + 1,
-      // 4. PADDING INFERIOR AUMENTADO
-      // 100px asegura que el último item se vea por encima de los botones flotantes
+      itemCount: filteredUsers.length + 1,
       padding: const EdgeInsets.only(bottom: 100),
       itemBuilder: (context, index) {
-        if (index == _usuarios.length) {
+        if (index == filteredUsers.length) {
           return _isLoadingMore
               ? const Padding(
                   padding: EdgeInsets.all(16),
@@ -348,7 +283,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               : const SizedBox.shrink();
         }
 
-        final user = _usuarios[index];
+        final user = filteredUsers[index];
         final changes = _pendingChanges[user.id];
         final bool isMod = changes != null && changes.containsKey('mod')
             ? changes['mod']!
@@ -433,35 +368,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onSelected;
-
-  const _FilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onSelected(),
-      showCheckmark: false,
-      selectedColor: Theme.of(context).colorScheme.primaryContainer,
-      labelStyle: TextStyle(
-        color: isSelected
-            ? Theme.of(context).colorScheme.onPrimaryContainer
-            : null,
-        fontWeight: isSelected ? FontWeight.bold : null,
-      ),
     );
   }
 }

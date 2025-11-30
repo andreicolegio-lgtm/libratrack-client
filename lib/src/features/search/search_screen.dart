@@ -484,7 +484,9 @@ class _ElementoListTile extends StatelessWidget {
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (_) => ElementoDetailScreen(elementoId: elemento.id)));
+              builder: (_) => ElementoDetailScreen(elementoId: elemento.id),
+              settings: const RouteSettings(name: 'ElementoDetailScreen'),
+            ));
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

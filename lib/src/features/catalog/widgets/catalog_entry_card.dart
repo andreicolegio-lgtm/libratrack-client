@@ -500,151 +500,172 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Altura fija para uniformidad (Punto 4)
-    return SizedBox(
-      height: 210,
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        elevation: 2,
-        margin: EdgeInsets.zero,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => ElementoDetailScreen(
-                        elementoId: widget.entrada.elementoId)));
-          },
+    // Altura dinámica para mejorar accesibilidad
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    ElementoDetailScreen(elementoId: widget.entrada.elementoId),
+                settings: const RouteSettings(name: 'ElementoDetailScreen'),
+              ));
+        },
+        child: IntrinsicHeight(
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch, // Adjusted to stretch
             children: [
               // PUNTO 6: Imagen con Aspect Ratio 2:3 para no estirarse
               // Usamos BoxFit.cover para llenar el contenedor, pero el AspectRatio previene distorsión rara
-              AspectRatio(
-                aspectRatio: 2 / 3,
-                child: widget.entrada.elementoUrlImagen != null
-                    ? CachedNetworkImage(
-                        imageUrl: widget.entrada.elementoUrlImagen!,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(
-                            color: theme.colorScheme.surfaceContainerHighest),
-                        errorWidget: (_, __, ___) => Container(
-                            color: Colors.grey,
-                            child: const Icon(Icons.broken_image)),
-                      )
-                    : Container(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        child: const Icon(Icons.image)),
+              SizedBox(
+                width: 130,
+                child: AspectRatio(
+                  aspectRatio: 2 / 3,
+                  child: widget.entrada.elementoUrlImagen != null
+                      ? CachedNetworkImage(
+                          imageUrl: widget.entrada.elementoUrlImagen!,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => Container(
+                              color: theme.colorScheme.surfaceContainerHighest),
+                          errorWidget: (_, __, ___) => Container(
+                              color: Colors.grey,
+                              child: const Icon(Icons.broken_image)),
+                        )
+                      : Container(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          child: const Icon(Icons.image)),
+                ),
               ),
 
               // Contenido Derecho
               Expanded(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Info Superior
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            MaybeMarquee(
-                              text: widget.entrada.elementoTitulo,
-                              style: theme.textTheme.titleMedium!
-                                  .copyWith(fontWeight: FontWeight.bold),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          MaybeMarquee(
+                            text: widget.entrada.elementoTitulo,
+                            style: theme.textTheme.titleMedium!
+                                .copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          // Tipo y Géneros (Marquee)
+                          SizedBox(
+                            height: 20,
+                            child: MaybeMarquee(
+                              text:
+                                  "${widget.entrada.elementoTipoNombre} • ${widget.entrada.elementoGeneros ?? '...'}",
+                              style: theme.textTheme.bodySmall!
+                                  .copyWith(color: theme.colorScheme.primary),
                             ),
-                            const SizedBox(height: 4),
-                            // Tipo y Géneros (Marquee)
-                            SizedBox(
-                                height: 20,
-                                child: MaybeMarquee(
-                                  text:
-                                      "${widget.entrada.elementoTipoNombre} • ${widget.entrada.elementoGeneros ?? '...'}",
-                                  style: theme.textTheme.bodySmall!.copyWith(
-                                      color: theme.colorScheme.primary),
-                                )),
-                            const Spacer(),
+                          ),
+                          const SizedBox(height: 12),
 
-                            // Barra de Progreso e Inputs
-                            // PUNTO 1: Si es Videojuego, no mostramos nada aquí
-                            if (widget.entrada.elementoTipoNombre !=
-                                'Video Game') ...[
-                              const SizedBox(height: 12),
-                              _buildProgressBar(theme),
-                              const SizedBox(height: 12),
-                              _buildProgressInputs(theme),
-                            ],
+                          // Barra de Progreso e Inputs
+                          // PUNTO 1: Si es Videojuego, no mostramos nada aquí
+                          if (widget.entrada.elementoTipoNombre !=
+                              'Video Game') ...[
+                            _buildProgressBar(theme),
                             const SizedBox(height: 12),
+                            _buildProgressInputs(theme),
                           ],
-                        ),
+                        ],
                       ),
                     ),
 
-                    // Barra de Acciones Inferior (Gris)
-                    Container(
-                      height: 48,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withAlpha(80),
-                      child: Row(
-                        children: [
-                          // Estado Dropdown
-                          DropdownButton<EstadoPersonal>(
-                            value: EstadoPersonal.fromString(
-                                widget.entrada.estadoPersonal),
-                            underline: const SizedBox(),
-                            icon: const Icon(Icons.arrow_drop_down, size: 20),
-                            style: theme.textTheme.bodySmall!
-                                .copyWith(fontWeight: FontWeight.w600),
-                            onChanged:
-                                _isLoading ? null : (v) => _updateEstado(v!),
-                            items: EstadoPersonal.values
-                                .map((e) => DropdownMenuItem(
-                                    value: e,
-                                    child: Row(children: [
-                                      Icon(Icons.circle,
-                                          size: 8, color: e.color),
-                                      const SizedBox(width: 6),
-                                      Text(e.displayName(context)),
-                                    ])))
-                                .toList(),
-                          ),
-                          const Spacer(),
+                    const SizedBox(
+                        height: 12), // Garantiza espacio mínimo (Problema 1)
+                    const Spacer(), // Empuja la barra al fondo (Problema 2)
 
-                          // PUNTO 4: Icono Notas más intuitivo (edit_note)
-                          IconButton(
-                            icon: Icon(
-                              widget.entrada.notas != null &&
-                                      widget.entrada.notas!.isNotEmpty
-                                  ? Icons.description
-                                  : Icons.edit_note,
-                              size: 22,
-                              color: widget.entrada.notas != null &&
-                                      widget.entrada.notas!.isNotEmpty
-                                  ? theme.colorScheme.primary
-                                  : Colors.grey[700],
+                    // Barra de Acciones Inferior
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Container(
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: EstadoPersonal.fromString(
+                                  widget.entrada.estadoPersonal)
+                              .color
+                              .withAlpha(38), // 15% opacity
+                          // Opcional: Borde superior del mismo color
+                          border: Border(
+                              top: BorderSide(
+                                  color: EstadoPersonal.fromString(
+                                          widget.entrada.estadoPersonal)
+                                      .color
+                                      .withAlpha(77))), // 30% opacity
+                        ),
+                        child: Row(
+                          children: [
+                            // Estado Dropdown
+                            DropdownButton<EstadoPersonal>(
+                              value: EstadoPersonal.fromString(
+                                  widget.entrada.estadoPersonal),
+                              underline: const SizedBox(),
+                              icon: const Icon(Icons.arrow_drop_down, size: 20),
+                              style: theme.textTheme.bodySmall!
+                                  .copyWith(fontWeight: FontWeight.w600),
+                              onChanged:
+                                  _isLoading ? null : (v) => _updateEstado(v!),
+                              items: EstadoPersonal.values
+                                  .map((e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Row(children: [
+                                        Icon(Icons.circle,
+                                            size: 8, color: e.color),
+                                        const SizedBox(width: 6),
+                                        Text(e.displayName(context)),
+                                      ])))
+                                  .toList(),
                             ),
-                            onPressed: _showNotesDialog,
-                            tooltip: 'Notas',
-                          ),
+                            const Spacer(),
 
-                          // Botón Favorito
-                          IconButton(
-                            icon: Icon(
-                                widget.entrada.esFavorito
-                                    ? Icons.star
-                                    : Icons.star_border,
-                                size: 24,
-                                color: widget.entrada.esFavorito
-                                    ? Colors.amber
-                                    : Colors.grey),
-                            onPressed: () async {
-                              await _catalogService
-                                  .toggleFavorite(widget.entrada.elementoId);
-                              widget.onUpdate();
-                            },
-                          ),
-                        ],
+                            // PUNTO 4: Icono Notas más intuitivo (edit_note)
+                            IconButton(
+                              icon: Icon(
+                                widget.entrada.notas != null &&
+                                        widget.entrada.notas!.isNotEmpty
+                                    ? Icons.description
+                                    : Icons.edit_note,
+                                size: 22,
+                                color: widget.entrada.notas != null &&
+                                        widget.entrada.notas!.isNotEmpty
+                                    ? theme.colorScheme.primary
+                                    : Colors.grey[700],
+                              ),
+                              onPressed: _showNotesDialog,
+                              tooltip: 'Notas',
+                            ),
+
+                            // Botón Favorito
+                            IconButton(
+                              icon: Icon(
+                                  widget.entrada.esFavorito
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  size: 24,
+                                  color: widget.entrada.esFavorito
+                                      ? Colors.amber
+                                      : Colors.grey),
+                              onPressed: () async {
+                                await _catalogService
+                                    .toggleFavorite(widget.entrada.elementoId);
+                                widget.onUpdate();
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

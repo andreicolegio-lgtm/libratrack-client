@@ -8,11 +8,18 @@ class FilterModal extends StatefulWidget {
   final List<String> selectedTypes;
   final List<String> selectedGenres;
   final void Function(List<String> types, List<String> genres) onApply;
+  final String currentSortMode; // Sorting mode ('DATE', 'ALPHA')
+  final bool isAscending; // Sorting order
+  final Function(String mode, bool ascending)
+      onSortChanged; // Callback for sorting changes
 
   const FilterModal({
     required this.selectedTypes,
     required this.selectedGenres,
     required this.onApply,
+    required this.currentSortMode,
+    required this.isAscending,
+    required this.onSortChanged,
     super.key,
   });
 
@@ -73,7 +80,85 @@ class _FilterModalState extends State<FilterModal> {
                 ],
               ),
             ),
-            const Divider(),
+
+            // Sección de Ordenar por
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ordenar por',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      ChoiceChip(
+                        label: Row(
+                          children: [
+                            Icon(
+                              widget.currentSortMode == 'DATE'
+                                  ? (widget.isAscending
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward)
+                                  : Icons.arrow_upward,
+                              color: widget.currentSortMode == 'DATE'
+                                  ? Colors.blue
+                                  : Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            const Text('Recientes'),
+                          ],
+                        ),
+                        selected: widget.currentSortMode == 'DATE',
+                        onSelected: (selected) {
+                          if (selected && widget.currentSortMode == 'DATE') {
+                            // Toggle ascending for the current mode
+                            widget.onSortChanged('DATE', !widget.isAscending);
+                          } else if (selected) {
+                            // Switch to new mode with default ascending order
+                            widget.onSortChanged('DATE', false);
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      ChoiceChip(
+                        label: Row(
+                          children: [
+                            Icon(
+                              widget.currentSortMode == 'ALPHA'
+                                  ? (widget.isAscending
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward)
+                                  : Icons.sort_by_alpha,
+                              color: widget.currentSortMode == 'ALPHA'
+                                  ? Colors.blue
+                                  : Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            const Text('Alfabéticamente'),
+                          ],
+                        ),
+                        selected: widget.currentSortMode == 'ALPHA',
+                        onSelected: (selected) {
+                          if (selected && widget.currentSortMode == 'ALPHA') {
+                            // Toggle ascending for the current mode
+                            widget.onSortChanged('ALPHA', !widget.isAscending);
+                          } else if (selected) {
+                            // Switch to new mode with default ascending order
+                            widget.onSortChanged('ALPHA', false);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Espaciado entre secciones
+            const SizedBox(height: 24),
 
             // Contenido con FutureBuilder para esperar los datos de tipos
             Expanded(

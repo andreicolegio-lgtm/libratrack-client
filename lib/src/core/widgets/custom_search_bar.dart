@@ -1,18 +1,39 @@
 import 'package:flutter/material.dart';
 
-class CustomSearchBar extends StatelessWidget {
+class CustomSearchBar extends StatefulWidget {
   final TextEditingController controller;
-  final VoidCallback onFilterPressed;
+  final VoidCallback? onFilterPressed;
   final String hintText;
   final VoidCallback? onChanged;
 
   const CustomSearchBar({
     required this.controller,
-    required this.onFilterPressed,
+    this.onFilterPressed,
     this.hintText = 'Buscar...',
     this.onChanged,
     super.key,
   });
+
+  @override
+  State<CustomSearchBar> createState() => _CustomSearchBarState();
+}
+
+class _CustomSearchBarState extends State<CustomSearchBar> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    setState(() {}); // Update state to show/hide the 'X' icon
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,17 +44,17 @@ class CustomSearchBar extends StatelessWidget {
         // Campo de Texto Expandido
         Expanded(
           child: TextField(
-            controller: controller,
-            onChanged: (_) => onChanged?.call(),
+            controller: widget.controller,
+            onChanged: (_) => widget.onChanged?.call(),
             decoration: InputDecoration(
-              hintText: hintText,
+              hintText: widget.hintText,
               prefixIcon: const Icon(Icons.search),
-              suffixIcon: controller.text.isNotEmpty
+              suffixIcon: widget.controller.text.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear),
                       onPressed: () {
-                        controller.clear();
-                        onChanged?.call();
+                        widget.controller.clear();
+                        widget.onChanged?.call();
                       },
                     )
                   : null,
@@ -59,12 +80,13 @@ class CustomSearchBar extends StatelessWidget {
         ),
         const SizedBox(width: 12),
 
-        // Botón de Filtros
-        IconButton.filledTonal(
-          onPressed: onFilterPressed,
-          icon: const Icon(Icons.tune),
-          tooltip: 'Filtros',
-        ),
+        // Botón de Filtros (conditionally rendered)
+        if (widget.onFilterPressed != null)
+          IconButton.filledTonal(
+            onPressed: widget.onFilterPressed,
+            icon: const Icon(Icons.tune),
+            tooltip: 'Filtros',
+          ),
       ],
     );
   }

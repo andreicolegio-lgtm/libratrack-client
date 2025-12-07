@@ -8,10 +8,11 @@ class FilterModal extends StatefulWidget {
   final List<String> selectedTypes;
   final List<String> selectedGenres;
   final void Function(List<String> types, List<String> genres) onApply;
-  final String currentSortMode; // Sorting mode ('DATE', 'ALPHA')
-  final bool isAscending; // Sorting order
-  final Function(String mode, bool ascending)
-      onSortChanged; // Callback for sorting changes
+
+  // Parámetros de ordenamiento
+  final String currentSortMode; // 'DATE' o 'ALPHA'
+  final bool isAscending;
+  final Function(String mode, bool ascending) onSortChanged;
 
   const FilterModal({
     required this.selectedTypes,
@@ -32,23 +33,29 @@ class _FilterModalState extends State<FilterModal> {
   late List<String> _genres;
   late Future<List<Tipo>> _tiposFuture;
 
+  late String _localSortMode;
+  late bool _localAscending;
+
   @override
   void initState() {
     super.initState();
     _types = List.from(widget.selectedTypes);
     _genres = List.from(widget.selectedGenres);
-
-    // Cargamos los tipos reales desde el servicio al iniciar
-    // Si ya están en caché, esto será instantáneo.
     _tiposFuture =
         context.read<TipoService>().fetchTipos('Error cargando filtros');
+    _localSortMode = widget.currentSortMode;
+    _localAscending = widget.isAscending;
   }
 
   void _resetFilters() {
     setState(() {
       _types.clear();
       _genres.clear();
+      _localSortMode = 'DATE'; // Default sorting mode
+      _localAscending = false; // Default sorting order
     });
+    // IMPORTANTE: Notificar al padre que el orden ha vuelto al default (DATE, Descendente)
+    widget.onSortChanged('DATE', false);
   }
 
   @override
@@ -63,7 +70,7 @@ class _FilterModalState extends State<FilterModal> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Cabecera
+            // Cabecera Fija
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(
@@ -80,87 +87,9 @@ class _FilterModalState extends State<FilterModal> {
                 ],
               ),
             ),
+            const Divider(),
 
-            // Sección de Ordenar por
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Ordenar por',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      ChoiceChip(
-                        label: Row(
-                          children: [
-                            Icon(
-                              widget.currentSortMode == 'DATE'
-                                  ? (widget.isAscending
-                                      ? Icons.arrow_upward
-                                      : Icons.arrow_downward)
-                                  : Icons.arrow_upward,
-                              color: widget.currentSortMode == 'DATE'
-                                  ? Colors.blue
-                                  : Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            const Text('Recientes'),
-                          ],
-                        ),
-                        selected: widget.currentSortMode == 'DATE',
-                        onSelected: (selected) {
-                          if (selected && widget.currentSortMode == 'DATE') {
-                            // Toggle ascending for the current mode
-                            widget.onSortChanged('DATE', !widget.isAscending);
-                          } else if (selected) {
-                            // Switch to new mode with default ascending order
-                            widget.onSortChanged('DATE', false);
-                          }
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      ChoiceChip(
-                        label: Row(
-                          children: [
-                            Icon(
-                              widget.currentSortMode == 'ALPHA'
-                                  ? (widget.isAscending
-                                      ? Icons.arrow_upward
-                                      : Icons.arrow_downward)
-                                  : Icons.sort_by_alpha,
-                              color: widget.currentSortMode == 'ALPHA'
-                                  ? Colors.blue
-                                  : Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            const Text('Alfabéticamente'),
-                          ],
-                        ),
-                        selected: widget.currentSortMode == 'ALPHA',
-                        onSelected: (selected) {
-                          if (selected && widget.currentSortMode == 'ALPHA') {
-                            // Toggle ascending for the current mode
-                            widget.onSortChanged('ALPHA', !widget.isAscending);
-                          } else if (selected) {
-                            // Switch to new mode with default ascending order
-                            widget.onSortChanged('ALPHA', false);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Espaciado entre secciones
-            const SizedBox(height: 24),
-
-            // Contenido con FutureBuilder para esperar los datos de tipos
+            // Contenido Scrollable (Incluye Orden, Tipos y Géneros)
             Expanded(
               child: FutureBuilder<List<Tipo>>(
                 future: _tiposFuture,
@@ -172,11 +101,7 @@ class _FilterModalState extends State<FilterModal> {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   }
 
-                  // Lista completa de objetos Tipo disponibles
                   final allTypeObjects = snapshot.data ?? [];
-
-                  // Calculamos los OBJETOS Tipo seleccionados para pasarlos al hijo
-                  // Esto permite que GenreSelector sepa qué géneros mostrar
                   final selectedTypeObjects = allTypeObjects
                       .where((t) => _types.contains(t.nombre))
                       .toList();
@@ -187,7 +112,33 @@ class _FilterModalState extends State<FilterModal> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Sección Tipos
+                        // 1. Sección de Ordenar (Dentro del Scroll)
+                        const Text(
+                          'Ordenar por',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            // Chip Recientes (DATE)
+                            _buildSortChip(
+                              label: 'Recientes',
+                              mode: 'DATE',
+                              defaultIcon: Icons.history,
+                            ),
+                            const SizedBox(width: 8),
+                            // Chip Alfabéticamente (ALPHA)
+                            _buildSortChip(
+                              label: 'Alfabéticamente',
+                              mode: 'ALPHA',
+                              defaultIcon: Icons.sort_by_alpha,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // 2. Sección Tipos
                         const Text('Tipos',
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 16)),
@@ -206,24 +157,36 @@ class _FilterModalState extends State<FilterModal> {
                                     _types.add(tipoObj.nombre);
                                   } else {
                                     _types.remove(tipoObj.nombre);
+
+                                    // LÓGICA DE LIMPIEZA:
+                                    // 1. Calcular qué tipos quedan seleccionados.
+                                    final remainingTypeObjects = allTypeObjects
+                                        .where((t) => _types.contains(t.nombre))
+                                        .toList();
+
+                                    // 2. Obtener la lista de todos los géneros válidos para esos tipos restantes.
+                                    final validGenres = remainingTypeObjects
+                                        .expand((t) =>
+                                            t.validGenres.map((g) => g.nombre))
+                                        .toSet();
+
+                                    // 3. Eliminar de _genres cualquier género que ya no sea válido.
+                                    _genres.removeWhere(
+                                        (g) => !validGenres.contains(g));
                                   }
-                                  // Al cambiar el tipo, limpiamos géneros que ya no apliquen?
-                                  // Por ahora lo mantenemos simple y dejamos la selección previa.
                                 });
-                              },
-                            );
-                          }).toList(),
-                        ),
+                              }, // Close onSelected
+                            ); // Close FilterChip
+                          }).toList(), // Close map
+                        ), // Close Wrap
                         const SizedBox(height: 24),
 
-                        // Sección Géneros (Conectada dinámicamente)
+                        // 3. Sección Géneros
                         const Text('Géneros',
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 16)),
                         const SizedBox(height: 12),
-
                         GenreSelectorWidget(
-                          // AHORA SÍ: Pasamos los objetos reales para que calcule los géneros válidos
                           selectedTypes: selectedTypeObjects,
                           initialGenres: _genres,
                           onChanged: (newGenres) {
@@ -239,7 +202,7 @@ class _FilterModalState extends State<FilterModal> {
               ),
             ),
 
-            // Botón Aplicar
+            // Botón Aplicar Fijo
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: FilledButton(
@@ -253,6 +216,52 @@ class _FilterModalState extends State<FilterModal> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSortChip({
+    required String label,
+    required String mode,
+    required IconData defaultIcon,
+  }) {
+    final bool isSelected = _localSortMode == mode;
+
+    // Icono dinámico: Flecha si está seleccionado, Icono por defecto si no
+    IconData icon;
+    if (isSelected) {
+      icon = _localAscending ? Icons.arrow_upward : Icons.arrow_downward;
+    } else {
+      icon = defaultIcon;
+    }
+
+    return FilterChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: isSelected ? Colors.white : Colors.grey[600],
+          ),
+          const SizedBox(width: 6),
+          Text(label),
+        ],
+      ),
+      selected: isSelected,
+      showCheckmark: false, // No mostrar el tick
+      onSelected: (_) {
+        setState(() {
+          if (_localSortMode == mode) {
+            _localAscending = !_localAscending;
+          } else {
+            _localSortMode = mode;
+            _localAscending =
+                mode == 'DATE' ? false : true; // Valores por defecto
+          }
+        });
+
+        widget.onSortChanged(_localSortMode, _localAscending);
+      },
     );
   }
 }

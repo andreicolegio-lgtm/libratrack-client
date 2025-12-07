@@ -11,45 +11,49 @@ class ElementoService with ChangeNotifier {
   ElementoService(this._apiClient);
 
   /// Busca elementos con filtros y paginación.
+  // En ElementoService.dart
+
   Future<PaginatedResponse<Elemento>> searchElementos({
     String? query,
     List<String>? types,
     List<String>? genres,
     int page = 0,
     int size = 20,
+    // NUEVOS PARÁMETROS
+    String? sortMode,
+    bool? isAscending,
   }) async {
-    try {
-      // Construcción manual de query params para manejar listas (ej. types=Anime,Manga)
-      // El backend espera strings separados por comas para listas simples en @RequestParam
-      final Map<String, String> params = {
-        'page': page.toString(),
-        'size': size.toString(),
-      };
+    final Map<String, String> queryParams = {
+      'page': page.toString(),
+      'size': size.toString(),
+    };
 
-      if (query != null && query.isNotEmpty) {
-        params['search'] = query;
-      }
-
-      if (types != null && types.isNotEmpty) {
-        params['types'] = types.join(',');
-      }
-
-      if (genres != null && genres.isNotEmpty) {
-        params['genres'] = genres.join(',');
-      }
-
-      final response = await _apiClient.get('elementos', queryParams: params);
-
-      return PaginatedResponse.fromJson(
-        response,
-        Elemento.fromJson,
-      );
-    } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
-      throw ApiException('Error buscando elementos: $e');
+    if (query != null && query.isNotEmpty) {
+      queryParams['search'] = query;
     }
+
+    // Enviar listas separadas por comas
+    if (types != null && types.isNotEmpty) {
+      queryParams['types'] = types.join(',');
+    }
+    if (genres != null && genres.isNotEmpty) {
+      queryParams['genres'] = genres.join(',');
+    }
+
+    // NUEVOS PARÁMETROS A LA URL
+    if (sortMode != null) {
+      queryParams['sort'] = sortMode; // 'DATE' o 'ALPHA'
+      queryParams['asc'] = (isAscending ?? false).toString();
+    }
+
+    // Coincide con @GetMapping("/public/search") del Controller
+    final response = await _apiClient.get('elementos/public/search',
+        queryParams: queryParams);
+
+    return PaginatedResponse.fromJson(
+      response,
+      (json) => Elemento.fromJson(json),
+    );
   }
 
   /// Obtiene el detalle completo de un elemento por ID.

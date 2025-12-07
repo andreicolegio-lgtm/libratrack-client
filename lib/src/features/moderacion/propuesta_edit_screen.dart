@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/services/auth_service.dart';
 import '../../core/utils/api_client.dart';
 import '../../core/services/moderacion_service.dart';
 import '../../core/services/tipo_service.dart';
@@ -16,7 +17,6 @@ import '../../core/widgets/genre_selector_widget.dart';
 import '../../core/widgets/content_type_progress_forms.dart';
 
 /// Pantalla para que un moderador revise, edite y apruebe una propuesta.
-/// Permite modificar todos los campos sugeridos por el usuario antes de crear el elemento final.
 class PropuestaEditScreen extends StatefulWidget {
   final Propuesta propuesta;
 
@@ -49,7 +49,14 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
   late TextEditingController _totalPaginasLibroController;
   late TextEditingController _durationController;
 
+  // Controlador de Comentarios (Nuevo)
+  final TextEditingController _comentariosController = TextEditingController();
+
+  // Estados Seleccionados
   String? _tipoSeleccionado;
+  String? _estadoPublicacionSeleccionado;
+  String _estadoContenido = 'COMUNITARIO'; // Valor por defecto solicitado
+
   List<Tipo> _tipos = [];
 
   // Gestión de Imagen
@@ -85,8 +92,11 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         TextEditingController(text: p.totalPaginasLibro?.toString() ?? '');
     _durationController = TextEditingController(text: p.duracion ?? '');
 
-    _tipoSeleccionado = p.tipoSugerido; // Intentamos mantener el sugerido
+    _tipoSeleccionado = p.tipoSugerido;
     _uploadedImageUrl = p.urlImagen;
+
+    // Valor por defecto para disponibilidad si no viene en la propuesta
+    _estadoPublicacionSeleccionado = 'AVAILABLE';
   }
 
   Future<void> _loadInitialData() async {
@@ -96,8 +106,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
       if (mounted) {
         setState(() {
           _tipos = tipos;
-
-          // Validar si el tipo sugerido existe en la lista oficial (case-insensitive)
+          // Validar si el tipo sugerido existe en la lista oficial
           final existingType = _tipos.firstWhere(
             (t) =>
                 t.nombre.toLowerCase() ==
@@ -106,20 +115,15 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           );
 
           if (existingType.id != 0) {
-            _tipoSeleccionado = existingType.nombre; // Normalizar nombre
-          } else {
-            // Si no existe, dejamos el valor raw pero el dropdown podría mostrarlo vacío o error
-            // Opcionalmente podríamos añadirlo a la lista localmente o forzar selección
+            _tipoSeleccionado = existingType.nombre;
           }
-
           _isDataLoaded = true;
         });
       }
     } catch (e) {
       debugPrint('Error cargando tipos en edición: $e');
       if (mounted) {
-        setState(() => _isDataLoaded =
-            true); // Permitir continuar aunque falle carga de tipos
+        setState(() => _isDataLoaded = true);
       }
     }
   }
@@ -134,6 +138,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     _totalCapitulosLibroController.dispose();
     _totalPaginasLibroController.dispose();
     _durationController.dispose();
+    _comentariosController.dispose();
     super.dispose();
   }
 
@@ -148,7 +153,6 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
       if (image != null) {
         setState(() {
           _pickedImage = image;
-          // No borramos _uploadedImageUrl para mantener preview si falla subida
         });
       }
     } catch (e) {
@@ -175,7 +179,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
       if (mounted) {
         setState(() {
           _uploadedImageUrl = url;
-          _pickedImage = null; // Limpiar selección local
+          _pickedImage = null;
           _isUploading = false;
         });
         SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadSuccess,
@@ -194,67 +198,73 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
   Future<void> _handleAprobar() async {
     final l10n = AppLocalizations.of(context);
 
+    // 1. Validar formulario visualmente
     if (!_formKey.currentState!.validate()) {
+      SnackBarHelper.showTopSnackBar(context, 'Revisa los errores en rojo',
+          isError: true);
       return;
     }
 
-    // Validación opcional: Exigir imagen para aprobar
-    /*
-    if (_uploadedImageUrl == null) {
-      SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadRequiredApproval, isError: true);
-      return;
-    }
-    */
-
-    // Subir imagen pendiente si existe
+    // 2. Subir imagen si hay una nueva seleccionada
     if (_pickedImage != null) {
       await _handleUploadImage();
-      if (_uploadedImageUrl == null) {
-        return; // Falló la subida
+      // Si falló la subida (sigue habiendo imagen local pero no url remota), paramos.
+      if (_pickedImage != null && _uploadedImageUrl == null) {
+        return;
       }
     }
 
     setState(() => _isLoading = true);
-
     if (!mounted) {
       return;
     }
     final NavigatorState navContext = Navigator.of(context);
 
     try {
-      // Construir payload limpio
-      final Map<String, dynamic> body = <String, dynamic>{
+      // 3. Preparar datos limpios (Trim strings, parse ints safely)
+      final Map<String, dynamic> body = {
         'tituloSugerido': _tituloController.text.trim(),
         'descripcionSugerida': _descripcionController.text.trim(),
         'tipoSugerido': _tipoSeleccionado,
         'generosSugeridos': _generosController.text.trim(),
         'urlImagen': _uploadedImageUrl,
 
-        // Progreso
+        // Datos numéricos: Usamos trim() antes de parsear para evitar errores por espacios accidentales
         'episodiosPorTemporada':
             _episodiosPorTemporadaController.text.trim().isEmpty
                 ? null
                 : _episodiosPorTemporadaController.text.trim(),
-        'totalUnidades': int.tryParse(_totalUnidadesController.text),
+
+        'totalUnidades': int.tryParse(_totalUnidadesController.text.trim()),
         'totalCapitulosLibro':
-            int.tryParse(_totalCapitulosLibroController.text),
-        'totalPaginasLibro': int.tryParse(_totalPaginasLibroController.text),
+            int.tryParse(_totalCapitulosLibroController.text.trim()),
+        'totalPaginasLibro':
+            int.tryParse(_totalPaginasLibroController.text.trim()),
+
         'duracion': _durationController.text.trim().isEmpty
             ? null
             : _durationController.text.trim(),
+
+        // Estados (Aseguramos que no sean nulos)
+        'estadoPublicacion': _estadoPublicacionSeleccionado ?? 'AVAILABLE',
+        'estadoContenido': _estadoContenido, // 'OFICIAL' o 'COMUNITARIO'
+        'comentariosRevision': _comentariosController.text.trim(),
       };
 
-      // Eliminar nulos
-      body.removeWhere((String key, value) => value == null);
+      // 4. Limpieza de nulos: El backend podría quejarse si enviamos "key": null explícito
+      body.removeWhere((key, value) => value == null || value == '');
+
+      // Log para depuración (Verás esto en la consola de Flutter si falla)
+      debugPrint('Enviando aprobación: $body');
 
       await _moderacionService.aprobarPropuesta(widget.propuesta.id, body);
 
       if (!mounted) {
         return;
       }
-
-      // Retornar 'true' indica éxito para actualizar la lista anterior
-      navContext.pop(true);
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarModProposalApproved,
+          isError: false);
+      navContext.pop(true); // Éxito
     } catch (e) {
       _handleError(e, l10n);
     } finally {
@@ -268,12 +278,79 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     if (!mounted) {
       return;
     }
-
     String msg = l10n.errorUnexpected(e.toString());
     if (e is ApiException) {
       msg = ErrorTranslator.translate(context, e.message);
     }
     SnackBarHelper.showTopSnackBar(context, msg, isError: true);
+  }
+
+  // --- UI Helpers (Estilo ElementoForm) ---
+
+  InputDecoration getCommonDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      border: const OutlineInputBorder(),
+      filled: true,
+      fillColor: Theme.of(context).colorScheme.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+    );
+  }
+
+  Widget _buildSectionField({
+    required String label,
+    required Widget child,
+    String? errorText,
+  }) {
+    final theme = Theme.of(context);
+    final hasError = errorText != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Stack(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 8.0),
+              padding: const EdgeInsets.fromLTRB(12, 20, 12, 12),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(4.0),
+                border: Border.all(
+                    color: hasError ? theme.colorScheme.error : Colors.grey),
+              ),
+              child: child,
+            ),
+            Positioned(
+              left: 10,
+              top: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                color: theme.scaffoldBackgroundColor,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    // CAMBIO: Usar el color del hint o onSurfaceVariant para coincidir con los Dropdowns
+                    color: hasError
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (hasError)
+          Padding(
+              padding: const EdgeInsets.only(top: 6, left: 12),
+              child: Text(errorText,
+                  style:
+                      TextStyle(color: theme.colorScheme.error, fontSize: 12))),
+      ],
+    );
   }
 
   // --- UI Building ---
@@ -291,121 +368,207 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.modEditTitle,
-            style: Theme.of(context).textTheme.titleLarge),
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text(l10n.modEditTitle),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              // Info del Proponente
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primaryContainer
-                      .withAlpha(50),
-                  borderRadius: BorderRadius.circular(8),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                // 1. Info del Proponente
+                _buildProposerInfo(),
+                const SizedBox(height: 24),
+
+                // 2. Imagen
+                _buildImageUploader(l10n),
+                const SizedBox(height: 24),
+
+                // 3. Título
+                TextFormField(
+                  controller: _tituloController,
+                  decoration: getCommonDecoration(l10n.proposalFormTitleLabel),
+                  validator: (v) => (v == null || v.isEmpty)
+                      ? l10n.validationTitleRequired
+                      : null,
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.modPanelProposalFrom(
-                            widget.propuesta.proponenteUsername),
-                        style: Theme.of(context).textTheme.bodyMedium,
+                const SizedBox(height: 24),
+
+                // 4. Descripción
+                TextFormField(
+                  controller: _descripcionController,
+                  decoration: getCommonDecoration(l10n.proposalFormDescLabel),
+                  maxLines: 4,
+                ),
+                const SizedBox(height: 24),
+
+                // 5. Tipo
+                DropdownButtonFormField<String>(
+                  initialValue: _tipoSeleccionado,
+                  items: _tipos
+                      .map((t) => DropdownMenuItem(
+                          value: t.nombre, child: Text(t.nombre)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _tipoSeleccionado = v),
+                  decoration: getCommonDecoration(l10n.proposalFormTypeLabel),
+                  validator: (v) =>
+                      v == null ? l10n.validationTypeRequired : null,
+                ),
+                const SizedBox(height: 24),
+
+                // 6. Género (Con estilo robusto)
+                FormField<String>(
+                  validator: (_) => _generosController.text.isEmpty
+                      ? 'El género no puede estar vacío'
+                      : null,
+                  builder: (state) => _buildSectionField(
+                    label: 'Genre',
+                    errorText: state.errorText,
+                    child: _buildGenreSelector(),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // 7. Progreso
+                if (_tipoSeleccionado != 'Video Game') ...[
+                  FormField<String>(
+                    validator: (_) => _validateProgressData(),
+                    builder: (state) => _buildSectionField(
+                      label: 'Progress Data',
+                      errorText: state.errorText,
+                      child: ContentTypeProgressForms(
+                        selectedTypeKey: _tipoSeleccionado,
+                        episodesController: _episodiosPorTemporadaController,
+                        chaptersController: _totalCapitulosLibroController,
+                        pagesController: _totalPaginasLibroController,
+                        durationController: _durationController,
+                        unitsController: _totalUnidadesController,
+                        l10n: l10n,
+                        hasError: state.hasError,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // 8. Disponibilidad
+                DropdownButtonFormField<String>(
+                  initialValue: _estadoPublicacionSeleccionado,
+                  items: const [
+                    DropdownMenuItem(
+                        value: 'RELEASING', child: Text('Releasing')),
+                    DropdownMenuItem(
+                        value: 'AVAILABLE', child: Text('Available')),
+                    DropdownMenuItem(
+                        value: 'FINISHED', child: Text('Finished')),
+                    DropdownMenuItem(
+                        value: 'ANNOUNCED', child: Text('Announced')),
+                    DropdownMenuItem(
+                        value: 'CANCELLED', child: Text('Cancelled')),
+                    DropdownMenuItem(value: 'PAUSADO', child: Text('Paused')),
                   ],
+                  onChanged: (v) =>
+                      setState(() => _estadoPublicacionSeleccionado = v),
+                  validator: (v) => v == null ? 'Required' : null,
+                  decoration: getCommonDecoration('Availability'),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              _buildImageUploader(l10n),
-              const SizedBox(height: 24),
-
-              _buildInputField(
-                l10n: l10n,
-                controller: _tituloController,
-                labelText: l10n.proposalFormTitleLabel,
-                validator: (v) => (v == null || v.isEmpty)
-                    ? l10n.validationTitleRequired
-                    : null,
-              ),
-              const SizedBox(height: 16),
-
-              _buildInputField(
-                l10n: l10n,
-                controller: _descripcionController,
-                labelText: l10n.proposalFormDescLabel,
-                maxLines: 4,
-                validator: (v) => (v == null || v.isEmpty)
-                    ? l10n.validationDescRequired
-                    : null,
-              ),
-              const SizedBox(height: 16),
-
-              _buildTipoDropdown(l10n),
-              const SizedBox(height: 16),
-
-              _buildGenerosField(l10n),
-
-              const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24.0),
-                  child: Divider()),
-
-              Text(l10n.modEditProgressTitle,
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-
-              ContentTypeProgressForms(
-                selectedTypeKey: _tipoSeleccionado,
-                episodesController: _episodiosPorTemporadaController,
-                chaptersController: _totalCapitulosLibroController,
-                pagesController: _totalPaginasLibroController,
-                durationController: _durationController,
-                unitsController: _totalUnidadesController,
-                l10n: l10n,
-              ),
-
-              const SizedBox(height: 32.0),
-
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[600],
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0)),
+                // 9. Estado (Oficial/Comunitario)
+                DropdownButtonFormField<String>(
+                  initialValue: _estadoContenido,
+                  items: const [
+                    DropdownMenuItem(value: 'OFICIAL', child: Text('Official')),
+                    DropdownMenuItem(
+                        value: 'COMUNITARIO', child: Text('Community')),
+                  ],
+                  onChanged: (v) => setState(() => _estadoContenido = v!),
+                  decoration: getCommonDecoration('Content State'),
                 ),
-                onPressed: (_isLoading || _isUploading) ? null : _handleAprobar,
-                icon: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.check),
-                label: Text(l10n.modEditSubmitButton,
-                    style: const TextStyle(fontSize: 18)),
-              ),
-            ],
+                const SizedBox(height: 24),
+
+                // 10. Comentarios de Revisión (Opcional)
+                TextFormField(
+                  controller: _comentariosController,
+                  decoration: getCommonDecoration('Review Comment (Optional)'),
+                  maxLines: 3,
+                ),
+
+                const SizedBox(height: 32),
+
+                // Botón Save and Approve
+                FilledButton(
+                  onPressed:
+                      (_isLoading || _isUploading) ? null : _handleAprobar,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Text('Save and Approve',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  Widget _buildProposerInfo() {
+    final p = widget.propuesta;
+    // 1. Verificar si soy admin
+    final bool isAdmin =
+        context.read<AuthService>().currentUser?.esAdministrador ?? false;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer.withAlpha(50),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withAlpha(100)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text.rich(
+              TextSpan(children: [
+                const TextSpan(
+                    text: 'Proposed by: ',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                TextSpan(text: '${p.proponenteUsername} '),
+                // 2. Mostrar email solo si es admin y el email existe
+                if (isAdmin && p.proponenteEmail != null)
+                  TextSpan(
+                    text: '(${p.proponenteEmail})',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
+              ]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildImageUploader(AppLocalizations l10n) {
     Widget content;
+    bool hasImage = _pickedImage != null || _uploadedImageUrl != null;
+
     if (_pickedImage != null) {
       content = Image.file(File(_pickedImage!.path), fit: BoxFit.cover);
     } else if (_uploadedImageUrl != null) {
@@ -415,42 +578,65 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
         placeholder: (_, __) =>
             const Center(child: CircularProgressIndicator()),
         errorWidget: (_, __, ___) =>
-            const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+            const Icon(Icons.broken_image, size: 50, color: Colors.grey),
       );
     } else {
       content = Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Icon(Icons.add_a_photo, size: 48, color: Colors.grey[400]),
+        children: [
+          Icon(Icons.add_photo_alternate,
+              size: 48, color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 8),
           Text(l10n.modEditImageTitle,
-              style: TextStyle(color: Colors.grey[600])),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
         ],
       );
     }
 
     return Column(
       children: [
-        GestureDetector(
-          onTap: (_isLoading || _isUploading) ? null : _handlePickImage,
-          child: Container(
-            height: 200,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(10.0),
-              border: Border.all(color: Theme.of(context).dividerColor),
+        Stack(
+          children: [
+            GestureDetector(
+              onTap: (_isLoading || _isUploading) ? null : _handlePickImage,
+              child: Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: content,
+              ),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: content,
-          ),
+            if (hasImage && !_isLoading && !_isUploading)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  style: IconButton.styleFrom(
+                      backgroundColor: Colors.black54,
+                      foregroundColor: Colors.white),
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      _pickedImage = null;
+                      _uploadedImageUrl = null;
+                    });
+                  },
+                ),
+              ),
+          ],
         ),
         if (_pickedImage != null && !_isUploading)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: FilledButton.icon(
               onPressed: _handleUploadImage,
-              icon: const Icon(Icons.cloud_upload),
+              icon: const Icon(Icons.upload),
               label: Text(l10n.adminFormImageUpload),
             ),
           ),
@@ -473,50 +659,11 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     );
   }
 
-  Widget _buildInputField({
-    required AppLocalizations l10n,
-    required TextEditingController controller,
-    required String labelText,
-    int maxLines = 1,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: labelText,
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: const OutlineInputBorder(),
-      ),
-    );
-  }
-
-  Widget _buildTipoDropdown(AppLocalizations l10n) {
-    return DropdownButtonFormField<String>(
-      initialValue: _tipoSeleccionado,
-      hint: Text(l10n.proposalFormTypeLabel),
-      items: _tipos.map((tipo) {
-        return DropdownMenuItem(
-          value: tipo.nombre,
-          child: Text(tipo.nombre),
-        );
-      }).toList(),
-      onChanged: (value) => setState(() => _tipoSeleccionado = value),
-      decoration: InputDecoration(
-        labelText: l10n.proposalFormTypeLabel,
-        filled: true,
-        border: const OutlineInputBorder(),
-      ),
-    );
-  }
-
-  Widget _buildGenerosField(AppLocalizations l10n) {
+  Widget _buildGenreSelector() {
     final selectedTypeObj = _tipos.firstWhere(
-        (t) => t.nombre == _tipoSeleccionado,
-        orElse: () => const Tipo(id: 0, nombre: '', validGenres: []));
-
+      (t) => t.nombre == _tipoSeleccionado,
+      orElse: () => const Tipo(id: 0, nombre: '', validGenres: []),
+    );
     return GenreSelectorWidget(
       selectedTypes: _tipoSeleccionado != null ? [selectedTypeObj] : [],
       initialGenres: _generosController.text
@@ -524,11 +671,33 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           .where((s) => s.isNotEmpty)
           .map((e) => e.trim())
           .toList(),
-      onChanged: (updatedGenres) {
-        setState(() {
-          _generosController.text = updatedGenres.join(', ');
-        });
-      },
+      onChanged: (genres) =>
+          setState(() => _generosController.text = genres.join(', ')),
     );
+  }
+
+  String? _validateProgressData() {
+    if (_tipoSeleccionado == null) {
+      return null;
+    }
+    final type = _tipoSeleccionado;
+    if (type == 'Anime' && _totalUnidadesController.text.trim().isEmpty) {
+      return 'Requerido';
+    }
+    if ((type == 'Manga' || type == 'Manhwa') &&
+        _totalCapitulosLibroController.text.trim().isEmpty) {
+      return 'Requerido';
+    }
+    if (type == 'Book' && _totalPaginasLibroController.text.trim().isEmpty) {
+      return 'Requerido';
+    }
+    if (type == 'Series' &&
+        _episodiosPorTemporadaController.text.trim().isEmpty) {
+      return 'Requerido';
+    }
+    if (type == 'Movie' && _durationController.text.trim().isEmpty) {
+      return 'Requerido';
+    }
+    return null;
   }
 }

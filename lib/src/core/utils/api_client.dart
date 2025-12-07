@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart'; // Para MediaType
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as path;
 import '../config/environment_config.dart';
 import 'api_exceptions.dart';
 
@@ -70,27 +69,30 @@ class ApiClient {
 
   /// Sube un archivo (imagen) al servidor.
   Future<dynamic> upload(String endpoint, XFile file) async {
-    final uri = Uri.parse('$_baseUrl/$endpoint');
+    Uri.parse('$_baseUrl/$endpoint');
 
     // Función envoltorio para el multipart request
     Future<http.Response> uploadRequest() async {
+      final uri = Uri.parse('$_baseUrl/$endpoint');
       final request = http.MultipartRequest('POST', uri);
-      final headers = await _getHeaders();
-      request.headers.addAll(headers);
+      request.headers.addAll(await _getHeaders());
 
-      // Detectar mime type básico por extensión
+      // Detección MimeType
       var mimeType = MediaType('application', 'octet-stream');
-      final extension = path.extension(file.path).toLowerCase();
-      if (extension == '.jpg' || extension == '.jpeg') {
+      if (file.path.toLowerCase().endsWith('jpg') ||
+          file.path.toLowerCase().endsWith('jpeg')) {
         mimeType = MediaType('image', 'jpeg');
-      }
-      if (extension == '.png') {
+      } else if (file.path.toLowerCase().endsWith('png')) {
         mimeType = MediaType('image', 'png');
       }
 
-      request.files.add(await http.MultipartFile.fromPath(
+      // LEER BYTES (Solución al error PathNotFoundException)
+      final bytes = await file.readAsBytes();
+
+      request.files.add(http.MultipartFile.fromBytes(
         'file',
-        file.path,
+        bytes,
+        filename: file.name,
         contentType: mimeType,
       ));
 

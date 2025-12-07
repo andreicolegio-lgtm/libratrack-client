@@ -9,7 +9,7 @@ class UserService with ChangeNotifier {
   UserService(this._apiClient);
 
   /// Actualiza la foto de perfil del usuario.
-  Future<PerfilUsuario> updateFotoPerfil(String fotoUrl) async {
+  Future<PerfilUsuario> updateFotoPerfil(String? fotoUrl) async {
     try {
       final Map<String, dynamic> body = {'url': fotoUrl};
       final dynamic data = await _apiClient.put('usuarios/me/foto', body);

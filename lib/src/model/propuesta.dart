@@ -14,6 +14,8 @@ class Propuesta {
   final DateTime fechaPropuesta;
   final String proponenteUsername;
   final String? revisorUsername;
+  final String? proponenteEmail;
+  final String? revisorEmail;
 
   // Detalles Técnicos Sugeridos
   final String? episodiosPorTemporada;
@@ -21,6 +23,8 @@ class Propuesta {
   final int? totalCapitulosLibro;
   final int? totalPaginasLibro;
   final String? duracion;
+  final int?
+      elementoCreadoId; // ID del elemento creado a partir de la propuesta
 
   const Propuesta({
     required this.id,
@@ -34,11 +38,14 @@ class Propuesta {
     this.urlImagen,
     this.comentariosRevision,
     this.revisorUsername,
+    this.proponenteEmail,
+    this.revisorEmail,
     this.episodiosPorTemporada,
     this.totalUnidades,
     this.totalCapitulosLibro,
     this.totalPaginasLibro,
     this.duracion,
+    this.elementoCreadoId,
   });
 
   factory Propuesta.fromJson(Map<String, dynamic> json) {
@@ -54,6 +61,8 @@ class Propuesta {
       fechaPropuesta: DateTime.parse(json['fechaPropuesta'] as String),
       proponenteUsername: json['proponenteUsername'] as String,
       revisorUsername: json['revisorUsername'] as String?,
+      proponenteEmail: json['proponenteEmail'] as String?,
+      revisorEmail: json['revisorEmail'] as String?,
 
       // Detalles opcionales
       episodiosPorTemporada: json['episodiosPorTemporada'] as String?,
@@ -61,6 +70,7 @@ class Propuesta {
       totalCapitulosLibro: json['totalCapitulosLibro'] as int?,
       totalPaginasLibro: json['totalPaginasLibro'] as int?,
       duracion: json['duracion'] as String?,
+      elementoCreadoId: json['elementoCreadoId'] as int?,
     );
   }
 }

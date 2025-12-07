@@ -18,19 +18,18 @@ import '../../model/tipo.dart';
 import '../../core/widgets/genre_selector_widget.dart';
 import '../../core/widgets/content_type_progress_forms.dart';
 
-class AdminElementoFormScreen extends StatefulWidget {
+class ElementoFormScreen extends StatefulWidget {
   final Elemento? elemento;
 
-  const AdminElementoFormScreen({super.key, this.elemento});
+  const ElementoFormScreen({super.key, this.elemento});
 
   bool get isEditMode => elemento != null;
 
   @override
-  State<AdminElementoFormScreen> createState() =>
-      _AdminElementoFormScreenState();
+  State<ElementoFormScreen> createState() => _AdminElementoFormScreenState();
 }
 
-class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
+class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   late final AdminService _adminService;
@@ -72,7 +71,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   String? _uploadedImageUrl;
 
   // New state variable for content status
-  String _estadoContenido = 'COMUNITARIO';
+  String _estadoContenido = 'OFICIAL';
 
   @override
   void initState() {
@@ -178,22 +177,25 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
 
     setState(() => _isUploading = true);
     final l10n = AppLocalizations.of(context);
-
     try {
-      final dynamic data = await _apiClient.upload('uploads', _pickedImage!);
-      final String url = data['url'];
+      // Usamos el ApiClient corregido
+      final dynamic data = await _apiClient
+          .upload('uploads', _pickedImage!)
+          .timeout(const Duration(seconds: 30));
 
       if (mounted) {
         setState(() {
-          _uploadedImageUrl = url;
-          _pickedImage = null; // Limpiar selección local ya que se subió
-          _isUploading = false;
+          _uploadedImageUrl = data['url'];
+          _pickedImage = null; // Limpiar local
         });
         SnackBarHelper.showTopSnackBar(context, l10n.snackbarImageUploadSuccess,
             isError: false);
       }
     } catch (e) {
-      _handleError(e, l10n);
+      if (mounted) {
+        SnackBarHelper.showTopSnackBar(context, 'Error: $e', isError: true);
+      }
+    } finally {
       if (mounted) {
         setState(() => _isUploading = false);
       }
@@ -203,13 +205,10 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
   // --- Guardado ---
 
   Future<void> _handleGuardar() async {
-    final l10n = AppLocalizations.of(context);
-
-    // SnackBar rojo si hay errores de validación
     if (!_formKey.currentState!.validate()) {
       SnackBarHelper.showTopSnackBar(
         context,
-        'Por favor, revisa los campos marcados en rojo.', // Centralizar texto si es posible
+        'Por favor, revisa los campos marcados en rojo.',
         isError: true,
       );
       return;
@@ -218,10 +217,8 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
     // Subida automática si hay imagen pendiente
     if (_pickedImage != null) {
       await _handleUploadImage();
-      // Si falla la subida (_uploadedImageUrl sigue siendo null o el anterior),
-      // decidimos si parar o continuar con la URL antigua.
-      // En este caso, si _pickedImage sigue ahí es que falló.
-      if (_pickedImage != null) {
+      // Si sigue habiendo imagen local (no se limpió), es que falló. Paramos.
+      if (_pickedImage != null && _uploadedImageUrl == null) {
         return;
       }
     }
@@ -271,13 +268,13 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
       }
 
       final String msg = widget.isEditMode
-          ? l10n.snackbarAdminElementUpdated
-          : l10n.snackbarAdminElementCreated;
+          ? 'Elemento actualizado con éxito.'
+          : 'Elemento creado con éxito.';
 
       SnackBarHelper.showTopSnackBar(context, msg, isError: false);
       navigator.pop(true); // Retornar true para recargar lista
     } catch (e) {
-      _handleError(e, l10n);
+      _handleError(e, AppLocalizations.of(context));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -397,7 +394,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                       ? l10n.validationTitleRequired
                       : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 // Descripción
                 _buildInputField(
@@ -405,7 +402,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                   label: l10n.adminFormDescLabel,
                   maxLines: 4,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 // Tipo
                 _buildTipoDropdown(l10n),
@@ -476,7 +473,7 @@ class _AdminElementoFormScreenState extends State<AdminElementoFormScreen> {
                 // FIELD: ESTADO DE PUBLICACIÓN
                 _buildAvailabilityDropdown(l10n),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 // FIELD: ESTADO DEL CONTENIDO
                 _buildContentStateDropdown(),

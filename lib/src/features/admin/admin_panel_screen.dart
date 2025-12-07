@@ -10,6 +10,7 @@ import '../../model/paginated_response.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/error_translator.dart';
 import '../../core/utils/api_exceptions.dart';
+import '../../core/widgets/custom_search_bar.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -18,8 +19,10 @@ class AdminPanelScreen extends StatefulWidget {
   State<AdminPanelScreen> createState() => _AdminPanelScreenState();
 }
 
-class _AdminPanelScreenState extends State<AdminPanelScreen> {
+class _AdminPanelScreenState extends State<AdminPanelScreen>
+    with SingleTickerProviderStateMixin {
   late final AdminService _adminService;
+  late TabController _tabController;
   int? _currentUserId;
 
   // Estado de Datos
@@ -47,6 +50,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     _adminService = context.read<AdminService>();
     final authService = context.read<AuthService>();
     _currentUserId = authService.currentUser?.id;
+    _tabController = TabController(length: 3, vsync: this);
 
     _scrollController.addListener(_onScroll);
     _searchController.addListener(_onSearchChanged);
@@ -57,6 +61,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   void dispose() {
     _scrollController.dispose();
     _searchController.dispose();
+    _tabController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -191,50 +196,52 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.profileAdminPanelButton),
-          centerTitle: true,
-          bottom: TabBar(
-            tabs: [
-              Tab(text: l10n.adminPanelFilterAll),
-              Tab(text: l10n.adminPanelFilterMods),
-              Tab(text: l10n.adminPanelFilterAdmins),
-            ],
-          ),
-        ),
-        body: SafeArea(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Admin Panel'),
+        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(100.0),
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextField(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: CustomSearchBar(
                   controller: _searchController,
-                  decoration: InputDecoration(
-                    labelText: l10n.adminPanelSearchHint,
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                      },
-                    ),
-                  ),
+                  hintText: 'Buscar usuarios...',
+                  onChanged: () {
+                    setState(() {});
+                  },
                 ),
               ),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _buildUserListView(l10n, theme, null, 'ALL'),
-                    _buildUserListView(l10n, theme, 'MODERADOR', 'MODS'),
-                    _buildUserListView(l10n, theme, 'ADMIN', 'ADMINS'),
-                  ],
-                ),
+              TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                tabAlignment: TabAlignment.center,
+                tabs: const [
+                  Tab(text: 'Todos'),
+                  Tab(text: 'Moderadores'),
+                  Tab(text: 'Administradores'),
+                ],
               ),
             ],
           ),
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildUserListView(l10n, theme, null, 'ALL'),
+                  _buildUserListView(l10n, theme, 'MODERADOR', 'MODS'),
+                  _buildUserListView(l10n, theme, 'ADMIN', 'ADMINS'),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

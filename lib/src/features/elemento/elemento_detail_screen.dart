@@ -16,7 +16,7 @@ import 'widgets/resena_card.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/error_translator.dart';
 import '../../core/services/admin_service.dart';
-import '../admin/admin_elemento_form.dart';
+import '../moderacion/elemento_form.dart';
 import '../../core/utils/api_exceptions.dart';
 import '../../core/widgets/maybe_marquee.dart';
 
@@ -281,7 +281,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     final bool? result = await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (_) => AdminElementoFormScreen(elemento: _elemento)),
+          builder: (_) => ElementoFormScreen(elemento: _elemento)),
     );
 
     if (result == true) {
@@ -497,7 +497,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                   ),
                   backgroundColor: _elemento!.estadoContenido == 'OFICIAL'
                       ? Colors.blueAccent
-                      : Colors.grey[700],
+                      : _elemento!.estadoContenido == 'COMUNITARIO'
+                          ? Colors.orange
+                          : Colors.grey[700],
                   padding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,
                   shape: RoundedRectangleBorder(
@@ -828,7 +830,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                   ? _buildChronologyItem(theme, 'Prequel', precuela)
                   : const SizedBox.shrink(), // Hueco vacío si no hay
             ),
-            // Espacio central seguro para que los textos no se toquen
+            // Espacio central seguro para que los textos no se toquen entre columnas
             const SizedBox(width: 16),
 
             // COLUMNA 2: SECUELA (Mitad Derecha)

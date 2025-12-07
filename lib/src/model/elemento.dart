@@ -27,6 +27,12 @@ class Elemento {
   final List<ElementoRelacion> precuelas;
   final List<ElementoRelacion> secuelas;
 
+  // Nuevas propiedades
+  final String? genero; // Género primario
+  final bool esOficial; // Indica si el contenido es oficial
+  final String? autorNombre; // Nombre del autor
+  final String? autorEmail; // Email del autor
+
   const Elemento({
     required this.id,
     required this.titulo,
@@ -37,6 +43,7 @@ class Elemento {
     required this.generos,
     required this.precuelas,
     required this.secuelas,
+    required this.esOficial,
     this.urlImagen,
     this.fechaLanzamiento,
     this.estadoPublicacion,
@@ -45,13 +52,17 @@ class Elemento {
     this.totalCapitulosLibro,
     this.totalPaginasLibro,
     this.duracion,
+    this.genero,
+    this.autorNombre,
+    this.autorEmail,
   });
 
   factory Elemento.fromJson(Map<String, dynamic> json) {
     return Elemento(
       id: json['id'] as int,
       titulo: json['titulo'] as String,
-      descripcion: json['descripcion'] as String,
+      // Si es null, ponemos cadena vacía
+      descripcion: json['descripcion'] as String? ?? '',
       urlImagen: json['urlImagen'] as String?,
       fechaLanzamiento: json['fechaLanzamiento'] as String?,
       tipo: json['tipoNombre'] as String? ?? 'Desconocido', // Fallback seguro
@@ -75,6 +86,10 @@ class Elemento {
               ?.map((e) => ElementoRelacion.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      genero: json['genero'] as String?,
+      esOficial: json['esOficial'] as bool? ?? false,
+      autorNombre: json['autorNombre'] as String?,
+      autorEmail: json['autorEmail'] as String?,
     );
   }
 

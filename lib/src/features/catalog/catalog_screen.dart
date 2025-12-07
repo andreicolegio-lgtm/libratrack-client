@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/catalog_service.dart';
-import '../../core/services/auth_service.dart';
 import '../../model/catalogo_entrada.dart';
-import '../../model/estado_personal.dart';
+import '../../model/estado_personal.dart'; // Asegúrate de que este import sea correcto
 import '../../core/utils/error_translator.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/api_exceptions.dart';
@@ -23,7 +22,8 @@ class CatalogScreen extends StatefulWidget {
 class _CatalogScreenState extends State<CatalogScreen>
     with SingleTickerProviderStateMixin {
   late final CatalogService _catalogService;
-  late final AuthService _authService;
+
+  // Controlador manual necesario para cambiar tabs desde la búsqueda
   late TabController _tabController;
 
   bool _isDataLoaded = false;
@@ -43,9 +43,8 @@ class _CatalogScreenState extends State<CatalogScreen>
   void initState() {
     super.initState();
     _catalogService = context.read<CatalogService>();
-    _authService = context.read<AuthService>();
 
-    // 6 Pestañas: All, Favorites, In Progress, Pending, Finished, Dropped
+    // 6 Tabs: All, Favs, Progress, Pending, Finished, Dropped
     _tabController = TabController(length: 6, vsync: this);
 
     // Listener para la búsqueda inteligente
@@ -80,13 +79,11 @@ class _CatalogScreenState extends State<CatalogScreen>
       if (!mounted) {
         return;
       }
-      if (e is UnauthorizedException) {
-        _authService.logout();
-      } else {
-        setState(() {
-          _loadingError = ErrorTranslator.translate(context, e.message);
-        });
-      }
+      // La lógica de logout ya debería estar centralizada en AuthService/ApiClient,
+      // pero mantenemos el manejo visual del error aquí.
+      setState(() {
+        _loadingError = ErrorTranslator.translate(context, e.message);
+      });
     } catch (e) {
       if (!mounted) {
         return;
@@ -104,44 +101,40 @@ class _CatalogScreenState extends State<CatalogScreen>
       _debounce!.cancel();
     }
 
-    // Pequeño debounce para no saltar de tab mientras escribes rápido
     _debounce = Timer(const Duration(milliseconds: 300), () {
       final query = _searchController.text.trim().toLowerCase();
+
+      // Siempre actualizamos el estado para filtrar la lista visualmente
+      setState(() {});
+
       if (query.isEmpty) {
-        setState(() {}); // Solo repintar para quitar filtros de texto
         return;
       }
 
-      // 1. Buscamos la mejor coincidencia en todo el catálogo
+      // Lógica de redirección de tab
       final allEntries = _catalogService.entradas;
       final match = allEntries.firstWhere(
         (e) => e.elementoTitulo.toLowerCase().contains(query),
-        orElse: () => allEntries.first, // Fallback (no crítico)
+        orElse: () => allEntries.first, // Fallback seguro (no crítico)
       );
 
-      // 2. Si hay coincidencia válida y contiene el texto buscado
+      // Si encontramos una coincidencia real
       if (match.elementoTitulo.toLowerCase().contains(query)) {
-        // 3. Obtenemos la Tab correspondiente a su estado
         final targetIndex = _getTabIndexForState(match);
-
-        // 4. Redirigimos si no estamos en 'All' (0) o en la tab correcta
-        // NOTA: Nunca forzamos ir a 'All' (0) automáticamente.
+        // Evitamos saltar si ya estamos ahí o si el target es 'All' (0)
         if (_tabController.index != targetIndex && targetIndex != 0) {
           _tabController.animateTo(targetIndex);
         }
       }
-
-      setState(() {}); // Actualizar listas filtradas
     });
   }
 
   int _getTabIndexForState(CatalogoEntrada entrada) {
     if (entrada.esFavorito) {
-      return 1; // Prioridad a Favs si se quiere, o por estado
+      return 1;
     }
 
-    // Mapeo Estado -> Índice de Tab
-    // Tabs: [0:All, 1:Favs, 2:Progress, 3:Pending, 4:Finished, 5:Dropped]
+    // Usamos los valores de la API (String) para comparar
     switch (entrada.estadoPersonal) {
       case 'EN_PROGRESO':
         return 2;
@@ -152,7 +145,7 @@ class _CatalogScreenState extends State<CatalogScreen>
       case 'ABANDONADO':
         return 5;
       default:
-        return 0; // Otros (Pausado) van a All
+        return 0;
     }
   }
 
@@ -171,10 +164,8 @@ class _CatalogScreenState extends State<CatalogScreen>
           !_selectedTypes.contains(e.elementoTipoNombre)) {
         return false;
       }
-      // Filtro Género (busca si el string de géneros contiene alguno de los seleccionados)
+      // Filtro Género
       if (_selectedGenres.isNotEmpty) {
-        // e.elementoGeneros es un String "Acción, Aventura".
-        // Verificamos si CUALQUIERA de los seleccionados está presente.
         final elementGenres = e.elementoGeneros?.toLowerCase() ?? '';
         bool hasMatch = false;
         for (final g in _selectedGenres) {
@@ -191,24 +182,25 @@ class _CatalogScreenState extends State<CatalogScreen>
     }).toList();
   }
 
-  List<CatalogoEntrada> _sortForAllTab(List<CatalogoEntrada> list) {
-    // Orden personalizado para la tab "All" (Punto 5)
-    // Orden: En Progreso > Pendiente > Pausado > Terminado > Abandonado
-    final orderMap = {
-      'EN_PROGRESO': 1,
-      'PENDIENTE': 2,
-      'PAUSADO': 3,
-      'TERMINADO': 4,
-      'ABANDONADO': 5,
-    };
+  List<CatalogoEntrada> _sortList(List<CatalogoEntrada> list,
+      {bool isAllTab = false}) {
+    // 1. Ordenación base (para Tab All: por estado)
+    if (isAllTab) {
+      final orderMap = {
+        'EN_PROGRESO': 1,
+        'PENDIENTE': 2,
+        'PAUSADO': 3,
+        'TERMINADO': 4,
+        'ABANDONADO': 5,
+      };
+      list.sort((a, b) {
+        final orderA = orderMap[a.estadoPersonal] ?? 99;
+        final orderB = orderMap[b.estadoPersonal] ?? 99;
+        return orderA.compareTo(orderB);
+      });
+    }
 
-    list.sort((a, b) {
-      final orderA = orderMap[a.estadoPersonal] ?? 99;
-      final orderB = orderMap[b.estadoPersonal] ?? 99;
-      return orderA.compareTo(orderB);
-    });
-
-    // Aplicar ordenación adicional por fecha o alfabética según configuración
+    // 2. Ordenación dinámica (Usuario)
     if (_sortMode == 'DATE') {
       list.sort((a, b) {
         final dateA = a.agregadoEn;
@@ -233,18 +225,22 @@ class _CatalogScreenState extends State<CatalogScreen>
       builder: (ctx) => FilterModal(
         selectedTypes: _selectedTypes,
         selectedGenres: _selectedGenres,
+
+        // DESCOMENTADO Y CONECTADO:
         currentSortMode: _sortMode,
         isAscending: _sortAscending,
+        onSortChanged: (mode, ascending) {
+          // Implementación real en lugar de '...'
+          setState(() {
+            _sortMode = mode;
+            _sortAscending = ascending;
+          });
+        },
+
         onApply: (types, genres) {
           setState(() {
             _selectedTypes = types;
             _selectedGenres = genres;
-          });
-        },
-        onSortChanged: (mode, ascending) {
-          setState(() {
-            _sortMode = mode;
-            _sortAscending = ascending;
           });
         },
       ),
@@ -258,10 +254,9 @@ class _CatalogScreenState extends State<CatalogScreen>
     final AppLocalizations l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    // Nombres de las Tabs
     final List<Widget> tabs = [
       Tab(text: l10n.adminPanelFilterAll),
-      const Tab(text: 'Favorites'), // Punto 1: "Favorite" (o Favorites)
+      const Tab(text: 'Favorites'),
       Tab(text: l10n.catalogInProgress),
       Tab(text: l10n.catalogPending),
       Tab(text: l10n.catalogFinished),
@@ -269,11 +264,10 @@ class _CatalogScreenState extends State<CatalogScreen>
     ];
 
     return Scaffold(
-      // SafeArea para proteger bordes
       body: SafeArea(
         child: Column(
           children: [
-            // 1. Cabecera Personalizada
+            // 1. Cabecera
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Row(
@@ -282,8 +276,6 @@ class _CatalogScreenState extends State<CatalogScreen>
                   SvgPicture.asset(
                     'assets/images/isotipo_libratrack.svg',
                     height: 32,
-                    // Si el SVG tiene color fijo, quitar colorFilter. Si es negro, colorear.
-                    // colorFilter: ColorFilter.mode(theme.primaryColor, BlendMode.srcIn),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -299,7 +291,7 @@ class _CatalogScreenState extends State<CatalogScreen>
               ),
             ),
 
-            // 2. Buscador y Filtros
+            // 2. Buscador
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -307,18 +299,17 @@ class _CatalogScreenState extends State<CatalogScreen>
                 controller: _searchController,
                 hintText: 'Buscar en mi catálogo...',
                 onFilterPressed: _openFilterModal,
-                onChanged: _onSearchChanged, // Trigger búsqueda al limpiar
+                onChanged: _onSearchChanged,
               ),
             ),
 
-            // 3. Tabs
+            // 3. Tabs (Con controlador manual)
             TabBar(
               controller: _tabController,
               isScrollable: true,
-              tabAlignment: TabAlignment.start,
+              tabAlignment: TabAlignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               tabs: tabs,
-              dividerColor: Colors.transparent,
               labelStyle: const TextStyle(fontWeight: FontWeight.bold),
               unselectedLabelStyle:
                   const TextStyle(fontWeight: FontWeight.normal),
@@ -337,47 +328,53 @@ class _CatalogScreenState extends State<CatalogScreen>
                     return _buildErrorState(_loadingError!);
                   }
 
-                  // Filtramos globalmente primero (Búsqueda + Filtros Modal)
                   final globalFiltered = _filterList(catalogService.entradas);
 
                   return TabBarView(
                     controller: _tabController,
                     children: [
-                      // Tab 0: All (Ordenado por estado)
+                      // All
                       _buildCatalogList(
-                          _sortForAllTab(List.from(globalFiltered))),
-
-                      // Tab 1: Favorites
+                          _sortList(List.from(globalFiltered), isAllTab: true),
+                          0),
+                      // Favs
                       _buildCatalogList(
-                          globalFiltered.where((e) => e.esFavorito).toList()),
-
-                      // Tab 2: In Progress
-                      _buildCatalogList(globalFiltered
-                          .where((e) =>
-                              e.estadoPersonal ==
-                              EstadoPersonal.enProgreso.apiValue)
-                          .toList()),
-
-                      // Tab 3: Pending
-                      _buildCatalogList(globalFiltered
-                          .where((e) =>
-                              e.estadoPersonal ==
-                              EstadoPersonal.pendiente.apiValue)
-                          .toList()),
-
-                      // Tab 4: Finished
-                      _buildCatalogList(globalFiltered
-                          .where((e) =>
-                              e.estadoPersonal ==
-                              EstadoPersonal.terminado.apiValue)
-                          .toList()),
-
-                      // Tab 5: Dropped
-                      _buildCatalogList(globalFiltered
-                          .where((e) =>
-                              e.estadoPersonal ==
-                              EstadoPersonal.abandonado.apiValue)
-                          .toList()),
+                          _sortList(globalFiltered
+                              .where((e) => e.esFavorito)
+                              .toList()),
+                          1),
+                      // In Progress
+                      _buildCatalogList(
+                          _sortList(globalFiltered
+                              .where((e) =>
+                                  e.estadoPersonal ==
+                                  EstadoPersonal.enProgreso.apiValue)
+                              .toList()),
+                          2),
+                      // Pending
+                      _buildCatalogList(
+                          _sortList(globalFiltered
+                              .where((e) =>
+                                  e.estadoPersonal ==
+                                  EstadoPersonal.pendiente.apiValue)
+                              .toList()),
+                          3),
+                      // Finished
+                      _buildCatalogList(
+                          _sortList(globalFiltered
+                              .where((e) =>
+                                  e.estadoPersonal ==
+                                  EstadoPersonal.terminado.apiValue)
+                              .toList()),
+                          4),
+                      // Dropped
+                      _buildCatalogList(
+                          _sortList(globalFiltered
+                              .where((e) =>
+                                  e.estadoPersonal ==
+                                  EstadoPersonal.abandonado.apiValue)
+                              .toList()),
+                          5),
                     ],
                   );
                 },
@@ -389,7 +386,31 @@ class _CatalogScreenState extends State<CatalogScreen>
     );
   }
 
-  Widget _buildCatalogList(List<CatalogoEntrada> list) {
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(error,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red)),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _loadCatalog,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Reintentar'),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCatalogList(List<CatalogoEntrada> list, int tabIndex) {
     if (list.isEmpty) {
       return Center(
         child: Column(
@@ -409,7 +430,8 @@ class _CatalogScreenState extends State<CatalogScreen>
     return RefreshIndicator(
       onRefresh: _loadCatalog,
       child: ListView.separated(
-        key: const PageStorageKey('catalog_tab_all'),
+        // Clave única para preservar scroll por pestaña
+        key: PageStorageKey('catalog_tab_$tabIndex'),
         padding: const EdgeInsets.all(12),
         itemCount: list.length,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -417,35 +439,9 @@ class _CatalogScreenState extends State<CatalogScreen>
           return CatalogEntryCard(
             key: ValueKey(list[i].id),
             entrada: list[i],
-            onUpdate: () {}, // El provider actualiza auto, callback opcional
+            onUpdate: () {},
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String error) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.red),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              error,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red),
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: _loadCatalog,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Reintentar'),
-          )
-        ],
       ),
     );
   }

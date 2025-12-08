@@ -12,7 +12,9 @@ class EnvironmentConfig {
   static String get apiUrl {
     if (kReleaseMode) {
       // TODO: Reemplazar con tu dominio real cuando despliegues en AWS/GCP/Heroku
-      return 'https://api.libratrack.com/api';
+      // return 'https://api.libratrack.com/api';
+      // return 'http://192.168.1.190:8080/api';
+      return 'https://nonmicroscopical-shelton-convulsively.ngrok-free.dev/api';
     }
 
     // Configuración para Desarrollo (Debug/Profile)
@@ -20,7 +22,7 @@ class EnvironmentConfig {
       // Si estás probando en un DISPOSITIVO FÍSICO Android, cambia esto por la IP local de tu PC
       // Ejemplo: return 'http://192.168.1.45:8080/api';
       // return 'http://10.0.2.2:8080/api';
-      return '192.168.1.190:8080';
+      return 'http://192.168.1.190:8080/api';
     }
 
     // Para simulador iOS, Web o Desktop, localhost funciona correctamente

@@ -446,36 +446,6 @@ abstract class AppLocalizations {
   /// **'There are no reviews for this item yet.'**
   String get elementDetailNoReviews;
 
-  /// No description provided for @elementDetailAddButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Add to My Catalog'**
-  String get elementDetailAddButton;
-
-  /// No description provided for @elementDetailAddingButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Adding...'**
-  String get elementDetailAddingButton;
-
-  /// No description provided for @elementDetailRemoveButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove from catalog'**
-  String get elementDetailRemoveButton;
-
-  /// No description provided for @elementDetailRemovingButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Removing...'**
-  String get elementDetailRemovingButton;
-
-  /// No description provided for @elementDetailAdminEdit.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit'**
-  String get elementDetailAdminEdit;
-
   /// No description provided for @elementDetailAdminMakeCommunity.
   ///
   /// In en, this message translates to:
@@ -493,24 +463,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'...'**
   String get elementDetailAdminLoading;
-
-  /// No description provided for @elementDetailNoElement.
-  ///
-  /// In en, this message translates to:
-  /// **'Element not found.'**
-  String get elementDetailNoElement;
-
-  /// No description provided for @contentStatusOfficial.
-  ///
-  /// In en, this message translates to:
-  /// **'OFFICIAL'**
-  String get contentStatusOfficial;
-
-  /// No description provided for @contentStatusCommunity.
-  ///
-  /// In en, this message translates to:
-  /// **'COMMUNITY'**
-  String get contentStatusCommunity;
 
   /// No description provided for @reviewModalTitle.
   ///
@@ -944,18 +896,6 @@ abstract class AppLocalizations {
   /// **'Rejected'**
   String get modPanelStatusRejected;
 
-  /// No description provided for @modEditTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Review Proposal'**
-  String get modEditTitle;
-
-  /// No description provided for @modEditImageTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No cover'**
-  String get modEditImageTitle;
-
   /// No description provided for @modEditProgressTitle.
   ///
   /// In en, this message translates to:
@@ -1123,12 +1063,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please upload a cover image before approving.'**
   String get snackbarImageUploadRequiredApproval;
-
-  /// No description provided for @snackbarModProposalApproved.
-  ///
-  /// In en, this message translates to:
-  /// **'Proposal approved!'**
-  String get snackbarModProposalApproved;
 
   /// No description provided for @snackbarModProposalRejected.
   ///
@@ -1580,12 +1514,6 @@ abstract class AppLocalizations {
   /// **'Unexpected error: {error}'**
   String errorUnexpected(String error);
 
-  /// No description provided for @errorLoadingFilters.
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading filters: {error}'**
-  String errorLoadingFilters(String error);
-
   /// No description provided for @errorLoadingElement.
   ///
   /// In en, this message translates to:
@@ -2005,6 +1933,924 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Magical Realism'**
   String get genreMagicalRealism;
+
+  /// No description provided for @commonRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get commonRetry;
+
+  /// No description provided for @labelUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get labelUnknown;
+
+  /// No description provided for @contentStatusOfficial.
+  ///
+  /// In en, this message translates to:
+  /// **'OFFICIAL'**
+  String get contentStatusOfficial;
+
+  /// No description provided for @contentStatusCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'COMMUNITY'**
+  String get contentStatusCommunity;
+
+  /// No description provided for @adminPanelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Panel'**
+  String get adminPanelTitle;
+
+  /// No description provided for @searchUsersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search users...'**
+  String get searchUsersHint;
+
+  /// No description provided for @adminTabAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get adminTabAll;
+
+  /// No description provided for @adminTabMods.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderators'**
+  String get adminTabMods;
+
+  /// No description provided for @adminTabAdmins.
+  ///
+  /// In en, this message translates to:
+  /// **'Admins'**
+  String get adminTabAdmins;
+
+  /// No description provided for @adminLabelYou.
+  ///
+  /// In en, this message translates to:
+  /// **'YOU'**
+  String get adminLabelYou;
+
+  /// No description provided for @settingsSectionAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsSectionAppearance;
+
+  /// No description provided for @settingsSectionLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsSectionLanguage;
+
+  /// No description provided for @settingsVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settingsVersion;
+
+  /// No description provided for @catalogProgressNoChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'No changes made.'**
+  String get catalogProgressNoChanges;
+
+  /// No description provided for @catalogProgressSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress saved'**
+  String get catalogProgressSaved;
+
+  /// No description provided for @dialogNotesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Notes'**
+  String get dialogNotesTitle;
+
+  /// No description provided for @dialogNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your thoughts...'**
+  String get dialogNotesHint;
+
+  /// No description provided for @actionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get actionCancel;
+
+  /// No description provided for @actionSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get actionSave;
+
+  /// No description provided for @tooltipNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get tooltipNotes;
+
+  /// No description provided for @tooltipSaveProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Save progress'**
+  String get tooltipSaveProgress;
+
+  /// No description provided for @unitMin.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get unitMin;
+
+  /// No description provided for @unitHr.
+  ///
+  /// In en, this message translates to:
+  /// **'hr(s)'**
+  String get unitHr;
+
+  /// No description provided for @unitCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Ch'**
+  String get unitCap;
+
+  /// No description provided for @unitPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pg'**
+  String get unitPage;
+
+  /// No description provided for @unitSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'S'**
+  String get unitSeason;
+
+  /// No description provided for @unitEp.
+  ///
+  /// In en, this message translates to:
+  /// **'Eps'**
+  String get unitEp;
+
+  /// No description provided for @inputTemp.
+  ///
+  /// In en, this message translates to:
+  /// **'Seas'**
+  String get inputTemp;
+
+  /// No description provided for @inputEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes'**
+  String get inputEpisodes;
+
+  /// No description provided for @inputChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter'**
+  String get inputChapter;
+
+  /// No description provided for @inputPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page'**
+  String get inputPage;
+
+  /// No description provided for @inputTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get inputTime;
+
+  /// No description provided for @inputEpisode.
+  ///
+  /// In en, this message translates to:
+  /// **'Episode'**
+  String get inputEpisode;
+
+  /// No description provided for @catalogTabFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get catalogTabFavorites;
+
+  /// No description provided for @catalogSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search my catalog...'**
+  String get catalogSearchHint;
+
+  /// No description provided for @catalogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No items found.'**
+  String get catalogEmpty;
+
+  /// No description provided for @actionEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get actionEdit;
+
+  /// No description provided for @actionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get actionDelete;
+
+  /// No description provided for @reviewCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Review'**
+  String get reviewCreateTitle;
+
+  /// No description provided for @reviewEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Review'**
+  String get reviewEditTitle;
+
+  /// No description provided for @reviewPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Review published successfully'**
+  String get reviewPublished;
+
+  /// No description provided for @reviewUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Review updated successfully'**
+  String get reviewUpdated;
+
+  /// No description provided for @actionPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get actionPublish;
+
+  /// No description provided for @actionUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get actionUpdate;
+
+  /// No description provided for @elementDetailNoElement.
+  ///
+  /// In en, this message translates to:
+  /// **'Element not found'**
+  String get elementDetailNoElement;
+
+  /// No description provided for @elementDetailAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to list'**
+  String get elementDetailAddButton;
+
+  /// No description provided for @elementDetailRemovingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing...'**
+  String get elementDetailRemovingButton;
+
+  /// No description provided for @elementDetailAddingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding...'**
+  String get elementDetailAddingButton;
+
+  /// No description provided for @elementDetailRemoveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get elementDetailRemoveButton;
+
+  /// No description provided for @elementDetailAdminEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Element'**
+  String get elementDetailAdminEdit;
+
+  /// No description provided for @labelSynopsis.
+  ///
+  /// In en, this message translates to:
+  /// **'Synopsis'**
+  String get labelSynopsis;
+
+  /// No description provided for @labelAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability'**
+  String get labelAvailability;
+
+  /// No description provided for @labelProgressDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress Details'**
+  String get labelProgressDetails;
+
+  /// No description provided for @labelChronology.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronology'**
+  String get labelChronology;
+
+  /// No description provided for @labelReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get labelReviews;
+
+  /// No description provided for @labelModActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Mod Actions'**
+  String get labelModActions;
+
+  /// No description provided for @labelTotalChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Chapters'**
+  String get labelTotalChapters;
+
+  /// No description provided for @labelTotalPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Pages'**
+  String get labelTotalPages;
+
+  /// No description provided for @labelDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get labelDuration;
+
+  /// No description provided for @labelTotalEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Episodes'**
+  String get labelTotalEpisodes;
+
+  /// No description provided for @labelPrequel.
+  ///
+  /// In en, this message translates to:
+  /// **'Prequel'**
+  String get labelPrequel;
+
+  /// No description provided for @labelSequel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sequel'**
+  String get labelSequel;
+
+  /// No description provided for @labelNoReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet.'**
+  String get labelNoReviews;
+
+  /// No description provided for @labelReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed'**
+  String get labelReviewed;
+
+  /// No description provided for @labelRatings.
+  ///
+  /// In en, this message translates to:
+  /// **'ratings'**
+  String get labelRatings;
+
+  /// No description provided for @actionWriteReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Write Review'**
+  String get actionWriteReview;
+
+  /// No description provided for @dialogDeleteReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete review?'**
+  String get dialogDeleteReviewTitle;
+
+  /// No description provided for @dialogDeleteReviewContent.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get dialogDeleteReviewContent;
+
+  /// No description provided for @snackbarReviewDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Review deleted'**
+  String get snackbarReviewDeleted;
+
+  /// No description provided for @snackbarReviewUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Review updated'**
+  String get snackbarReviewUpdated;
+
+  /// No description provided for @tooltipFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get tooltipFavorite;
+
+  /// No description provided for @tooltipSortOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get tooltipSortOldest;
+
+  /// No description provided for @tooltipSortNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest first'**
+  String get tooltipSortNewest;
+
+  /// No description provided for @formatSeasonEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Season {season}: {episodes} Episodes'**
+  String formatSeasonEpisodes(String season, String episodes);
+
+  /// No description provided for @formatDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} hr {minutes} min'**
+  String formatDuration(int hours, int minutes);
+
+  /// No description provided for @createdElementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Creation History'**
+  String get createdElementsTitle;
+
+  /// No description provided for @searchByTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by title...'**
+  String get searchByTitleHint;
+
+  /// No description provided for @createdElementsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t created any elements yet.'**
+  String get createdElementsEmpty;
+
+  /// No description provided for @labelCreatedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Created by'**
+  String get labelCreatedBy;
+
+  /// No description provided for @adminFormErrorReviewFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Please review the fields marked in red.'**
+  String get adminFormErrorReviewFields;
+
+  /// No description provided for @adminFormUpdateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Element updated successfully.'**
+  String get adminFormUpdateSuccess;
+
+  /// No description provided for @adminFormCreateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Element created successfully.'**
+  String get adminFormCreateSuccess;
+
+  /// No description provided for @validationEpisodesRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of episodes is required.'**
+  String get validationEpisodesRequired;
+
+  /// No description provided for @validationChaptersRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of chapters is required.'**
+  String get validationChaptersRequired;
+
+  /// No description provided for @validationPagesRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages are required.'**
+  String get validationPagesRequired;
+
+  /// No description provided for @validationSeasonsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You must indicate episodes per season.'**
+  String get validationSeasonsRequired;
+
+  /// No description provided for @validationDurationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration is required.'**
+  String get validationDurationRequired;
+
+  /// No description provided for @validationAvailabilityRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability is required.'**
+  String get validationAvailabilityRequired;
+
+  /// No description provided for @labelGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre'**
+  String get labelGenre;
+
+  /// No description provided for @labelProgressData.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress Data'**
+  String get labelProgressData;
+
+  /// No description provided for @labelSequels.
+  ///
+  /// In en, this message translates to:
+  /// **'Sequels (Optional)'**
+  String get labelSequels;
+
+  /// No description provided for @labelNoRelations.
+  ///
+  /// In en, this message translates to:
+  /// **'No relations selected'**
+  String get labelNoRelations;
+
+  /// No description provided for @labelContentStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Content Status'**
+  String get labelContentStatus;
+
+  /// No description provided for @actionAddRelation.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Relation'**
+  String get actionAddRelation;
+
+  /// No description provided for @searchHintShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least 2 characters...'**
+  String get searchHintShort;
+
+  /// No description provided for @searchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found.'**
+  String get searchNoResults;
+
+  /// No description provided for @moderationPanelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderation Panel'**
+  String get moderationPanelTitle;
+
+  /// No description provided for @searchProposalsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search proposals...'**
+  String get searchProposalsHint;
+
+  /// No description provided for @tabPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get tabPending;
+
+  /// No description provided for @tabApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get tabApproved;
+
+  /// No description provided for @tabRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get tabRejected;
+
+  /// No description provided for @actionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get actionHistory;
+
+  /// No description provided for @actionCreateElement.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Element'**
+  String get actionCreateElement;
+
+  /// No description provided for @actionReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get actionReject;
+
+  /// No description provided for @actionReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get actionReview;
+
+  /// No description provided for @actionComments.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get actionComments;
+
+  /// No description provided for @actionClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get actionClose;
+
+  /// No description provided for @dialogRejectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject Proposal'**
+  String get dialogRejectTitle;
+
+  /// No description provided for @dialogRejectInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Indicate the reason for rejection:'**
+  String get dialogRejectInstruction;
+
+  /// No description provided for @dialogRejectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ex. Duplicate or incorrect information'**
+  String get dialogRejectHint;
+
+  /// No description provided for @dialogReviewCommentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Comments'**
+  String get dialogReviewCommentsTitle;
+
+  /// No description provided for @dialogReviewCommentsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No comments registered.'**
+  String get dialogReviewCommentsEmpty;
+
+  /// No description provided for @snackbarProposalRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposal rejected'**
+  String get snackbarProposalRejected;
+
+  /// No description provided for @labelApprovedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved by:'**
+  String get labelApprovedBy;
+
+  /// No description provided for @labelRejectedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected by:'**
+  String get labelRejectedBy;
+
+  /// No description provided for @labelProposedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposed by:'**
+  String get labelProposedBy;
+
+  /// No description provided for @modEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Proposal'**
+  String get modEditTitle;
+
+  /// No description provided for @modEditImageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested Image'**
+  String get modEditImageTitle;
+
+  /// No description provided for @modEditReviewComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Review comments (Optional)'**
+  String get modEditReviewComment;
+
+  /// No description provided for @snackbarModProposalApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposal approved and element created successfully'**
+  String get snackbarModProposalApproved;
+
+  /// No description provided for @actionSaveAndApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and Approve'**
+  String get actionSaveAndApprove;
+
+  /// No description provided for @validationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get validationRequired;
+
+  /// No description provided for @actionRemovePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove current photo'**
+  String get actionRemovePhoto;
+
+  /// No description provided for @snackbarProfilePhotoRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo removed'**
+  String get snackbarProfilePhotoRemoved;
+
+  /// No description provided for @errorRemovingPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Error removing photo'**
+  String get errorRemovingPhoto;
+
+  /// No description provided for @labelProgressDataOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress Data (Optional)'**
+  String get labelProgressDataOptional;
+
+  /// No description provided for @labelAvailabilityOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability (Optional)'**
+  String get labelAvailabilityOptional;
+
+  /// No description provided for @hintSelectAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Availability'**
+  String get hintSelectAvailability;
+
+  /// No description provided for @validationRequiredField.
+  ///
+  /// In en, this message translates to:
+  /// **'Please review required fields.'**
+  String get validationRequiredField;
+
+  /// No description provided for @statusReleasing.
+  ///
+  /// In en, this message translates to:
+  /// **'Releasing'**
+  String get statusReleasing;
+
+  /// No description provided for @statusFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get statusFinished;
+
+  /// No description provided for @statusAnnounced.
+  ///
+  /// In en, this message translates to:
+  /// **'Announced'**
+  String get statusAnnounced;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
+
+  /// No description provided for @statusPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get statusPaused;
+
+  /// No description provided for @statusAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get statusAvailable;
+
+  /// No description provided for @hintDurationFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'120 min / 02:00'**
+  String get hintDurationFormat;
+
+  /// No description provided for @helperSeriesEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the number of episodes per season separated by commas.'**
+  String get helperSeriesEpisodes;
+
+  /// No description provided for @tooltipFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get tooltipFilters;
+
+  /// No description provided for @searchHintDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Search...'**
+  String get searchHintDefault;
+
+  /// No description provided for @modalFiltersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get modalFiltersTitle;
+
+  /// No description provided for @actionReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get actionReset;
+
+  /// No description provided for @actionApplyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Filters'**
+  String get actionApplyFilters;
+
+  /// No description provided for @filterSortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get filterSortBy;
+
+  /// No description provided for @sortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get sortRecent;
+
+  /// No description provided for @sortAlpha.
+  ///
+  /// In en, this message translates to:
+  /// **'Alphabetically'**
+  String get sortAlpha;
+
+  /// No description provided for @filterTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Types'**
+  String get filterTypes;
+
+  /// No description provided for @filterGenres.
+  ///
+  /// In en, this message translates to:
+  /// **'Genres'**
+  String get filterGenres;
+
+  /// No description provided for @errorLoadingFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading filters'**
+  String get errorLoadingFilters;
+
+  /// No description provided for @hintFilterGenres.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter genres'**
+  String get hintFilterGenres;
+
+  /// No description provided for @actionOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get actionOther;
+
+  /// No description provided for @dialogAddGenreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Genre'**
+  String get dialogAddGenreTitle;
+
+  /// No description provided for @hintGenreName.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre Name'**
+  String get hintGenreName;
+
+  /// No description provided for @actionAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get actionAdd;
 }
 
 class _AppLocalizationsDelegate

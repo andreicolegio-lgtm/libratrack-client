@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../core/services/catalog_service.dart';
 import '../../../model/catalogo_entrada.dart';
 import '../../../model/estado_personal.dart';
@@ -145,15 +146,16 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
   }
 
   String _formatMinutosToVerbose(int totalMinutos) {
+    final l10n = AppLocalizations.of(context);
     if (totalMinutos <= 0) {
-      return '0 min';
+      return '0 ${l10n.unitMin}';
     }
     final h = totalMinutos ~/ 60;
     final m = totalMinutos % 60;
     if (h > 0) {
-      return '$h hr(s) ${m > 0 ? "$m mins" : ""}';
+      return '$h ${l10n.unitHr} ${m > 0 ? "$m ${l10n.unitMin}" : ""}';
     } else {
-      return '$m mins';
+      return '$m ${l10n.unitMin}';
     }
   }
 
@@ -320,13 +322,10 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
   }
 
   Future<void> _saveProgress() async {
+    final l10n = AppLocalizations.of(context);
     if (!_hasChanges()) {
-      SnackBarHelper.showTopSnackBar(
-        context,
-        'No has realizado cambios.',
-        isError: false,
-        isNeutral: true,
-      );
+      SnackBarHelper.showTopSnackBar(context, l10n.catalogProgressNoChanges,
+          isError: false, isNeutral: true);
       return;
     }
 
@@ -382,7 +381,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       widget.onUpdate();
       if (mounted) {
         // Feedback visual rápido
-        SnackBarHelper.showTopSnackBar(context, 'Progreso guardado',
+        SnackBarHelper.showTopSnackBar(context, l10n.catalogProgressSaved,
             isError: false);
       }
 
@@ -438,6 +437,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
   }
 
   void _showNotesDialog() {
+    final l10n = AppLocalizations.of(context);
     // 1. Capturamos el valor original
     final String originalNotes = widget.entrada.notas ?? '';
     final controller = TextEditingController(text: originalNotes);
@@ -445,18 +445,18 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-              title: const Text('Notas Personales'),
+              title: Text(l10n.dialogNotesTitle),
               content: TextField(
                 controller: controller,
                 maxLines: 5,
-                decoration: const InputDecoration(
-                    hintText: 'Escribe tus pensamientos...',
-                    border: OutlineInputBorder()),
+                decoration: InputDecoration(
+                    hintText: l10n.dialogNotesHint,
+                    border: const OutlineInputBorder()),
               ),
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancelar')),
+                    child: Text(l10n.actionCancel)),
                 FilledButton(
                     onPressed: () async {
                       Navigator.pop(ctx);
@@ -467,7 +467,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
 
                       await _saveNotes(controller.text);
                     },
-                    child: const Text('Guardar')),
+                    child: Text(l10n.actionSave)),
               ],
             ));
   }
@@ -498,6 +498,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     // Altura dinámica para mejorar accesibilidad
@@ -645,7 +646,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
                                     : Colors.grey[700],
                               ),
                               onPressed: _showNotesDialog,
-                              tooltip: 'Notas',
+                              tooltip: l10n.tooltipNotes,
                             ),
 
                             // Botón Favorito
@@ -679,6 +680,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
   }
 
   Widget _buildProgressBar(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     double progress = 0.0;
     String text = '';
     final t = widget.entrada;
@@ -696,8 +698,8 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       final totalC = t.elementoTotalCapitulosLibro ?? 0;
 
       // Construimos el string exacto que pediste
-      String txtCap = "Cap $currC/${totalC > 0 ? totalC : '?'}";
-      String txtPag = "$currP/${totalP > 0 ? totalP : '?'} Pág";
+      String txtCap = "${l10n.unitCap} $currC/${totalC > 0 ? totalC : '?'}";
+      String txtPag = "$currP/${totalP > 0 ? totalP : '?'} ${l10n.unitPage}";
 
       text = '$txtCap • $txtPag';
     }
@@ -713,8 +715,10 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
       int totalSeasons = _episodiosPorTemporada.length;
 
       // Construimos el string exacto que pediste
-      String txtSeason = "S $season/${totalSeasons > 0 ? totalSeasons : '?'}";
-      String txtEp = "$ep/${maxEpsCurrent > 0 ? maxEpsCurrent : '?'} Eps";
+      String txtSeason =
+          "${l10n.unitSeason} $season/${totalSeasons > 0 ? totalSeasons : '?'}";
+      String txtEp =
+          "$ep/${maxEpsCurrent > 0 ? maxEpsCurrent : '?'} ${l10n.unitEp}";
 
       text = '$txtSeason • $txtEp';
     }
@@ -732,14 +736,14 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
     } else if (type == 'Anime') {
       final total = t.elementoTotalUnidades ?? 0;
       final current = t.unidadActual ?? 0;
-      text = "$current${total > 0 ? '/$total' : ''} Eps";
+      text = "$current${total > 0 ? '/$total' : ''} ${l10n.unitEp}";
       if (total > 0) {
         progress = current / total;
       }
     } else if (['Manga', 'Manhwa'].contains(type)) {
       final total = t.elementoTotalCapitulosLibro ?? 0;
       final current = t.capituloActual ?? 0;
-      text = "$current${total > 0 ? '/$total' : ''} Caps";
+      text = "$current${total > 0 ? '/$total' : ''} ${l10n.unitCap}";
       if (total > 0) {
         progress = current / total;
       }
@@ -770,6 +774,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
   }
 
   Widget _buildProgressInputs(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     final type = widget.entrada.elementoTipoNombre;
 
     if (_isLoading) {
@@ -786,27 +791,27 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
 
     if (type == 'Series') {
       inputs = Row(children: [
-        _labeledInput(_temporadaController, 'Temp'), // Sin width
+        _labeledInput(_temporadaController, l10n.inputTemp),
         const SizedBox(width: 8),
-        _labeledInput(_unidadController, 'Episodios'), // Sin width
+        _labeledInput(_unidadController, l10n.inputEpisodes),
       ]);
     } else if (type == 'Book') {
       inputs = Row(children: [
-        _labeledInput(_capituloController, 'Capítulo'),
+        _labeledInput(_capituloController, l10n.inputChapter),
         const SizedBox(width: 8),
-        _labeledInput(_paginaController, 'Página'),
+        _labeledInput(_paginaController, l10n.inputPage),
       ]);
     } else if (type == 'Movie') {
       inputs = Row(children: [
-        _labeledInput(_duracionController, 'Tiempo', isTime: true),
+        _labeledInput(_duracionController, l10n.inputTime, isTime: true),
       ]);
     } else if (type == 'Anime') {
       inputs = Row(children: [
-        _labeledInput(_unidadController, 'Episodio'),
+        _labeledInput(_unidadController, l10n.inputEpisode),
       ]);
     } else if (['Manga', 'Manhwa'].contains(type)) {
       inputs = Row(children: [
-        _labeledInput(_capituloController, 'Capítulo'),
+        _labeledInput(_capituloController, l10n.inputChapter),
       ]);
     } else {
       return const SizedBox.shrink();
@@ -826,7 +831,7 @@ class _CatalogEntryCardState extends State<CatalogEntryCard> {
           child: IconButton.filledTonal(
             onPressed: _saveProgress,
             icon: const Icon(Icons.check),
-            tooltip: 'Guardar progreso',
+            tooltip: l10n.tooltipSaveProgress,
           ),
         )
       ],

@@ -85,8 +85,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
     final l10n = AppLocalizations.of(context);
 
     if (!_formKey.currentState!.validate()) {
-      SnackBarHelper.showTopSnackBar(
-          context, 'Por favor, revisa los campos obligatorios.',
+      SnackBarHelper.showTopSnackBar(context, l10n.validationRequiredField,
           isError: true);
       return;
     }
@@ -286,7 +285,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                       ? l10n.validationGenresRequired
                       : null,
                   builder: (state) => _buildSectionField(
-                    label: 'Genre',
+                    label: l10n.labelGenre,
                     errorText: state.errorText,
                     child: _buildGenreSelector(),
                   ),
@@ -296,7 +295,7 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 // 4. Progress Data (Opcional para propuesta, pero útil)
                 if (_tipoSeleccionado != 'Video Game') ...[
                   _buildSectionField(
-                    label: 'Progress Data (Optional)',
+                    label: l10n.labelProgressDataOptional,
                     child: ContentTypeProgressForms(
                       selectedTypeKey: _tipoSeleccionado,
                       episodesController: _episodiosPorTemporadaController,
@@ -313,23 +312,25 @@ class _PropuestaFormScreenState extends State<PropuestaFormScreen> {
                 // 5. Availability (Opcional)
                 DropdownButtonFormField<String>(
                   initialValue: _estadoPublicacionSeleccionado,
-                  hint: const Text('Select Availability'),
-                  items: const [
+                  hint: Text(l10n.hintSelectAvailability),
+                  items: [
                     DropdownMenuItem(
-                        value: 'RELEASING', child: Text('Releasing')),
+                        value: 'RELEASING', child: Text(l10n.statusReleasing)),
                     DropdownMenuItem(
-                        value: 'FINISHED', child: Text('Finished')),
+                        value: 'FINISHED', child: Text(l10n.statusFinished)),
                     DropdownMenuItem(
-                        value: 'ANNOUNCED', child: Text('Announced')),
+                        value: 'ANNOUNCED', child: Text(l10n.statusAnnounced)),
                     DropdownMenuItem(
-                        value: 'CANCELLED', child: Text('Cancelled')),
-                    DropdownMenuItem(value: 'PAUSADO', child: Text('Paused')),
+                        value: 'CANCELLED', child: Text(l10n.statusCancelled)),
                     DropdownMenuItem(
-                        value: 'AVAILABLE', child: Text('Available')),
+                        value: 'PAUSADO', child: Text(l10n.statusPaused)),
+                    DropdownMenuItem(
+                        value: 'AVAILABLE', child: Text(l10n.statusAvailable)),
                   ],
                   onChanged: (v) =>
                       setState(() => _estadoPublicacionSeleccionado = v),
-                  decoration: getCommonDecoration('Availability (Optional)'),
+                  decoration:
+                      getCommonDecoration(l10n.labelAvailabilityOptional),
                 ),
                 const SizedBox(height: 32),
 

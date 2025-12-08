@@ -202,21 +202,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get elementDetailNoReviews => 'Aún no hay reseñas para este elemento.';
 
   @override
-  String get elementDetailAddButton => 'Añadir a Mi Catálogo';
-
-  @override
-  String get elementDetailAddingButton => 'Añadiendo...';
-
-  @override
-  String get elementDetailRemoveButton => 'Quitar del catálogo';
-
-  @override
-  String get elementDetailRemovingButton => 'Eliminando...';
-
-  @override
-  String get elementDetailAdminEdit => 'Editar';
-
-  @override
   String get elementDetailAdminMakeCommunity => 'Comunitarizar';
 
   @override
@@ -224,15 +209,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get elementDetailAdminLoading => '...';
-
-  @override
-  String get elementDetailNoElement => 'Elemento no encontrado.';
-
-  @override
-  String get contentStatusOfficial => 'OFICIAL';
-
-  @override
-  String get contentStatusCommunity => 'COMUNITARIO';
 
   @override
   String get reviewModalTitle => 'Escribir Reseña';
@@ -464,12 +440,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get modPanelStatusRejected => 'Rechazadas';
 
   @override
-  String get modEditTitle => 'Revisar Propuesta';
-
-  @override
-  String get modEditImageTitle => 'Sin portada';
-
-  @override
   String get modEditProgressTitle => 'Datos de Progreso (¡Obligatorio!)';
 
   @override
@@ -562,9 +532,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get snackbarImageUploadRequiredApproval =>
       'Por favor, sube una imagen de portada antes de aprobar.';
-
-  @override
-  String get snackbarModProposalApproved => '¡Propuesta aprobada!';
 
   @override
   String get snackbarModProposalRejected => 'Propuesta rechazada (simulado).';
@@ -825,11 +792,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String errorLoadingFilters(String error) {
-    return 'Error al cargar filtros: $error';
-  }
-
-  @override
   String errorLoadingElement(String error) {
     return 'Error al cargar el elemento:\n$error';
   }
@@ -1062,4 +1024,475 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get genreMagicalRealism => 'Realismo Mágico';
+
+  @override
+  String get commonRetry => 'Reintentar';
+
+  @override
+  String get labelUnknown => 'Desconocido';
+
+  @override
+  String get contentStatusOfficial => 'OFICIAL';
+
+  @override
+  String get contentStatusCommunity => 'COMUNITARIO';
+
+  @override
+  String get adminPanelTitle => 'Panel de Administración';
+
+  @override
+  String get searchUsersHint => 'Buscar usuarios...';
+
+  @override
+  String get adminTabAll => 'Todos';
+
+  @override
+  String get adminTabMods => 'Moderadores';
+
+  @override
+  String get adminTabAdmins => 'Administradores';
+
+  @override
+  String get adminLabelYou => 'TÚ';
+
+  @override
+  String get settingsSectionAppearance => 'Apariencia';
+
+  @override
+  String get settingsSectionLanguage => 'Idioma';
+
+  @override
+  String get settingsVersion => 'Versión';
+
+  @override
+  String get catalogProgressNoChanges => 'No has realizado cambios.';
+
+  @override
+  String get catalogProgressSaved => 'Progreso guardado';
+
+  @override
+  String get dialogNotesTitle => 'Notas Personales';
+
+  @override
+  String get dialogNotesHint => 'Escribe tus pensamientos...';
+
+  @override
+  String get actionCancel => 'Cancelar';
+
+  @override
+  String get actionSave => 'Guardar';
+
+  @override
+  String get tooltipNotes => 'Notas';
+
+  @override
+  String get tooltipSaveProgress => 'Guardar progreso';
+
+  @override
+  String get unitMin => 'min';
+
+  @override
+  String get unitHr => 'hr(s)';
+
+  @override
+  String get unitCap => 'Cap';
+
+  @override
+  String get unitPage => 'Pág';
+
+  @override
+  String get unitSeason => 'T';
+
+  @override
+  String get unitEp => 'Eps';
+
+  @override
+  String get inputTemp => 'Temp';
+
+  @override
+  String get inputEpisodes => 'Episodios';
+
+  @override
+  String get inputChapter => 'Capítulo';
+
+  @override
+  String get inputPage => 'Página';
+
+  @override
+  String get inputTime => 'Tiempo';
+
+  @override
+  String get inputEpisode => 'Episodio';
+
+  @override
+  String get catalogTabFavorites => 'Favoritos';
+
+  @override
+  String get catalogSearchHint => 'Buscar en mi catálogo...';
+
+  @override
+  String get catalogEmpty => 'No se encontraron elementos.';
+
+  @override
+  String get actionEdit => 'Editar';
+
+  @override
+  String get actionDelete => 'Borrar';
+
+  @override
+  String get reviewCreateTitle => 'Crear Reseña';
+
+  @override
+  String get reviewEditTitle => 'Editar Reseña';
+
+  @override
+  String get reviewPublished => 'Reseña publicada con éxito';
+
+  @override
+  String get reviewUpdated => 'Reseña actualizada con éxito';
+
+  @override
+  String get actionPublish => 'Publicar';
+
+  @override
+  String get actionUpdate => 'Actualizar';
+
+  @override
+  String get elementDetailNoElement => 'Elemento no encontrado';
+
+  @override
+  String get elementDetailAddButton => 'Añadir a lista';
+
+  @override
+  String get elementDetailRemovingButton => 'Eliminando...';
+
+  @override
+  String get elementDetailAddingButton => 'Añadiendo...';
+
+  @override
+  String get elementDetailRemoveButton => 'Quitar';
+
+  @override
+  String get elementDetailAdminEdit => 'Editar Elemento';
+
+  @override
+  String get labelSynopsis => 'Sinopsis';
+
+  @override
+  String get labelAvailability => 'Disponibilidad';
+
+  @override
+  String get labelProgressDetails => 'Detalles de Progreso';
+
+  @override
+  String get labelChronology => 'Cronología';
+
+  @override
+  String get labelReviews => 'Reseñas';
+
+  @override
+  String get labelModActions => 'Acciones de Moderación';
+
+  @override
+  String get labelTotalChapters => 'Total Capítulos';
+
+  @override
+  String get labelTotalPages => 'Total Páginas';
+
+  @override
+  String get labelDuration => 'Duración';
+
+  @override
+  String get labelTotalEpisodes => 'Total Episodios';
+
+  @override
+  String get labelPrequel => 'Precuela';
+
+  @override
+  String get labelSequel => 'Secuela';
+
+  @override
+  String get labelNoReviews => 'No hay reseñas aún.';
+
+  @override
+  String get labelReviewed => 'Reseñado';
+
+  @override
+  String get labelRatings => 'valoraciones';
+
+  @override
+  String get actionWriteReview => 'Escribir Reseña';
+
+  @override
+  String get dialogDeleteReviewTitle => '¿Borrar reseña?';
+
+  @override
+  String get dialogDeleteReviewContent => 'Esta acción no se puede deshacer.';
+
+  @override
+  String get snackbarReviewDeleted => 'Reseña eliminada';
+
+  @override
+  String get snackbarReviewUpdated => 'Reseña actualizada';
+
+  @override
+  String get tooltipFavorite => 'Favorito';
+
+  @override
+  String get tooltipSortOldest => 'Más antiguas primero';
+
+  @override
+  String get tooltipSortNewest => 'Más recientes primero';
+
+  @override
+  String formatSeasonEpisodes(String season, String episodes) {
+    return 'Temporada $season: $episodes Episodios';
+  }
+
+  @override
+  String formatDuration(int hours, int minutes) {
+    return '$hours hr $minutes min';
+  }
+
+  @override
+  String get createdElementsTitle => 'Historial de Creaciones';
+
+  @override
+  String get searchByTitleHint => 'Buscar por título...';
+
+  @override
+  String get createdElementsEmpty => 'No has creado elementos aún.';
+
+  @override
+  String get labelCreatedBy => 'Creado por';
+
+  @override
+  String get adminFormErrorReviewFields =>
+      'Por favor, revisa los campos marcados en rojo.';
+
+  @override
+  String get adminFormUpdateSuccess => 'Elemento actualizado con éxito.';
+
+  @override
+  String get adminFormCreateSuccess => 'Elemento creado con éxito.';
+
+  @override
+  String get validationEpisodesRequired =>
+      'El número de episodios es obligatorio.';
+
+  @override
+  String get validationChaptersRequired =>
+      'El número de capítulos es obligatorio.';
+
+  @override
+  String get validationPagesRequired => 'Las páginas son obligatorias.';
+
+  @override
+  String get validationSeasonsRequired =>
+      'Debes indicar los episodios por temporada.';
+
+  @override
+  String get validationDurationRequired => 'La duración es obligatoria.';
+
+  @override
+  String get validationAvailabilityRequired =>
+      'La disponibilidad es obligatoria.';
+
+  @override
+  String get labelGenre => 'Género';
+
+  @override
+  String get labelProgressData => 'Datos de Progreso';
+
+  @override
+  String get labelSequels => 'Secuelas (Opcional)';
+
+  @override
+  String get labelNoRelations => 'Sin relaciones seleccionadas';
+
+  @override
+  String get labelContentStatus => 'Estado del Contenido';
+
+  @override
+  String get actionAddRelation => 'Añadir Relación';
+
+  @override
+  String get searchHintShort => 'Escribe al menos 2 caracteres...';
+
+  @override
+  String get searchNoResults => 'No se encontraron resultados.';
+
+  @override
+  String get moderationPanelTitle => 'Panel de Moderación';
+
+  @override
+  String get searchProposalsHint => 'Buscar propuestas...';
+
+  @override
+  String get tabPending => 'Pendientes';
+
+  @override
+  String get tabApproved => 'Aprobados';
+
+  @override
+  String get tabRejected => 'Rechazados';
+
+  @override
+  String get actionHistory => 'Historial';
+
+  @override
+  String get actionCreateElement => 'Crear Elemento';
+
+  @override
+  String get actionReject => 'Rechazar';
+
+  @override
+  String get actionReview => 'Revisar';
+
+  @override
+  String get actionComments => 'Comentarios';
+
+  @override
+  String get actionClose => 'Cerrar';
+
+  @override
+  String get dialogRejectTitle => 'Rechazar Propuesta';
+
+  @override
+  String get dialogRejectInstruction => 'Indica el motivo del rechazo:';
+
+  @override
+  String get dialogRejectHint => 'Ej. Información duplicada o incorrecta';
+
+  @override
+  String get dialogReviewCommentsTitle => 'Comentarios de Revisión';
+
+  @override
+  String get dialogReviewCommentsEmpty => 'Sin comentarios registrados.';
+
+  @override
+  String get snackbarProposalRejected => 'Propuesta rechazada';
+
+  @override
+  String get labelApprovedBy => 'Aprobado por:';
+
+  @override
+  String get labelRejectedBy => 'Rechazado por:';
+
+  @override
+  String get labelProposedBy => 'Propuesto por:';
+
+  @override
+  String get modEditTitle => 'Revisar Propuesta';
+
+  @override
+  String get modEditImageTitle => 'Imagen Sugerida';
+
+  @override
+  String get modEditReviewComment => 'Comentarios de revisión (Opcional)';
+
+  @override
+  String get snackbarModProposalApproved =>
+      'Propuesta aprobada y elemento creado con éxito';
+
+  @override
+  String get actionSaveAndApprove => 'Guardar y Aprobar';
+
+  @override
+  String get validationRequired => 'Requerido';
+
+  @override
+  String get actionRemovePhoto => 'Eliminar foto actual';
+
+  @override
+  String get snackbarProfilePhotoRemoved => 'Foto de perfil eliminada';
+
+  @override
+  String get errorRemovingPhoto => 'Error al eliminar foto';
+
+  @override
+  String get labelProgressDataOptional => 'Datos de Progreso (Opcional)';
+
+  @override
+  String get labelAvailabilityOptional => 'Disponibilidad (Opcional)';
+
+  @override
+  String get hintSelectAvailability => 'Seleccionar Disponibilidad';
+
+  @override
+  String get validationRequiredField =>
+      'Por favor, revisa los campos obligatorios.';
+
+  @override
+  String get statusReleasing => 'En Emisión';
+
+  @override
+  String get statusFinished => 'Finalizado';
+
+  @override
+  String get statusAnnounced => 'Anunciado';
+
+  @override
+  String get statusCancelled => 'Cancelado';
+
+  @override
+  String get statusPaused => 'Pausado';
+
+  @override
+  String get statusAvailable => 'Disponible';
+
+  @override
+  String get hintDurationFormat => '120 min / 02:00';
+
+  @override
+  String get helperSeriesEpisodes =>
+      'Introduce el número de episodios por temporada separados por comas.';
+
+  @override
+  String get tooltipFilters => 'Filtros';
+
+  @override
+  String get searchHintDefault => 'Buscar...';
+
+  @override
+  String get modalFiltersTitle => 'Filtros';
+
+  @override
+  String get actionReset => 'Restablecer';
+
+  @override
+  String get actionApplyFilters => 'Aplicar Filtros';
+
+  @override
+  String get filterSortBy => 'Ordenar por';
+
+  @override
+  String get sortRecent => 'Recientes';
+
+  @override
+  String get sortAlpha => 'Alfabéticamente';
+
+  @override
+  String get filterTypes => 'Tipos';
+
+  @override
+  String get filterGenres => 'Géneros';
+
+  @override
+  String get errorLoadingFilters => 'Error cargando filtros';
+
+  @override
+  String get hintFilterGenres => 'Filtrar géneros';
+
+  @override
+  String get actionOther => 'Otro';
+
+  @override
+  String get dialogAddGenreTitle => 'Añadir Género';
+
+  @override
+  String get hintGenreName => 'Nombre del género';
+
+  @override
+  String get actionAdd => 'Añadir';
 }

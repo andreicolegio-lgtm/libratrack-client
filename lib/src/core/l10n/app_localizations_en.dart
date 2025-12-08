@@ -203,21 +203,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'There are no reviews for this item yet.';
 
   @override
-  String get elementDetailAddButton => 'Add to My Catalog';
-
-  @override
-  String get elementDetailAddingButton => 'Adding...';
-
-  @override
-  String get elementDetailRemoveButton => 'Remove from catalog';
-
-  @override
-  String get elementDetailRemovingButton => 'Removing...';
-
-  @override
-  String get elementDetailAdminEdit => 'Edit';
-
-  @override
   String get elementDetailAdminMakeCommunity => 'Make Community';
 
   @override
@@ -225,15 +210,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get elementDetailAdminLoading => '...';
-
-  @override
-  String get elementDetailNoElement => 'Element not found.';
-
-  @override
-  String get contentStatusOfficial => 'OFFICIAL';
-
-  @override
-  String get contentStatusCommunity => 'COMMUNITY';
 
   @override
   String get reviewModalTitle => 'Write Review';
@@ -464,12 +440,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modPanelStatusRejected => 'Rejected';
 
   @override
-  String get modEditTitle => 'Review Proposal';
-
-  @override
-  String get modEditImageTitle => 'No cover';
-
-  @override
   String get modEditProgressTitle => 'Progress Data (Required!)';
 
   @override
@@ -557,9 +527,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get snackbarImageUploadRequiredApproval =>
       'Please upload a cover image before approving.';
-
-  @override
-  String get snackbarModProposalApproved => 'Proposal approved!';
 
   @override
   String get snackbarModProposalRejected => 'Proposal rejected (simulated).';
@@ -806,11 +773,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String errorLoadingFilters(String error) {
-    return 'Error loading filters: $error';
-  }
-
-  @override
   String errorLoadingElement(String error) {
     return 'Error loading element:\n$error';
   }
@@ -1043,4 +1005,471 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get genreMagicalRealism => 'Magical Realism';
+
+  @override
+  String get commonRetry => 'Retry';
+
+  @override
+  String get labelUnknown => 'Unknown';
+
+  @override
+  String get contentStatusOfficial => 'OFFICIAL';
+
+  @override
+  String get contentStatusCommunity => 'COMMUNITY';
+
+  @override
+  String get adminPanelTitle => 'Admin Panel';
+
+  @override
+  String get searchUsersHint => 'Search users...';
+
+  @override
+  String get adminTabAll => 'All';
+
+  @override
+  String get adminTabMods => 'Moderators';
+
+  @override
+  String get adminTabAdmins => 'Admins';
+
+  @override
+  String get adminLabelYou => 'YOU';
+
+  @override
+  String get settingsSectionAppearance => 'Appearance';
+
+  @override
+  String get settingsSectionLanguage => 'Language';
+
+  @override
+  String get settingsVersion => 'Version';
+
+  @override
+  String get catalogProgressNoChanges => 'No changes made.';
+
+  @override
+  String get catalogProgressSaved => 'Progress saved';
+
+  @override
+  String get dialogNotesTitle => 'Personal Notes';
+
+  @override
+  String get dialogNotesHint => 'Write your thoughts...';
+
+  @override
+  String get actionCancel => 'Cancel';
+
+  @override
+  String get actionSave => 'Save';
+
+  @override
+  String get tooltipNotes => 'Notes';
+
+  @override
+  String get tooltipSaveProgress => 'Save progress';
+
+  @override
+  String get unitMin => 'min';
+
+  @override
+  String get unitHr => 'hr(s)';
+
+  @override
+  String get unitCap => 'Ch';
+
+  @override
+  String get unitPage => 'Pg';
+
+  @override
+  String get unitSeason => 'S';
+
+  @override
+  String get unitEp => 'Eps';
+
+  @override
+  String get inputTemp => 'Seas';
+
+  @override
+  String get inputEpisodes => 'Episodes';
+
+  @override
+  String get inputChapter => 'Chapter';
+
+  @override
+  String get inputPage => 'Page';
+
+  @override
+  String get inputTime => 'Time';
+
+  @override
+  String get inputEpisode => 'Episode';
+
+  @override
+  String get catalogTabFavorites => 'Favorites';
+
+  @override
+  String get catalogSearchHint => 'Search my catalog...';
+
+  @override
+  String get catalogEmpty => 'No items found.';
+
+  @override
+  String get actionEdit => 'Edit';
+
+  @override
+  String get actionDelete => 'Delete';
+
+  @override
+  String get reviewCreateTitle => 'Create Review';
+
+  @override
+  String get reviewEditTitle => 'Edit Review';
+
+  @override
+  String get reviewPublished => 'Review published successfully';
+
+  @override
+  String get reviewUpdated => 'Review updated successfully';
+
+  @override
+  String get actionPublish => 'Publish';
+
+  @override
+  String get actionUpdate => 'Update';
+
+  @override
+  String get elementDetailNoElement => 'Element not found';
+
+  @override
+  String get elementDetailAddButton => 'Add to list';
+
+  @override
+  String get elementDetailRemovingButton => 'Removing...';
+
+  @override
+  String get elementDetailAddingButton => 'Adding...';
+
+  @override
+  String get elementDetailRemoveButton => 'Remove';
+
+  @override
+  String get elementDetailAdminEdit => 'Edit Element';
+
+  @override
+  String get labelSynopsis => 'Synopsis';
+
+  @override
+  String get labelAvailability => 'Availability';
+
+  @override
+  String get labelProgressDetails => 'Progress Details';
+
+  @override
+  String get labelChronology => 'Chronology';
+
+  @override
+  String get labelReviews => 'Reviews';
+
+  @override
+  String get labelModActions => 'Mod Actions';
+
+  @override
+  String get labelTotalChapters => 'Total Chapters';
+
+  @override
+  String get labelTotalPages => 'Total Pages';
+
+  @override
+  String get labelDuration => 'Duration';
+
+  @override
+  String get labelTotalEpisodes => 'Total Episodes';
+
+  @override
+  String get labelPrequel => 'Prequel';
+
+  @override
+  String get labelSequel => 'Sequel';
+
+  @override
+  String get labelNoReviews => 'No reviews yet.';
+
+  @override
+  String get labelReviewed => 'Reviewed';
+
+  @override
+  String get labelRatings => 'ratings';
+
+  @override
+  String get actionWriteReview => 'Write Review';
+
+  @override
+  String get dialogDeleteReviewTitle => 'Delete review?';
+
+  @override
+  String get dialogDeleteReviewContent => 'This action cannot be undone.';
+
+  @override
+  String get snackbarReviewDeleted => 'Review deleted';
+
+  @override
+  String get snackbarReviewUpdated => 'Review updated';
+
+  @override
+  String get tooltipFavorite => 'Favorite';
+
+  @override
+  String get tooltipSortOldest => 'Oldest first';
+
+  @override
+  String get tooltipSortNewest => 'Newest first';
+
+  @override
+  String formatSeasonEpisodes(String season, String episodes) {
+    return 'Season $season: $episodes Episodes';
+  }
+
+  @override
+  String formatDuration(int hours, int minutes) {
+    return '$hours hr $minutes min';
+  }
+
+  @override
+  String get createdElementsTitle => 'Creation History';
+
+  @override
+  String get searchByTitleHint => 'Search by title...';
+
+  @override
+  String get createdElementsEmpty => 'You haven\'t created any elements yet.';
+
+  @override
+  String get labelCreatedBy => 'Created by';
+
+  @override
+  String get adminFormErrorReviewFields =>
+      'Please review the fields marked in red.';
+
+  @override
+  String get adminFormUpdateSuccess => 'Element updated successfully.';
+
+  @override
+  String get adminFormCreateSuccess => 'Element created successfully.';
+
+  @override
+  String get validationEpisodesRequired => 'Number of episodes is required.';
+
+  @override
+  String get validationChaptersRequired => 'Number of chapters is required.';
+
+  @override
+  String get validationPagesRequired => 'Pages are required.';
+
+  @override
+  String get validationSeasonsRequired =>
+      'You must indicate episodes per season.';
+
+  @override
+  String get validationDurationRequired => 'Duration is required.';
+
+  @override
+  String get validationAvailabilityRequired => 'Availability is required.';
+
+  @override
+  String get labelGenre => 'Genre';
+
+  @override
+  String get labelProgressData => 'Progress Data';
+
+  @override
+  String get labelSequels => 'Sequels (Optional)';
+
+  @override
+  String get labelNoRelations => 'No relations selected';
+
+  @override
+  String get labelContentStatus => 'Content Status';
+
+  @override
+  String get actionAddRelation => 'Add Relation';
+
+  @override
+  String get searchHintShort => 'Type at least 2 characters...';
+
+  @override
+  String get searchNoResults => 'No results found.';
+
+  @override
+  String get moderationPanelTitle => 'Moderation Panel';
+
+  @override
+  String get searchProposalsHint => 'Search proposals...';
+
+  @override
+  String get tabPending => 'Pending';
+
+  @override
+  String get tabApproved => 'Approved';
+
+  @override
+  String get tabRejected => 'Rejected';
+
+  @override
+  String get actionHistory => 'History';
+
+  @override
+  String get actionCreateElement => 'Create Element';
+
+  @override
+  String get actionReject => 'Reject';
+
+  @override
+  String get actionReview => 'Review';
+
+  @override
+  String get actionComments => 'Comments';
+
+  @override
+  String get actionClose => 'Close';
+
+  @override
+  String get dialogRejectTitle => 'Reject Proposal';
+
+  @override
+  String get dialogRejectInstruction => 'Indicate the reason for rejection:';
+
+  @override
+  String get dialogRejectHint => 'Ex. Duplicate or incorrect information';
+
+  @override
+  String get dialogReviewCommentsTitle => 'Review Comments';
+
+  @override
+  String get dialogReviewCommentsEmpty => 'No comments registered.';
+
+  @override
+  String get snackbarProposalRejected => 'Proposal rejected';
+
+  @override
+  String get labelApprovedBy => 'Approved by:';
+
+  @override
+  String get labelRejectedBy => 'Rejected by:';
+
+  @override
+  String get labelProposedBy => 'Proposed by:';
+
+  @override
+  String get modEditTitle => 'Review Proposal';
+
+  @override
+  String get modEditImageTitle => 'Suggested Image';
+
+  @override
+  String get modEditReviewComment => 'Review comments (Optional)';
+
+  @override
+  String get snackbarModProposalApproved =>
+      'Proposal approved and element created successfully';
+
+  @override
+  String get actionSaveAndApprove => 'Save and Approve';
+
+  @override
+  String get validationRequired => 'Required';
+
+  @override
+  String get actionRemovePhoto => 'Remove current photo';
+
+  @override
+  String get snackbarProfilePhotoRemoved => 'Profile photo removed';
+
+  @override
+  String get errorRemovingPhoto => 'Error removing photo';
+
+  @override
+  String get labelProgressDataOptional => 'Progress Data (Optional)';
+
+  @override
+  String get labelAvailabilityOptional => 'Availability (Optional)';
+
+  @override
+  String get hintSelectAvailability => 'Select Availability';
+
+  @override
+  String get validationRequiredField => 'Please review required fields.';
+
+  @override
+  String get statusReleasing => 'Releasing';
+
+  @override
+  String get statusFinished => 'Finished';
+
+  @override
+  String get statusAnnounced => 'Announced';
+
+  @override
+  String get statusCancelled => 'Cancelled';
+
+  @override
+  String get statusPaused => 'Paused';
+
+  @override
+  String get statusAvailable => 'Available';
+
+  @override
+  String get hintDurationFormat => '120 min / 02:00';
+
+  @override
+  String get helperSeriesEpisodes =>
+      'Enter the number of episodes per season separated by commas.';
+
+  @override
+  String get tooltipFilters => 'Filters';
+
+  @override
+  String get searchHintDefault => 'Search...';
+
+  @override
+  String get modalFiltersTitle => 'Filters';
+
+  @override
+  String get actionReset => 'Reset';
+
+  @override
+  String get actionApplyFilters => 'Apply Filters';
+
+  @override
+  String get filterSortBy => 'Sort by';
+
+  @override
+  String get sortRecent => 'Recent';
+
+  @override
+  String get sortAlpha => 'Alphabetically';
+
+  @override
+  String get filterTypes => 'Types';
+
+  @override
+  String get filterGenres => 'Genres';
+
+  @override
+  String get errorLoadingFilters => 'Error loading filters';
+
+  @override
+  String get hintFilterGenres => 'Filter genres';
+
+  @override
+  String get actionOther => 'Other';
+
+  @override
+  String get dialogAddGenreTitle => 'Add Genre';
+
+  @override
+  String get hintGenreName => 'Genre Name';
+
+  @override
+  String get actionAdd => 'Add';
 }

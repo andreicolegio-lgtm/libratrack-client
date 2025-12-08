@@ -12,7 +12,7 @@ class Propuesta {
   final String estadoPropuesta; // PENDIENTE, APROBADO, RECHAZADO
   final String? comentariosRevision;
   final DateTime fechaPropuesta;
-  final String proponenteUsername;
+  final String? proponenteUsername;
   final String? revisorUsername;
   final String? proponenteEmail;
   final String? revisorEmail;
@@ -33,7 +33,7 @@ class Propuesta {
     required this.generosSugeridos,
     required this.estadoPropuesta,
     required this.fechaPropuesta,
-    required this.proponenteUsername,
+    this.proponenteUsername,
     this.descripcionSugerida,
     this.urlImagen,
     this.comentariosRevision,
@@ -59,7 +59,7 @@ class Propuesta {
       estadoPropuesta: json['estadoPropuesta'] as String,
       comentariosRevision: json['comentariosRevision'] as String?,
       fechaPropuesta: DateTime.parse(json['fechaPropuesta'] as String),
-      proponenteUsername: json['proponenteUsername'] as String,
+      proponenteUsername: json['proponenteUsername'] as String?,
       revisorUsername: json['revisorUsername'] as String?,
       proponenteEmail: json['proponenteEmail'] as String?,
       revisorEmail: json['revisorEmail'] as String?,

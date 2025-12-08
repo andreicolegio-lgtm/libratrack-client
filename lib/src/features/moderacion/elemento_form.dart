@@ -205,10 +205,11 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
   // --- Guardado ---
 
   Future<void> _handleGuardar() async {
+    final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) {
       SnackBarHelper.showTopSnackBar(
         context,
-        'Por favor, revisa los campos marcados en rojo.',
+        l10n.adminFormErrorReviewFields,
         isError: true,
       );
       return;
@@ -268,8 +269,8 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
       }
 
       final String msg = widget.isEditMode
-          ? 'Elemento actualizado con éxito.'
-          : 'Elemento creado con éxito.';
+          ? l10n.adminFormUpdateSuccess
+          : l10n.adminFormCreateSuccess;
 
       SnackBarHelper.showTopSnackBar(context, msg, isError: false);
       navigator.pop(true); // Retornar true para recargar lista
@@ -293,7 +294,7 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
     SnackBarHelper.showTopSnackBar(context, msg, isError: true);
   }
 
-  String? _validateProgressData() {
+  String? _validateProgressData(AppLocalizations l10n) {
     // Si no hay tipo, no validamos progreso aún
     if (_tipoSeleccionado == null) {
       return null;
@@ -302,24 +303,24 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
     final type = _tipoSeleccionado;
     // Lógica personalizada según el tipo seleccionado
     if (type == 'Anime' && _totalUnidadesController.text.trim().isEmpty) {
-      return 'El número de episodios es obligatorio.';
+      return l10n.validationEpisodesRequired;
     }
     if ((type == 'Manga' || type == 'Manhwa') &&
         _totalCapitulosLibroController.text.trim().isEmpty) {
-      return 'El número de capítulos es obligatorio.';
+      return l10n.validationChaptersRequired;
     }
     if (type == 'Book') {
       if (_totalPaginasLibroController.text.trim().isEmpty) {
-        return 'Las páginas son obligatorias.';
+        return l10n.validationPagesRequired;
       }
       // Capítulos en libros pueden ser opcionales, depende de la lógica
     }
     if (type == 'Series' &&
         _episodiosPorTemporadaController.text.trim().isEmpty) {
-      return 'Debes indicar los episodios por temporada.';
+      return l10n.validationSeasonsRequired;
     }
     if (type == 'Movie' && _durationController.text.trim().isEmpty) {
-      return 'La duración es obligatoria.';
+      return l10n.validationDurationRequired;
     }
 
     return null; // Todo correcto
@@ -412,12 +413,12 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
                 FormField<String>(
                   validator: (_) {
                     return _generosController.text.isEmpty
-                        ? 'El género no puede estar vacío'
+                        ? l10n.validationGenresRequired
                         : null;
                   },
                   builder: (FormFieldState<String> state) {
                     return _buildSectionField(
-                      label: 'Genre',
+                      label: l10n.labelGenre,
                       errorText: state.errorText,
                       child: _buildGenerosField(l10n),
                     );
@@ -428,10 +429,10 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
                 // FIELD: PROGRESS DATA
                 if (_tipoSeleccionado != 'Video Game') ...[
                   FormField<String>(
-                    validator: (_) => _validateProgressData(),
+                    validator: (_) => _validateProgressData(l10n),
                     builder: (FormFieldState<String> state) {
                       return _buildSectionField(
-                        label: 'Progress Data',
+                        label: l10n.labelProgressData,
                         errorText: state.errorText,
                         child: ContentTypeProgressForms(
                           selectedTypeKey: _tipoSeleccionado,
@@ -451,7 +452,7 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
 
                 // FIELD: SEQUELS
                 _buildSectionField(
-                  label: 'Sequels (Optional)',
+                  label: l10n.labelSequels,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -459,7 +460,7 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
                         alignment: Alignment.centerLeft,
                         child: TextButton.icon(
                           icon: const Icon(Icons.search),
-                          label: const Text('Añadir Relación'),
+                          label: Text(l10n.actionAddRelation),
                           onPressed: _openSearchDialog,
                         ),
                       ),
@@ -476,7 +477,7 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
                 const SizedBox(height: 24),
 
                 // FIELD: ESTADO DEL CONTENIDO
-                _buildContentStateDropdown(),
+                _buildContentStateDropdown(l10n),
 
                 const SizedBox(height: 32),
 
@@ -656,7 +657,7 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
       return Padding(
         padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
         child: Text(
-          'Sin relaciones seleccionadas',
+          l10n.labelNoRelations,
           style: TextStyle(
             color: Theme.of(context).textTheme.bodyMedium?.color ??
                 Theme.of(context).colorScheme.onSurface,
@@ -688,6 +689,7 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
   }
 
   void _openSearchDialog() async {
+    AppLocalizations.of(context);
     final Elemento? selected = await showSearch<Elemento?>(
       context: context,
       delegate: _ElementSearchDelegate(_elementoService),
@@ -734,22 +736,25 @@ class _AdminElementoFormScreenState extends State<ElementoFormScreen> {
       }).toList(),
       onChanged: (value) =>
           setState(() => _estadoPublicacionSeleccionado = value),
-      validator: (value) => value == null ? 'Availability is required' : null,
+      validator: (value) =>
+          value == null ? l10n.validationAvailabilityRequired : null,
       // Usamos getCommonDecoration para mantener el estilo idéntico al campo "Type"
-      decoration: getCommonDecoration('Availability'),
+      decoration: getCommonDecoration(l10n.labelAvailability),
     );
   }
 
-  Widget _buildContentStateDropdown() {
+  Widget _buildContentStateDropdown(AppLocalizations l10n) {
     return DropdownButtonFormField<String>(
       initialValue: _estadoContenido,
-      decoration: const InputDecoration(
-        labelText: 'Estado del Contenido',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: l10n.labelContentStatus,
+        border: const OutlineInputBorder(),
       ),
-      items: const [
-        DropdownMenuItem(value: 'COMUNITARIO', child: Text('Community')),
-        DropdownMenuItem(value: 'OFICIAL', child: Text('Official')),
+      items: [
+        DropdownMenuItem(
+            value: 'COMUNITARIO', child: Text(l10n.contentStatusCommunity)),
+        DropdownMenuItem(
+            value: 'OFICIAL', child: Text(l10n.contentStatusOfficial)),
       ],
       onChanged: (value) {
         setState(() {
@@ -788,8 +793,9 @@ class _ElementSearchDelegate extends SearchDelegate<Elemento?> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (query.length < 2) {
-      return const Center(child: Text('Escribe al menos 2 caracteres...'));
+      return Center(child: Text(l10n.searchHintShort));
     }
     return _buildSearchResults();
   }
@@ -798,6 +804,7 @@ class _ElementSearchDelegate extends SearchDelegate<Elemento?> {
     return FutureBuilder<PaginatedResponse<Elemento>>(
       future: _service.searchElementos(query: query, size: 10),
       builder: (context, snapshot) {
+        final l10n = AppLocalizations.of(context);
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -806,7 +813,7 @@ class _ElementSearchDelegate extends SearchDelegate<Elemento?> {
         }
         final items = snapshot.data?.content ?? [];
         if (items.isEmpty) {
-          return const Center(child: Text('No se encontraron resultados.'));
+          return Center(child: Text(l10n.searchNoResults));
         }
 
         return ListView.builder(
@@ -818,7 +825,7 @@ class _ElementSearchDelegate extends SearchDelegate<Elemento?> {
                   ? Image.network(item.urlImagen!, width: 40, fit: BoxFit.cover)
                   : const Icon(Icons.image_not_supported),
               title: Text(item.titulo),
-              subtitle: Text(item.tipo),
+              subtitle: Text(item.tipo ?? ''),
               onTap: () => close(context, item),
             );
           },

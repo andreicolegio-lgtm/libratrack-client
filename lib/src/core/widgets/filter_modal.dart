@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/tipo_service.dart';
 import '../../model/tipo.dart';
+import '../l10n/app_localizations.dart';
 import 'genre_selector_widget.dart';
 
 class FilterModal extends StatefulWidget {
@@ -29,6 +30,7 @@ class FilterModal extends StatefulWidget {
 }
 
 class _FilterModalState extends State<FilterModal> {
+  bool _isInitialized = false; // Para cargar datos solo una vez
   late List<String> _types;
   late List<String> _genres;
   late Future<List<Tipo>> _tiposFuture;
@@ -41,10 +43,19 @@ class _FilterModalState extends State<FilterModal> {
     super.initState();
     _types = List.from(widget.selectedTypes);
     _genres = List.from(widget.selectedGenres);
-    _tiposFuture =
-        context.read<TipoService>().fetchTipos('Error cargando filtros');
     _localSortMode = widget.currentSortMode;
     _localAscending = widget.isAscending;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      final l10n = AppLocalizations.of(context);
+      _tiposFuture =
+          context.read<TipoService>().fetchTipos(l10n.errorLoadingFilters);
+      _isInitialized = true;
+    }
   }
 
   void _resetFilters() {
@@ -60,6 +71,7 @@ class _FilterModalState extends State<FilterModal> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.85,
@@ -76,13 +88,14 @@ class _FilterModalState extends State<FilterModal> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Filtros',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.modalFiltersTitle,
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   TextButton(
                     onPressed: _resetFilters,
-                    child: const Text('Restablecer'),
+                    child: Text(l10n.actionReset),
                   ),
                 ],
               ),
@@ -113,9 +126,9 @@ class _FilterModalState extends State<FilterModal> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // 1. Sección de Ordenar (Dentro del Scroll)
-                        const Text(
-                          'Ordenar por',
-                          style: TextStyle(
+                        Text(
+                          l10n.filterSortBy,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         const SizedBox(height: 12),
@@ -123,14 +136,14 @@ class _FilterModalState extends State<FilterModal> {
                           children: [
                             // Chip Recientes (DATE)
                             _buildSortChip(
-                              label: 'Recientes',
+                              label: l10n.sortRecent, // "Recientes"
                               mode: 'DATE',
                               defaultIcon: Icons.history,
                             ),
                             const SizedBox(width: 8),
                             // Chip Alfabéticamente (ALPHA)
                             _buildSortChip(
-                              label: 'Alfabéticamente',
+                              label: l10n.sortAlpha, // "Alfabéticamente"
                               mode: 'ALPHA',
                               defaultIcon: Icons.sort_by_alpha,
                             ),
@@ -139,8 +152,8 @@ class _FilterModalState extends State<FilterModal> {
                         const SizedBox(height: 24),
 
                         // 2. Sección Tipos
-                        const Text('Tipos',
-                            style: TextStyle(
+                        Text(l10n.filterTypes,
+                            style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 16)),
                         const SizedBox(height: 12),
                         Wrap(
@@ -182,8 +195,8 @@ class _FilterModalState extends State<FilterModal> {
                         const SizedBox(height: 24),
 
                         // 3. Sección Géneros
-                        const Text('Géneros',
-                            style: TextStyle(
+                        Text(l10n.filterGenres,
+                            style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 16)),
                         const SizedBox(height: 12),
                         GenreSelectorWidget(
@@ -210,7 +223,7 @@ class _FilterModalState extends State<FilterModal> {
                   widget.onApply(_types, _genres);
                   Navigator.pop(context);
                 },
-                child: const Text('Aplicar Filtros'),
+                child: Text(l10n.actionApplyFilters),
               ),
             ),
           ],

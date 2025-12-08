@@ -10,10 +10,10 @@ class Elemento {
   final String descripcion;
   final String? urlImagen;
   final String? fechaLanzamiento; // Formato YYYY-MM-DD
-  final String tipo; // Nombre del tipo (ej. Anime, Libro)
+  final String? tipo; // Nombre del tipo (ej. Anime, Libro)
   final String estadoContenido; // OFICIAL o COMUNITARIO
   final String? estadoPublicacion; // EN_EMISION, FINALIZADO...
-  final String creadorUsername;
+  final String? creadorUsername;
   final List<String> generos;
 
   // Detalles específicos
@@ -65,10 +65,10 @@ class Elemento {
       descripcion: json['descripcion'] as String? ?? '',
       urlImagen: json['urlImagen'] as String?,
       fechaLanzamiento: json['fechaLanzamiento'] as String?,
-      tipo: json['tipoNombre'] as String? ?? 'Desconocido', // Fallback seguro
+      tipo: json['tipoNombre'] as String?,
       estadoContenido: json['estadoContenido'] as String? ?? 'COMUNITARIO',
       estadoPublicacion: json['estadoPublicacion'] as String?,
-      creadorUsername: json['creadorUsername'] as String? ?? 'Anónimo',
+      creadorUsername: json['creadorUsername'] as String?,
       generos: (json['generos'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??

@@ -150,7 +150,7 @@ class _ResenaCardState extends State<ResenaCard> {
                     TextButton.icon(
                       onPressed: widget.onEdit,
                       icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Editar'),
+                      label: Text(l10n.actionEdit),
                       style: TextButton.styleFrom(
                         visualDensity: VisualDensity.compact,
                         foregroundColor: theme.colorScheme.primary,
@@ -160,7 +160,7 @@ class _ResenaCardState extends State<ResenaCard> {
                     TextButton.icon(
                       onPressed: widget.onDelete,
                       icon: const Icon(Icons.delete, size: 18),
-                      label: const Text('Borrar'),
+                      label: Text(l10n.actionDelete),
                       style: TextButton.styleFrom(
                         visualDensity: VisualDensity.compact,
                         foregroundColor: theme.colorScheme.error,

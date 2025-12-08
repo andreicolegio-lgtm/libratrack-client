@@ -294,17 +294,16 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('¿Borrar reseña?'),
-        content: const Text('Esta acción no se puede deshacer.'),
+        title: Text(l10n.dialogDeleteReviewTitle),
+        content: Text(l10n.dialogDeleteReviewContent),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
+              child: Text(l10n.actionCancel)),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Borrar'),
-          ),
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: Text(l10n.actionDelete)),
         ],
       ),
     );
@@ -325,7 +324,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           _haResenado = false;
         }
       });
-      SnackBarHelper.showTopSnackBar(context, 'Reseña eliminada',
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarReviewDeleted,
           isError: false);
     } catch (e) {
       _handleError(e, l10n);
@@ -333,6 +332,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
 
   Future<void> _handleEditReview(Resena resena) async {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final Resena? resenaActualizada = await showModalBottomSheet<Resena>(
       context: context,
       isScrollControlled: true,
@@ -351,7 +351,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
         }
         _sortResenasInternal(); // Reordenar por si cambió fecha (aunque al editar no suele cambiar)
       });
-      SnackBarHelper.showTopSnackBar(context, 'Reseña actualizada',
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarReviewUpdated,
           isError: false);
     }
   }
@@ -518,7 +518,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     final theme = Theme.of(context);
 
     // Formateo de Disponibilidad (ej. "RELEASING" -> "Releasing")
-    String availability = _elemento?.estadoPublicacion ?? 'Unknown';
+    String availability = _elemento?.estadoPublicacion ?? l10n.labelUnknown;
     if (availability.isNotEmpty && availability.length > 1) {
       availability = availability[0] + availability.substring(1).toLowerCase();
     }
@@ -541,7 +541,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                 // Sinopsis
                 if (_elemento?.descripcion != null &&
                     _elemento!.descripcion.isNotEmpty) ...[
-                  Text('Sinopsis',
+                  Text(l10n.labelSynopsis,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
@@ -551,7 +551,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                 ],
 
                 // Disponibilidad
-                Text('Availability',
+                Text(l10n.labelAvailability,
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
@@ -674,7 +674,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           icon: Icon(_isFavorito ? Icons.star : Icons.star_border),
           color: _isFavorito ? Colors.amber : null,
           onPressed: _handleToggleFavorite,
-          tooltip: 'Favorito',
+          tooltip: l10n.tooltipFavorite,
         ),
       ],
     );
@@ -698,7 +698,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
               const Icon(Icons.security, size: 20), // Icono más grande
               const SizedBox(width: 8),
               // Texto más grande
-              Text('Mod Actions',
+              Text(l10n.labelModActions,
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
@@ -732,6 +732,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
 
   // --- Progreso y Detalles ---
   Widget _buildTechnicalDetails(ThemeData theme) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     if (_elemento?.tipo == 'Video Game') {
       return const SizedBox.shrink();
     }
@@ -739,7 +740,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Progress Details',
+        Text(l10n.labelProgressDetails,
             style: theme.textTheme.titleMedium
                 ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
@@ -753,7 +754,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
               children: List.generate(parts.length, (i) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: Text('Season ${i + 1}: ${parts[i].trim()} Episodes',
+                  child: Text(
+                      l10n.formatSeasonEpisodes(
+                          (i + 1).toString(), parts[i].trim()),
                       style: theme.textTheme.bodyMedium),
                 );
               }),
@@ -761,9 +764,9 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
           }),
         ],
         if (_elemento?.tipo == 'Book') ...[
-          _detailRow(Icons.menu_book, 'Total Chapters',
+          _detailRow(Icons.menu_book, l10n.labelTotalChapters,
               '${_elemento?.totalCapitulosLibro ?? "?"}'),
-          _detailRow(Icons.description, 'Total Pages',
+          _detailRow(Icons.description, l10n.labelTotalPages,
               '${_elemento?.totalPaginasLibro ?? "?"}'),
         ],
         if (_elemento?.tipo == 'Movie' && _elemento?.duracion != null) ...[
@@ -774,15 +777,16 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                 0;
             final h = mins ~/ 60;
             final m = mins % 60;
-            return _detailRow(Icons.timer, 'Duration', '$h hr $m min');
+            return _detailRow(
+                Icons.timer, l10n.labelDuration, l10n.formatDuration(h, m));
           }),
         ],
         if (_elemento?.tipo == 'Anime') ...[
-          _detailRow(
-              Icons.tv, 'Total Episodes', '${_elemento?.totalUnidades ?? "?"}'),
+          _detailRow(Icons.tv, l10n.labelTotalEpisodes,
+              '${_elemento?.totalUnidades ?? "?"}'),
         ],
         if (['Manga', 'Manhwa'].contains(_elemento?.tipo)) ...[
-          _detailRow(Icons.library_books, 'Total Chapters',
+          _detailRow(Icons.library_books, l10n.labelTotalChapters,
               '${_elemento?.totalCapitulosLibro ?? "?"}'),
         ],
       ],
@@ -805,6 +809,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
 
   // --- Cronología ---
   Widget _buildChronology(ThemeData theme) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final precuela = _elemento?.precuelas.isNotEmpty == true
         ? _elemento!.precuelas.first
         : null;
@@ -817,7 +822,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Chronology',
+        Text(l10n.labelChronology,
             style: theme.textTheme.titleMedium
                 ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
@@ -827,7 +832,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
             // COLUMNA 1: PRECUELA (Mitad Izquierda)
             Expanded(
               child: precuela != null
-                  ? _buildChronologyItem(theme, 'Prequel', precuela)
+                  ? _buildChronologyItem(theme, l10n.labelPrequel, precuela)
                   : const SizedBox.shrink(), // Hueco vacío si no hay
             ),
             // Espacio central seguro para que los textos no se toquen entre columnas
@@ -836,7 +841,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
             // COLUMNA 2: SECUELA (Mitad Derecha)
             Expanded(
               child: secuela != null
-                  ? _buildChronologyItem(theme, 'Sequel', secuela)
+                  ? _buildChronologyItem(theme, l10n.labelSequel, secuela)
                   : const SizedBox.shrink(),
             ),
           ],
@@ -911,7 +916,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
       children: [
         Row(
           children: [
-            Text('Reviews (${_resenas.length})',
+            Text('${l10n.labelReviews} (${_resenas.length})',
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium
@@ -924,26 +929,27 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                       : Icons.arrow_downward,
                   size: 20),
               tooltip: _sortReviewsAscending
-                  ? 'PLACEHOLDER_OLDEST_FIRST'
-                  : 'PLACEHOLDER_NEWEST_FIRST',
+                  ? l10n.tooltipSortOldest
+                  : l10n.tooltipSortNewest,
               onPressed: _toggleSortOrder,
             ),
             const Spacer(),
             if (!_haResenado)
               TextButton.icon(
                   icon: const Icon(Icons.edit),
-                  label: const Text('Write Review'),
+                  label: Text(l10n.actionWriteReview),
                   onPressed: _openReviewModal)
             else
-              const Chip(
-                  label: Text('Reviewed'), avatar: Icon(Icons.check, size: 14)),
+              Chip(
+                  label: Text(l10n.labelReviewed),
+                  avatar: const Icon(Icons.check, size: 14)),
           ],
         ),
         const SizedBox(height: 16),
         _buildRatingStatistics(Theme.of(context)),
         const SizedBox(height: 8),
         if (_resenas.isEmpty)
-          const Text('No reviews yet.', style: TextStyle(color: Colors.grey))
+          Text(l10n.labelNoReviews, style: const TextStyle(color: Colors.grey))
         else
           ListView.separated(
             shrinkWrap: true,
@@ -964,6 +970,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
   }
 
   Widget _buildRatingStatistics(ThemeData theme) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     final Map<int, int> distribution = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
     double average = 0.0;
 
@@ -989,7 +996,7 @@ class _ElementoDetailScreenState extends State<ElementoDetailScreen> {
                     (i) => _buildFractionalStar(average, i,
                         Colors.amber))), // Estrellas fraccionadas (Pto 10)
             const SizedBox(height: 4),
-            Text('${_resenas.length} ratings',
+            Text('${_resenas.length} ${l10n.labelRatings}',
                 style: theme.textTheme.bodySmall),
           ],
         ),

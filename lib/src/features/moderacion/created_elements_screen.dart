@@ -155,7 +155,7 @@ class _CreatedElementsScreenState extends State<CreatedElementsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historial de Creaciones'),
+        title: Text(l10n.createdElementsTitle),
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(52),
@@ -163,7 +163,7 @@ class _CreatedElementsScreenState extends State<CreatedElementsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: CustomSearchBar(
               controller: _searchController,
-              hintText: 'Buscar por título...',
+              hintText: l10n.searchByTitleHint,
               onFilterPressed: _openFilterModal,
               onChanged: _onSearchChanged,
             ),
@@ -186,7 +186,7 @@ class _CreatedElementsScreenState extends State<CreatedElementsScreen> {
       return Center(child: Text('Error: $_error'));
     }
     if (_elementos.isEmpty) {
-      return const Center(child: Text('No has creado elementos aún.'));
+      return Center(child: Text(l10n.createdElementsEmpty));
     }
 
     return ListView.separated(
@@ -232,6 +232,7 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isOficial = elemento.estadoContenido == 'OFICIAL';
     // Color base según estado (Azul oficial, Naranja comunitario)
@@ -302,7 +303,9 @@ class _HistoryCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              isOficial ? 'OFICIAL' : 'COMUNITARIO',
+                              isOficial
+                                  ? l10n.contentStatusOfficial
+                                  : l10n.contentStatusCommunity,
                               style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 10,
@@ -343,12 +346,12 @@ class _HistoryCard extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    'Created by:',
+                                    '${l10n.labelCreatedBy}:',
                                     style: theme.textTheme.labelSmall?.copyWith(
                                         color: Colors.grey, fontSize: 10),
                                   ),
                                   Text(
-                                    elemento.autorNombre ?? 'Unknown',
+                                    elemento.autorNombre ?? l10n.labelUnknown,
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: theme.colorScheme

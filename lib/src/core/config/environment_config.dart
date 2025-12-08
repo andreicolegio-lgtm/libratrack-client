@@ -19,7 +19,8 @@ class EnvironmentConfig {
     if (!kIsWeb && Platform.isAndroid) {
       // Si estás probando en un DISPOSITIVO FÍSICO Android, cambia esto por la IP local de tu PC
       // Ejemplo: return 'http://192.168.1.45:8080/api';
-      return 'http://10.0.2.2:8080/api';
+      // return 'http://10.0.2.2:8080/api';
+      return '192.168.1.190:8080';
     }
 
     // Para simulador iOS, Web o Desktop, localhost funciona correctamente

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/content_translator.dart';
 import '../../model/tipo.dart';
+import '../../core/l10n/app_localizations.dart';
 
 class GenreSelectorWidget extends StatefulWidget {
   /// Tipos seleccionados actualmente (para filtrar géneros sugeridos).
@@ -102,6 +103,7 @@ class _GenreSelectorWidgetState extends State<GenreSelectorWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // Filtrar según el texto de búsqueda
     final filteredAvailableList = _computeAvailableGenres().where((genre) {
       return genre.toLowerCase().contains(_filterText);
@@ -120,11 +122,11 @@ class _GenreSelectorWidgetState extends State<GenreSelectorWidget> {
         // Campo de búsqueda
         TextField(
           controller: _searchController,
-          decoration: const InputDecoration(
-            prefixIcon: Icon(Icons.search),
-            hintText: 'Filtrar géneros',
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search),
+            hintText: l10n.hintFilterGenres,
             isDense: true,
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 8),
@@ -160,7 +162,7 @@ class _GenreSelectorWidgetState extends State<GenreSelectorWidget> {
             // Botón "+ Otro" (Siempre al final)
             ActionChip(
               avatar: const Icon(Icons.add, size: 16),
-              label: const Text('Otro'),
+              label: Text(l10n.actionOther),
               onPressed: () async {
                 final newGenre = await _showAddGenreDialog(context);
                 if (newGenre != null && newGenre.trim().isNotEmpty) {
@@ -175,26 +177,29 @@ class _GenreSelectorWidgetState extends State<GenreSelectorWidget> {
   }
 
   Future<String?> _showAddGenreDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     String? newGenre;
     return showDialog<String>(
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Añadir Género'),
+          title: Text(l10n.dialogAddGenreTitle),
           content: TextField(
             autofocus: true,
-            decoration: const InputDecoration(hintText: 'Nombre del género'),
+            decoration: InputDecoration(
+              hintText: l10n.hintGenreName,
+            ),
             textCapitalization: TextCapitalization.sentences,
             onChanged: (val) => newGenre = val,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar'),
+              child: Text(l10n.actionCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, newGenre),
-              child: const Text('Añadir'),
+              child: Text(l10n.actionAdd),
             ),
           ],
         );

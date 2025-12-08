@@ -24,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         children: <Widget>[
           // Sección: Apariencia
-          _buildSectionHeader(context, 'Apariencia'), // Podría ir a l10n
+          _buildSectionHeader(context, l10n.settingsSectionAppearance),
           SwitchListTile.adaptive(
             title: Text(l10n.settingsDarkMode,
                 style: Theme.of(context).textTheme.titleMedium),
@@ -51,7 +51,7 @@ class SettingsScreen extends StatelessWidget {
           const Divider(),
 
           // Sección: Idioma
-          _buildSectionHeader(context, 'Idioma'), // Podría ir a l10n
+          _buildSectionHeader(context, l10n.settingsSectionLanguage),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.language),
@@ -95,7 +95,7 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.info_outline),
-            title: const Text('Versión'),
+            title: Text(l10n.settingsVersion),
             trailing:
                 Text('1.0.0', style: Theme.of(context).textTheme.bodySmall),
           ),

@@ -271,7 +271,7 @@ class _SearchScreenState extends State<SearchScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _loadElementos(isFirstPage: true),
-              child: const Text('Reintentar'),
+              child: Text(l10n.commonRetry),
             )
           ],
         ),
@@ -336,10 +336,11 @@ class _SearchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isOficial = elemento.estadoContenido == 'OFICIAL';
     final statusColor = isOficial ? Colors.blueAccent : Colors.orange;
 
-    final String availability = elemento.estadoPublicacion ?? 'Unknown';
+    final String availability = elemento.estadoPublicacion ?? l10n.labelUnknown;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -404,7 +405,9 @@ class _SearchCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              isOficial ? 'OFICIAL' : 'COMUNITARIO',
+                              isOficial
+                                  ? l10n.contentStatusOfficial
+                                  : l10n.contentStatusCommunity,
                               style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 10,

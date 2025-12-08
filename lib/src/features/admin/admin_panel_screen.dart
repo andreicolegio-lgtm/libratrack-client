@@ -198,7 +198,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Panel'),
+        title: Text(l10n.adminPanelTitle),
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(100.0),
@@ -208,7 +208,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: CustomSearchBar(
                   controller: _searchController,
-                  hintText: 'Buscar usuarios...',
+                  hintText: l10n.searchUsersHint,
                   onChanged: () {
                     setState(() {});
                   },
@@ -218,10 +218,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                 controller: _tabController,
                 isScrollable: true,
                 tabAlignment: TabAlignment.center,
-                tabs: const [
-                  Tab(text: 'Todos'),
-                  Tab(text: 'Moderadores'),
-                  Tab(text: 'Administradores'),
+                tabs: [
+                  Tab(text: l10n.adminTabAll),
+                  Tab(text: l10n.adminTabMods),
+                  Tab(text: l10n.adminTabAdmins),
                 ],
               ),
             ],
@@ -336,9 +336,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                       color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Text(
-                      'TÚ',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.adminLabelYou, // <-- Usar traducción
+                      style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.bold),

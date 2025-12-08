@@ -296,9 +296,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (hasImage) // Solo mostramos borrar si hay imagen
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text(
-                  'Eliminar foto actual', // Añade esta key a tu l10n si prefieres
-                  style: TextStyle(color: Colors.red),
+                title: Text(
+                  l10n.actionRemovePhoto, // Añade esta key a tu l10n si prefieres
+                  style: const TextStyle(color: Colors.red),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -313,6 +313,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Lógica para borrar la foto (enviar null al backend)
   Future<void> _handleRemoveFoto() async {
+    final l10n = AppLocalizations.of(context);
     if (_isAnyLoading) {
       return;
     }
@@ -336,14 +337,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isUploadingFoto = false;
       });
 
-      SnackBarHelper.showTopSnackBar(context, 'Foto de perfil eliminada',
+      SnackBarHelper.showTopSnackBar(context, l10n.snackbarProfilePhotoRemoved,
           isError: false);
     } catch (e) {
       // Manejo de error estándar
       if (mounted) {
         setState(() => _isUploadingFoto = false);
       }
-      SnackBarHelper.showTopSnackBar(context, 'Error al eliminar foto',
+      SnackBarHelper.showTopSnackBar(context, l10n.errorRemovingPhoto,
           isError: true);
     }
   }

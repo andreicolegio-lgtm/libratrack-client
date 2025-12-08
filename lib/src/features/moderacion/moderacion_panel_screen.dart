@@ -139,11 +139,11 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
 
   @override
   Widget build(BuildContext context) {
-    AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Moderation Panel'),
+        title: Text(l10n.moderationPanelTitle),
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(100.0),
@@ -153,7 +153,7 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: CustomSearchBar(
                   controller: _searchController,
-                  hintText: 'Buscar propuestas...',
+                  hintText: l10n.searchProposalsHint,
                   onFilterPressed: () {
                     showModalBottomSheet(
                       context: context,
@@ -186,10 +186,10 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
                 isScrollable: true,
                 tabAlignment: TabAlignment.center,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                tabs: const [
-                  Tab(text: 'Pendientes'),
-                  Tab(text: 'Aprobados'),
-                  Tab(text: 'Rechazados'),
+                tabs: [
+                  Tab(text: l10n.tabPending),
+                  Tab(text: l10n.tabApproved),
+                  Tab(text: l10n.tabRejected),
                 ],
               ),
             ],
@@ -238,7 +238,7 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
                   );
                 },
                 icon: const Icon(Icons.history),
-                label: const Text('Historial'),
+                label: Text(l10n.actionHistory),
               ),
             ),
             const SizedBox(width: 16), // Espacio central
@@ -255,7 +255,7 @@ class _ModeracionPanelScreenState extends State<ModeracionPanelScreen>
                   );
                 },
                 icon: const Icon(Icons.add),
-                label: const Text('Crear Elemento'),
+                label: Text(l10n.actionCreateElement),
               ),
             ),
           ],
@@ -328,24 +328,25 @@ class _PropuestasTabState extends State<_PropuestasTab> {
   }
 
   Future<void> _handleRechazar(int id) async {
+    final l10n = AppLocalizations.of(context);
     final TextEditingController reasonController = TextEditingController();
 
     // 1. Pedir motivo (Obligatorio)
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Rechazar Propuesta'),
+        title: Text(l10n.dialogRejectTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Indica el motivo del rechazo:'),
+            Text(l10n.dialogRejectInstruction),
             const SizedBox(height: 12),
             TextField(
               controller: reasonController,
-              decoration: const InputDecoration(
-                hintText: 'Ej. Información duplicada o incorrecta',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: l10n.dialogRejectHint,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
@@ -354,7 +355,7 @@ class _PropuestasTabState extends State<_PropuestasTab> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
+              child: Text(l10n.actionCancel)),
           FilledButton(
             onPressed: () {
               if (reasonController.text.trim().isEmpty) {
@@ -363,7 +364,7 @@ class _PropuestasTabState extends State<_PropuestasTab> {
               Navigator.pop(ctx, true);
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Rechazar'),
+            child: Text(l10n.actionReject),
           ),
         ],
       ),
@@ -385,13 +386,12 @@ class _PropuestasTabState extends State<_PropuestasTab> {
           _propuestasList?.removeWhere((p) => p.id == id);
           _processingIds.remove(id);
         });
-        SnackBarHelper.showTopSnackBar(context, 'Propuesta rechazada',
+        SnackBarHelper.showTopSnackBar(context, l10n.snackbarProposalRejected,
             isError: false);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _processingIds.remove(id));
-        // Manejo de error visual si lo deseas
       }
     }
   }
@@ -414,22 +414,23 @@ class _PropuestasTabState extends State<_PropuestasTab> {
   }
 
   void _showComentarios(Propuesta p) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Comentarios de Revisión'),
+        title: Text(l10n.dialogReviewCommentsTitle),
         content: SingleChildScrollView(
           child: Text(
             (p.comentariosRevision != null && p.comentariosRevision!.isNotEmpty)
                 ? p.comentariosRevision!
-                : 'Sin comentarios registrados.',
+                : l10n.dialogReviewCommentsEmpty,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cerrar'),
+            child: Text(l10n.actionClose),
           ),
         ],
       ),
@@ -467,7 +468,7 @@ class _PropuestasTabState extends State<_PropuestasTab> {
           final lista = _propuestasList ?? [];
 
           if (lista.isEmpty) {
-            return const Center(child: Text('No hay resultados'));
+            return Center(child: Text(l10n.searchNoResults));
           }
 
           return ListView.separated(
@@ -519,6 +520,7 @@ class _PropuestaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final authService = context.read<AuthService>();
     final bool isAdmin = authService.currentUser?.esAdministrador ?? false;
@@ -596,8 +598,8 @@ class _PropuestaCard extends StatelessWidget {
                                 children: [
                                   Text(
                                     propuesta.estadoPropuesta == 'APROBADO'
-                                        ? 'Approved by:'
-                                        : 'Rejected by:',
+                                        ? l10n.labelApprovedBy
+                                        : l10n.labelRejectedBy,
                                     style: theme.textTheme.labelSmall?.copyWith(
                                         color: Colors.grey, fontSize: 10),
                                   ),
@@ -626,12 +628,12 @@ class _PropuestaCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              'Proposed by:',
+                              l10n.labelProposedBy,
                               style: theme.textTheme.labelSmall
                                   ?.copyWith(color: Colors.grey, fontSize: 10),
                             ),
                             Text(
-                              propuesta.proponenteUsername,
+                              propuesta.proponenteUsername ?? '',
                               style: theme.textTheme.bodySmall
                                   ?.copyWith(fontWeight: FontWeight.bold),
                               textAlign: TextAlign.right,
@@ -665,7 +667,7 @@ class _PropuestaCard extends StatelessWidget {
                     if (onVerComentarios != null)
                       TextButton.icon(
                         icon: const Icon(Icons.comment, size: 16),
-                        label: const Text('Comentarios'),
+                        label: Text(l10n.actionComments),
                         onPressed: onVerComentarios,
                       ),
                     const Spacer(),
@@ -674,7 +676,7 @@ class _PropuestaCard extends StatelessWidget {
                         onPressed: onRechazar,
                         style: TextButton.styleFrom(
                             foregroundColor: theme.colorScheme.error),
-                        child: const Text('Rechazar'),
+                        child: Text(l10n.actionReject),
                       ),
                     if (onRevisar != null) ...[
                       const SizedBox(width: 8),
@@ -687,7 +689,7 @@ class _PropuestaCard extends StatelessWidget {
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
                             : const Icon(Icons.edit, size: 16),
-                        label: const Text('Revisar'),
+                        label: Text(l10n.actionReview),
                       ),
                     ],
                   ],

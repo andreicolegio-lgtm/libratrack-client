@@ -89,8 +89,8 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
       }
 
       final successMessage = widget.resenaExistente == null
-          ? 'Reseña publicada con éxito'
-          : 'Reseña actualizada con éxito';
+          ? l10n.reviewPublished
+          : l10n.reviewUpdated;
 
       SnackBarHelper.showTopSnackBar(context, successMessage, isError: false);
       navigator.pop(nuevaResena); // Return the review for list update
@@ -143,8 +143,8 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
           children: <Widget>[
             Text(
               widget.resenaExistente == null
-                  ? 'Crear Reseña'
-                  : 'Editar Reseña', // Hardcoded title in Spanish
+                  ? l10n.reviewCreateTitle
+                  : l10n.reviewEditTitle,
               style: theme.textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
@@ -213,8 +213,8 @@ class _ResenaFormModalState extends State<ResenaFormModal> {
                       child: CircularProgressIndicator(
                           color: Colors.white, strokeWidth: 2))
                   : Text(widget.resenaExistente == null
-                      ? 'Publicar'
-                      : 'Actualizar'), // Hardcoded button text in Spanish
+                      ? l10n.actionPublish
+                      : l10n.actionUpdate),
             ),
             const SizedBox(height: 32),
           ],

@@ -200,7 +200,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
 
     // 1. Validar formulario visualmente
     if (!_formKey.currentState!.validate()) {
-      SnackBarHelper.showTopSnackBar(context, 'Revisa los errores en rojo',
+      SnackBarHelper.showTopSnackBar(context, l10n.adminFormErrorReviewFields,
           isError: true);
       return;
     }
@@ -422,10 +422,10 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                 // 6. Género (Con estilo robusto)
                 FormField<String>(
                   validator: (_) => _generosController.text.isEmpty
-                      ? 'El género no puede estar vacío'
+                      ? l10n.validationGenresRequired
                       : null,
                   builder: (state) => _buildSectionField(
-                    label: 'Genre',
+                    label: l10n.labelGenre,
                     errorText: state.errorText,
                     child: _buildGenreSelector(),
                   ),
@@ -437,7 +437,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                   FormField<String>(
                     validator: (_) => _validateProgressData(),
                     builder: (state) => _buildSectionField(
-                      label: 'Progress Data',
+                      label: l10n.labelProgressData,
                       errorText: state.errorText,
                       child: ContentTypeProgressForms(
                         selectedTypeKey: _tipoSeleccionado,
@@ -457,43 +457,48 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                 // 8. Disponibilidad
                 DropdownButtonFormField<String>(
                   initialValue: _estadoPublicacionSeleccionado,
-                  items: const [
+                  hint: Text(l10n.hintSelectAvailability),
+                  items: [
                     DropdownMenuItem(
-                        value: 'RELEASING', child: Text('Releasing')),
+                        value: 'RELEASING', child: Text(l10n.statusReleasing)),
                     DropdownMenuItem(
-                        value: 'AVAILABLE', child: Text('Available')),
+                        value: 'FINISHED', child: Text(l10n.statusFinished)),
                     DropdownMenuItem(
-                        value: 'FINISHED', child: Text('Finished')),
+                        value: 'ANNOUNCED', child: Text(l10n.statusAnnounced)),
                     DropdownMenuItem(
-                        value: 'ANNOUNCED', child: Text('Announced')),
+                        value: 'CANCELLED', child: Text(l10n.statusCancelled)),
                     DropdownMenuItem(
-                        value: 'CANCELLED', child: Text('Cancelled')),
-                    DropdownMenuItem(value: 'PAUSADO', child: Text('Paused')),
+                        value: 'PAUSADO', child: Text(l10n.statusPaused)),
+                    DropdownMenuItem(
+                        value: 'AVAILABLE', child: Text(l10n.statusAvailable)),
                   ],
                   onChanged: (v) =>
                       setState(() => _estadoPublicacionSeleccionado = v),
-                  validator: (v) => v == null ? 'Required' : null,
-                  decoration: getCommonDecoration('Availability'),
+                  validator: (v) => v == null ? l10n.validationRequired : null,
+                  decoration: getCommonDecoration(l10n.labelAvailability),
                 ),
                 const SizedBox(height: 24),
 
                 // 9. Estado (Oficial/Comunitario)
                 DropdownButtonFormField<String>(
                   initialValue: _estadoContenido,
-                  items: const [
-                    DropdownMenuItem(value: 'OFICIAL', child: Text('Official')),
+                  items: [
                     DropdownMenuItem(
-                        value: 'COMUNITARIO', child: Text('Community')),
+                        value: 'OFICIAL',
+                        child: Text(l10n.contentStatusOfficial)),
+                    DropdownMenuItem(
+                        value: 'COMUNITARIO',
+                        child: Text(l10n.contentStatusCommunity)),
                   ],
                   onChanged: (v) => setState(() => _estadoContenido = v!),
-                  decoration: getCommonDecoration('Content State'),
+                  decoration: getCommonDecoration(l10n.labelContentStatus),
                 ),
                 const SizedBox(height: 24),
 
                 // 10. Comentarios de Revisión (Opcional)
                 TextFormField(
                   controller: _comentariosController,
-                  decoration: getCommonDecoration('Review Comment (Optional)'),
+                  decoration: getCommonDecoration(l10n.modEditReviewComment),
                   maxLines: 3,
                 ),
 
@@ -512,8 +517,8 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
                           width: 20,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
-                      : const Text('Save and Approve',
-                          style: TextStyle(
+                      : Text(l10n.actionSaveAndApprove,
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ],
@@ -525,6 +530,7 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
   }
 
   Widget _buildProposerInfo() {
+    final l10n = AppLocalizations.of(context);
     final p = widget.propuesta;
     // 1. Verificar si soy admin
     final bool isAdmin =
@@ -545,9 +551,9 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
           Expanded(
             child: Text.rich(
               TextSpan(children: [
-                const TextSpan(
-                    text: 'Proposed by: ',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                TextSpan(
+                    text: l10n.labelProposedBy,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
                 TextSpan(text: '${p.proponenteUsername} '),
                 // 2. Mostrar email solo si es admin y el email existe
                 if (isAdmin && p.proponenteEmail != null)
@@ -680,23 +686,24 @@ class _PropuestaEditScreenState extends State<PropuestaEditScreen> {
     if (_tipoSeleccionado == null) {
       return null;
     }
+    final l10n = AppLocalizations.of(context);
     final type = _tipoSeleccionado;
     if (type == 'Anime' && _totalUnidadesController.text.trim().isEmpty) {
-      return 'Requerido';
+      return l10n.validationRequired;
     }
     if ((type == 'Manga' || type == 'Manhwa') &&
         _totalCapitulosLibroController.text.trim().isEmpty) {
-      return 'Requerido';
+      return l10n.validationRequired;
     }
     if (type == 'Book' && _totalPaginasLibroController.text.trim().isEmpty) {
-      return 'Requerido';
+      return l10n.validationRequired;
     }
     if (type == 'Series' &&
         _episodiosPorTemporadaController.text.trim().isEmpty) {
-      return 'Requerido';
+      return l10n.validationRequired;
     }
     if (type == 'Movie' && _durationController.text.trim().isEmpty) {
-      return 'Requerido';
+      return l10n.validationRequired;
     }
     return null;
   }

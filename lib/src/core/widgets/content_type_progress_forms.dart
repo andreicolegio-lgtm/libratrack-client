@@ -50,7 +50,7 @@ class ContentTypeProgressForms extends StatelessWidget {
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r'[0-9:]'))
           ],
-          hintText: '120 min / 02:00',
+          hintText: l10n.hintDurationFormat,
         );
 
       case 'Manga':
@@ -104,7 +104,7 @@ class ContentTypeProgressForms extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Introduce el número de episodios por temporada separados por comas.',
+              l10n.helperSeriesEpisodes,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),

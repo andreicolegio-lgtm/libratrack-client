@@ -12,3 +12,17 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Android & Configuración Local (IMPORTANTE)
+android/local.properties
+android/key.properties
+android/*.keystore
+android/*.jks
+
+# Google Services (Por seguridad futura)
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db

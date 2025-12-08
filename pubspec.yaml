@@ -43,6 +43,7 @@ dev_dependencies:
   
   # --- Linter y Generadores ---
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 
 # Configuración específica de Flutter
 flutter:
@@ -58,3 +59,12 @@ flutter:
 
 flutter_intl:
   enabled: true
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon.png" 
+  min_sdk_android: 21 # opcional
+  # Si quieres un fondo de color específico (ej. blanco) en Android adaptativo:
+  # adaptive_icon_background: "#FFFFFF"
+  # adaptive_icon_foreground: "assets/images/app_icon.png"

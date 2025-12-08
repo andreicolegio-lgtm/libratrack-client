@@ -256,7 +256,7 @@ class _CatalogScreenState extends State<CatalogScreen>
 
     final List<Widget> tabs = [
       Tab(text: l10n.adminPanelFilterAll),
-      const Tab(text: 'Favorites'),
+      Tab(text: l10n.catalogTabFavorites),
       Tab(text: l10n.catalogInProgress),
       Tab(text: l10n.catalogPending),
       Tab(text: l10n.catalogFinished),
@@ -297,7 +297,7 @@ class _CatalogScreenState extends State<CatalogScreen>
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: CustomSearchBar(
                 controller: _searchController,
-                hintText: 'Buscar en mi catálogo...',
+                hintText: l10n.catalogSearchHint,
                 onFilterPressed: _openFilterModal,
                 onChanged: _onSearchChanged,
               ),
@@ -387,6 +387,7 @@ class _CatalogScreenState extends State<CatalogScreen>
   }
 
   Widget _buildErrorState(String error) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -403,7 +404,7 @@ class _CatalogScreenState extends State<CatalogScreen>
           ElevatedButton.icon(
             onPressed: _loadCatalog,
             icon: const Icon(Icons.refresh),
-            label: const Text('Reintentar'),
+            label: Text(l10n.commonRetry),
           )
         ],
       ),
@@ -411,6 +412,7 @@ class _CatalogScreenState extends State<CatalogScreen>
   }
 
   Widget _buildCatalogList(List<CatalogoEntrada> list, int tabIndex) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
     if (list.isEmpty) {
       return Center(
         child: Column(
@@ -419,7 +421,7 @@ class _CatalogScreenState extends State<CatalogScreen>
             Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No se encontraron elementos.',
+              l10n.catalogEmpty,
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],

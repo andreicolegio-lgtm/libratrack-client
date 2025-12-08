@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../core/l10n/app_localizations.dart';
 
 class CustomSearchBar extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback? onFilterPressed;
-  final String hintText;
+  final String? hintText;
   final VoidCallback? onChanged;
 
   const CustomSearchBar({
     required this.controller,
     this.onFilterPressed,
-    this.hintText = 'Buscar...',
+    this.hintText,
     this.onChanged,
     super.key,
   });
@@ -38,6 +39,8 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final hint = widget.hintText ?? l10n.searchHintDefault;
 
     return Row(
       children: [
@@ -47,7 +50,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
             controller: widget.controller,
             onChanged: (_) => widget.onChanged?.call(),
             decoration: InputDecoration(
-              hintText: widget.hintText,
+              hintText: hint,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: widget.controller.text.isNotEmpty
                   ? IconButton(
@@ -85,7 +88,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
           IconButton.filledTonal(
             onPressed: widget.onFilterPressed,
             icon: const Icon(Icons.tune),
-            tooltip: 'Filtros',
+            tooltip: l10n.tooltipFilters,
           ),
       ],
     );
